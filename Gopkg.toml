@@ -1,0 +1,51 @@
+[[constraint]]
+  name = "github.com/urfave/cli"
+  version = "1.20.0"
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "v1.0.3"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "v0.8.0"
+
+[[constraint]]
+  name = "github.com/kelseyhightower/envconfig"
+  version = "v1.3.0"
+
+[[constraint]]
+  name = "github.com/mattes/migrate"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/go-chi/chi"
+  version = "^3.3.0"
+
+[[constraint]]
+  name = "github.com/go-chi/render"
+  version = "v1.0.0"
+
+[[constraint]]
+  name = "github.com/DATA-DOG/godog"
+  version = "^0.7.4"
+
+[[constraint]]
+  name = "github.com/jmoiron/sqlx"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/f2prateek/train"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+  version = "v1.2.0"
+
+[[constraint]]
+  name = "github.com/guregu/null"
+  version = "3.3.0"
+
+[[constraint]]
+  name = "github.com/patrickmn/go-cache"
+  version = "2.1.0"

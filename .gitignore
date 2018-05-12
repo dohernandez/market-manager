@@ -1,0 +1,8 @@
+automation/roles/external
+vendor/
+.env
+
+# Code coverage
+*.coverprofile
+
+docs/api.html

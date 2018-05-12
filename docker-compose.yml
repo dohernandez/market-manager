@@ -1,0 +1,29 @@
+version: '2'
+services:
+  base:
+    build:
+      context: .
+      dockerfile: ./resources/dev/Dockerfile
+      args:
+        - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - .:/go/src/github.com/dohernandez/market-manager
+    env_file: .env
+
+  http:
+    extends: base
+    depends_on:
+      - postgres
+    ports:
+      - '9081:8081'
+    command: "make dev-run-http"
+
+  postgres:
+    image: postgres:10.1
+    ports:
+      - '4532:5432'
+    environment:
+      LC_ALL: C.UTF-8
+      POSTGRES_DB: market-manager-service
+      POSTGRES_USER: mms
+      POSTGRES_PASSWORD: mms4you
