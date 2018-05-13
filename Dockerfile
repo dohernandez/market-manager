@@ -22,7 +22,7 @@ RUN raml2html  -i "/docs/raml/api.raml" -o "/docs/api.html"
 # The final container
 FROM alpine
 
-COPY --from=builder /go/src/github.com/dohernandez/market-manager/build/customer-complaints-service /
+COPY --from=builder /go/src/github.com/dohernandez/market-manager/build/market-manager /
 
 COPY --from=docs-builder /docs/api.html /docs/documentation-raml/index.html
 

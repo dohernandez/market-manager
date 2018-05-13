@@ -29,6 +29,33 @@
   version = "v1.3.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "oid"
+  ]
+  revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mattes/migrate"
+  packages = [
+    ".",
+    "database",
+    "database/postgres",
+    "source",
+    "source/file"
+  ]
+  revision = "4768a648fbd9e04389a73a21139d14a4ccb1a61a"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
@@ -70,6 +97,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9e3824f9ca8cda85fa975a96f28f89de9392ee7c47d045796401648ec6c823f1"
+  inputs-digest = "5d45c41f0ead4b84ffc46165385e07e7a7c0ba34a56e7c46a1b843ea2e9c044c"
   solver-name = "gps-cdcl"
   solver-version = 1

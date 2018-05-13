@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/go-chi/chi"
 	chiMiddleware "github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
@@ -13,22 +14,24 @@ import (
 
 // HTTPCommand holds the necessary data for its execution
 type HTTPCommand struct {
-	BaseCommand
+	*BaseCommand
 }
 
 // NewHTTPCommand constructs HTTPCommand
-func NewHTTPCommand(baseCommand BaseCommand) *HTTPCommand {
+func NewHTTPCommand(baseCommand *BaseCommand) *HTTPCommand {
 	return &HTTPCommand{baseCommand}
 }
 
 // Run ...
 func (cmd *HTTPCommand) Run(cliCtx *cli.Context) error {
-	_, cancelCtx := context.WithCancel(context.TODO())
+	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
 	// Init router
+	logger.FromContext(ctx).Info("Loading routes")
 	router := cmd.newRouter(cliCtx.App.Version)
 
+	logger.FromContext(ctx).Info("Starting server")
 	return http.ListenAndServe(fmt.Sprintf(":%d", cmd.config.HTTP.Port), router)
 }
 

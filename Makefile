@@ -1,6 +1,6 @@
 ### Change this variables ###
 
-NAME=market-manager-service
+NAME=market-manager
 
 VERSION ?= "dev"
 
@@ -99,7 +99,7 @@ install:
 
 codecov: deps-dev-overalls
 	@printf "$(OK_COLOR)==> Running code coverage $(NO_COLOR)\n"
-	@overalls -project=github.com/hellofresh/market-manager-service -ignore="adapter,vendor,.glide,common" -covermode=count
+	@overalls -project=github.com/hellofresh/market-manager -ignore="adapter,vendor,.glide,common" -covermode=count
 
 # Test
 test: test-unit test-integration
@@ -114,10 +114,10 @@ test-integration:
 
 # Dev
 dev-run-http:
-	@CompileDaemon -build="make install" -graceful-kill -command="market-manager-service http"
+	@CompileDaemon -build="make install" -graceful-kill -command="market-manager http"
 
 dev-migrate:
-	@docker-compose run --rm --name app-migrations base market-manager-service migrate up
+	@docker-compose run --rm --name app-migrations base market-manager migrate up
 
 # Dev with docker
 dev-docker-start:
@@ -135,7 +135,7 @@ dev-docker-deps:
 
 dev-docker-migration:
 	@printf "$(OK_COLOR)==> Running migration using docker container$(NO_COLOR)\n"
-	@docker-compose exec http market-manager-service migrate up
+	@docker-compose exec http market-manager migrate up
 
 dev-docker-test-unit:
 	@printf "$(OK_COLOR)==> Running unit test using docker container$(NO_COLOR)\n"

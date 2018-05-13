@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
+	"github.com/dohernandez/market-manager/pkg/command"
 	"github.com/dohernandez/market-manager/pkg/config"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
@@ -14,13 +16,13 @@ import (
 // Build version. Sent as a linker flag in Makefile
 var version string
 
-var binaryName = "market-manager-service"
+var binaryName = "market-manager"
 
 func main() {
 	app := cli.NewApp()
 	app.Version = version
 	app.Name = binaryName
-	app.Usage = "The (first) awesome service for operation manager!"
+	app.Usage = "The (first) awesome service for manage market!"
 	app.UsageText = fmt.Sprintf("%s command [arguments]", binaryName)
 
 	// Init envConfig
@@ -45,16 +47,40 @@ func main() {
 
 	// Init command handlers
 	// TODO: Real ctx should be passed here
-	//baseCommand := command.NewBaseCommand(context.TODO(), envConfig)
-	//serverCommand := command.NewHTTPCommand(baseCommand)
-	//
-	//app.Commands = []cli.Command{
-	//	{
-	//		Name:   "http",
-	//		Usage:  "Start REST API service",
-	//		Action: serverCommand.Run,
-	//	},
-	//}
+	baseCommand := command.NewBaseCommand(context.TODO(), envConfig)
+	serverCommand := command.NewHTTPCommand(baseCommand)
+	migrateCommand := command.NewMigrateCommand(baseCommand)
+
+	app.Commands = []cli.Command{
+		{
+			Name:   "http",
+			Usage:  "Start REST API service",
+			Action: serverCommand.Run,
+		},
+		{
+			Name:      "migrate",
+			Aliases:   []string{"m"},
+			Usage:     "Run database migrations to the specific version",
+			Action:    migrateCommand.Run,
+			ArgsUsage: "",
+			Subcommands: []cli.Command{
+				{
+					Name:      "up",
+					Aliases:   []string{"u"},
+					Usage:     "Up the database migrations",
+					Action:    migrateCommand.Up,
+					ArgsUsage: "",
+				},
+				{
+					Name:      "down",
+					Aliases:   []string{"d"},
+					Usage:     "Down the database migrations",
+					Action:    migrateCommand.Down,
+					ArgsUsage: "",
+				},
+			},
+		},
+	}
 
 	err = app.Run(os.Args)
 	if err != nil {

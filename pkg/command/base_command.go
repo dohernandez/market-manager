@@ -15,8 +15,8 @@ type (
 )
 
 // NewBaseCommand creates a structure with common shared properties of the commands
-func NewBaseCommand(ctx context.Context, config *config.Specification) BaseCommand {
-	return BaseCommand{
+func NewBaseCommand(ctx context.Context, config *config.Specification) *BaseCommand {
+	return &BaseCommand{
 		ctx:    ctx,
 		config: config,
 	}
