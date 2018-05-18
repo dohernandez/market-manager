@@ -3,7 +3,11 @@ package command
 import (
 	"context"
 
+	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
+
 	"github.com/dohernandez/market-manager/pkg/config"
+	"github.com/dohernandez/market-manager/pkg/container"
 )
 
 type (
@@ -20,4 +24,17 @@ func NewBaseCommand(ctx context.Context, config *config.Specification) *BaseComm
 		ctx:    ctx,
 		config: config,
 	}
+}
+
+func (cmd *BaseCommand) initDatabaseConnection() (*sqlx.DB, error) {
+	db, err := sqlx.Connect("postgres", cmd.config.Database.DSN)
+	if err != nil {
+		return nil, errors.Wrap(err, "Connecting to postgres")
+	}
+
+	return db, nil
+}
+
+func (cmd *BaseCommand) Container(db *sqlx.DB) *container.Container {
+	return container.NewContainer(cmd.ctx, db, cmd.config)
 }

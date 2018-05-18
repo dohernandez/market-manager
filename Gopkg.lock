@@ -8,6 +8,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+  version = "v3.2.0"
+
+[[projects]]
   name = "github.com/go-chi/chi"
   packages = [
     ".",
@@ -21,6 +27,41 @@
   packages = ["."]
   revision = "9f855fadd4b8cde7773f9ef51f6b2705af239519"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/guregu/null"
+  packages = ["."]
+  revision = "e81d6d8d57747b34d7c5fe0d20ebf57692f04ea9"
+  version = "v3.3.0"
+
+[[projects]]
+  name = "github.com/hellofresh/customer-complaints-service"
+  packages = [
+    "pkg/auth",
+    "pkg/customer-complaints/compensation",
+    "pkg/customer-complaints/complaint",
+    "pkg/hf"
+  ]
+  revision = "e3996f1d214cffa056c5321048d05cb48fccef26"
+  version = "0.27.0"
+
+[[projects]]
+  name = "github.com/hellofresh/jwt-auth-go"
+  packages = [
+    ".",
+    "middleware"
+  ]
+  revision = "d3675ffdc8ea7e1f3b21a54c8849f1ddebd2cd46"
+  version = "v0.4.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jmoiron/sqlx"
+  packages = [
+    ".",
+    "reflectx"
+  ]
+  revision = "2aeb6a910c2b94f2d5eb53d9895d80e27264ec41"
 
 [[projects]]
   name = "github.com/kelseyhightower/envconfig"
@@ -62,14 +103,29 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
+
+[[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
   version = "v1.0.5"
 
 [[projects]]
+  name = "github.com/stretchr/objx"
+  packages = ["."]
+  revision = "facf9a85c22f48d2f52f2380e4efce1768749a89"
+  version = "v0.1"
+
+[[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert"]
+  packages = [
+    "assert",
+    "mock"
+  ]
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
   version = "v1.2.1"
 
@@ -97,6 +153,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5d45c41f0ead4b84ffc46165385e07e7a7c0ba34a56e7c46a1b843ea2e9c044c"
+  inputs-digest = "049bc291c88344635353b167866e2706e6f3155bd75ac29d8274e8e73a87ca9a"
   solver-name = "gps-cdcl"
   solver-version = 1

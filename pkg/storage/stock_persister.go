@@ -1,0 +1,40 @@
+package storage
+
+import (
+	"github.com/dohernandez/market-manager/pkg/market-manager/stock"
+	"github.com/jmoiron/sqlx"
+)
+
+// StockPersister struct to hold necessary dependencies
+type stockPersister struct {
+	db *sqlx.DB
+}
+
+func NewStockPersister(db *sqlx.DB) *stockPersister {
+	return &stockPersister{
+		db: db,
+	}
+}
+
+func (p *stockPersister) PersistAll(ss []*stock.Stock) error {
+	return transaction(p.db, func(tx *sqlx.Tx) error {
+		for _, s := range ss {
+			if err := p.exec(tx, s); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func (p *stockPersister) exec(tx *sqlx.Tx, s *stock.Stock) error {
+	query := `INSERT INTO stock(id, market_id, exchange_id, name, symbol) VALUES ($1, $2, $3, $4, $5)`
+
+	_, err := tx.Exec(query, s.ID, s.Market.ID, s.Exchange.ID, s.Name, s.Symbol)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

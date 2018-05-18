@@ -50,6 +50,7 @@ func main() {
 	baseCommand := command.NewBaseCommand(context.TODO(), envConfig)
 	serverCommand := command.NewHTTPCommand(baseCommand)
 	migrateCommand := command.NewMigrateCommand(baseCommand)
+	importCommand := command.NewImportCommand(baseCommand)
 
 	app.Commands = []cli.Command{
 		{
@@ -77,6 +78,21 @@ func main() {
 					Usage:     "Down the database migrations",
 					Action:    migrateCommand.Down,
 					ArgsUsage: "",
+				},
+			},
+		},
+		{
+			Name:   "import",
+			Usage:  "Import csv files",
+			Action: importCommand.Run,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "type, t",
+					Usage: "Type of import",
+				},
+				cli.StringFlag{
+					Name:  "file, f",
+					Usage: "csv file to import",
 				},
 			},
 		},

@@ -35,7 +35,7 @@ func (cmd *MigrateCommand) Run(cliCtx *cli.Context) error {
 	}
 
 	if cliCtx.NArg() != 1 {
-		logger.FromContext(context.TODO()).Error("Please specify the migration version: customer-complaints-service migrate [version]")
+		logger.FromContext(context.TODO()).Error("Please specify the migration version: market-manager migrate [version]")
 		return nil
 	}
 
