@@ -51,6 +51,7 @@ func main() {
 	serverCommand := command.NewHTTPCommand(baseCommand)
 	migrateCommand := command.NewMigrateCommand(baseCommand)
 	importCommand := command.NewImportCommand(baseCommand)
+	stocksCommand := command.NewStocksCommand(baseCommand)
 
 	app.Commands = []cli.Command{
 		{
@@ -95,6 +96,11 @@ func main() {
 					Usage: "csv file to import",
 				},
 			},
+		},
+		{
+			Name:   "stocks",
+			Usage:  "Update stock values based on the yahoo/google api finance",
+			Action: stocksCommand.Run,
 		},
 	}
 

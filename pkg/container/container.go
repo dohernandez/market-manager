@@ -18,8 +18,11 @@ type Container struct {
 
 	marketFinder   market.Finder
 	exchangeFinder exchange.Finder
+	stockFinder    stock.Finder
 
 	stockPersister stock.Persister
+
+	stockService *stock.Service
 }
 
 func NewContainer(ctx context.Context, db *sqlx.DB, config *config.Specification) *Container {
@@ -29,6 +32,10 @@ func NewContainer(ctx context.Context, db *sqlx.DB, config *config.Specification
 		config: config,
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FINDER
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func (c *Container) MarketFinderInstance() market.Finder {
 	if c.marketFinder == nil {
@@ -46,10 +53,35 @@ func (c *Container) ExchangeFinderInstance() exchange.Finder {
 	return c.exchangeFinder
 }
 
+func (c *Container) StockFinderInstance() stock.Finder {
+	if c.stockFinder == nil {
+		c.stockFinder = storage.NewStockFinder(c.db)
+	}
+
+	return c.stockFinder
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// PERSISTER
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 func (c *Container) StockPersisterInstance() stock.Persister {
 	if c.stockPersister == nil {
 		c.stockPersister = storage.NewStockPersister(c.db)
 	}
 
 	return c.stockPersister
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SERVICE
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+func (c *Container) StockServiceInstance() *stock.Service {
+	if c.stockService == nil {
+		c.stockService = stock.NewService(
+			c.StockPersisterInstance(),
+			c.StockFinderInstance(),
+		)
+	}
+
+	return c.stockService
 }

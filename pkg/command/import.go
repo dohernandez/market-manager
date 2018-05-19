@@ -73,7 +73,7 @@ func (cmd *ImportCommand) getImport(ctx context.Context, db *sqlx.DB, t, file st
 
 	switch t {
 	case "stock":
-		return _import.NewImportStock(ctx, r, c.MarketFinderInstance(), c.ExchangeFinderInstance(), c.StockPersisterInstance()), nil
+		return _import.NewImportStock(ctx, r, c.MarketFinderInstance(), c.ExchangeFinderInstance(), c.StockServiceInstance()), nil
 	}
 
 	return nil, errors.New("type not supported")

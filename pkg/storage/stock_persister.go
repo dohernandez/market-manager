@@ -5,10 +5,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// StockPersister struct to hold necessary dependencies
-type stockPersister struct {
-	db *sqlx.DB
-}
+type (
+	// StockPersister struct to hold necessary dependencies
+	stockPersister struct {
+		db *sqlx.DB
+	}
+)
 
 func NewStockPersister(db *sqlx.DB) *stockPersister {
 	return &stockPersister{
@@ -19,7 +21,7 @@ func NewStockPersister(db *sqlx.DB) *stockPersister {
 func (p *stockPersister) PersistAll(ss []*stock.Stock) error {
 	return transaction(p.db, func(tx *sqlx.Tx) error {
 		for _, s := range ss {
-			if err := p.exec(tx, s); err != nil {
+			if err := p.execInsert(tx, s); err != nil {
 				return err
 			}
 		}
@@ -28,10 +30,31 @@ func (p *stockPersister) PersistAll(ss []*stock.Stock) error {
 	})
 }
 
-func (p *stockPersister) exec(tx *sqlx.Tx, s *stock.Stock) error {
+func (p *stockPersister) execInsert(tx *sqlx.Tx, s *stock.Stock) error {
 	query := `INSERT INTO stock(id, market_id, exchange_id, name, symbol) VALUES ($1, $2, $3, $4, $5)`
 
 	_, err := tx.Exec(query, s.ID, s.Market.ID, s.Exchange.ID, s.Name, s.Symbol)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *stockPersister) UpdatePrice(s *stock.Stock) error {
+	return transaction(p.db, func(tx *sqlx.Tx) error {
+		if err := p.execUpdatePrice(tx, s); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (p *stockPersister) execUpdatePrice(tx *sqlx.Tx, s *stock.Stock) error {
+	query := `UPDATE stock SET value = $1 WHERE id = $2`
+
+	_, err := tx.Exec(query, s.Value.Amount, s.ID)
 	if err != nil {
 		return err
 	}

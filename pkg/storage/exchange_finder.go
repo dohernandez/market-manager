@@ -21,18 +21,18 @@ func NewExchangeFinder(db sqlx.Queryer) *exchangeFinder {
 }
 
 func (f *exchangeFinder) FindBySymbol(symbol string) (*exchange.Exchange, error) {
-	var m exchange.Exchange
+	var e exchange.Exchange
 
 	query := "SELECT * FROM exchange WHERE symbol=$1"
 
-	err := sqlx.Get(f.db, &m, query, symbol)
+	err := sqlx.Get(f.db, &e, query, symbol)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return &m, mm.ErrNotFound
+			return nil, mm.ErrNotFound
 		}
 
-		return &m, errors.Wrap(err, "Select exchange by symbol")
+		return nil, errors.Wrap(err, "Select exchange by symbol")
 	}
 
-	return &m, nil
+	return &e, nil
 }

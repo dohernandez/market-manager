@@ -1,7 +1,7 @@
 package mm
 
 type Value struct {
-	Amount   int
+	Amount   float64
 	Currency Currency
 }
 

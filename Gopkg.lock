@@ -8,10 +8,16 @@
   version = "v1.1.0"
 
 [[projects]]
-  name = "github.com/dgrijalva/jwt-go"
+  branch = "master"
+  name = "github.com/dohernandez/go-quote"
   packages = ["."]
-  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
-  version = "v3.2.0"
+  revision = "296483cdaf29a02871c0c58f7fe0b5eedf7ca9cd"
+
+[[projects]]
+  name = "github.com/dohernandez/googlefinance-client-go"
+  packages = ["."]
+  revision = "57dbdf3b7fc014b4765b6f43d030dbcac5dae39a"
+  version = "1.0.3"
 
 [[projects]]
   name = "github.com/go-chi/chi"
@@ -27,32 +33,6 @@
   packages = ["."]
   revision = "9f855fadd4b8cde7773f9ef51f6b2705af239519"
   version = "v1.0.0"
-
-[[projects]]
-  name = "github.com/guregu/null"
-  packages = ["."]
-  revision = "e81d6d8d57747b34d7c5fe0d20ebf57692f04ea9"
-  version = "v3.3.0"
-
-[[projects]]
-  name = "github.com/hellofresh/customer-complaints-service"
-  packages = [
-    "pkg/auth",
-    "pkg/customer-complaints/compensation",
-    "pkg/customer-complaints/complaint",
-    "pkg/hf"
-  ]
-  revision = "e3996f1d214cffa056c5321048d05cb48fccef26"
-  version = "0.27.0"
-
-[[projects]]
-  name = "github.com/hellofresh/jwt-auth-go"
-  packages = [
-    ".",
-    "middleware"
-  ]
-  revision = "d3675ffdc8ea7e1f3b21a54c8849f1ddebd2cd46"
-  version = "v0.4.0"
 
 [[projects]]
   branch = "master"
@@ -153,6 +133,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "049bc291c88344635353b167866e2706e6f3155bd75ac29d8274e8e73a87ca9a"
+  inputs-digest = "1d2f7d06a62ac482f533bcbfe2bf6848306217822abf0745e434db970baf0d3e"
   solver-name = "gps-cdcl"
   solver-version = 1

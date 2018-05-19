@@ -16,7 +16,7 @@ type (
 		reader         Reader
 		marketFinder   market.Finder
 		exchangeFinder exchange.Finder
-		stockPersister stock.Persister
+		stockService   *stock.Service
 	}
 )
 
@@ -25,14 +25,14 @@ func NewImportStock(
 	reader Reader,
 	marketFinder market.Finder,
 	exchangeFinder exchange.Finder,
-	stockPersister stock.Persister,
+	stockService *stock.Service,
 ) *ImportStock {
 	return &ImportStock{
 		ctx:            ctx,
 		reader:         reader,
 		marketFinder:   marketFinder,
 		exchangeFinder: exchangeFinder,
-		stockPersister: stockPersister,
+		stockService:   stockService,
 	}
 }
 
@@ -63,5 +63,5 @@ func (i *ImportStock) Import() error {
 		ss = append(ss, stock.NewStock(m, e, line[0], line[2]))
 	}
 
-	return i.stockPersister.PersistAll(ss)
+	return i.stockService.SaveAll(ss)
 }

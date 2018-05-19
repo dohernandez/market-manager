@@ -28,10 +28,10 @@ func (f *marketFinder) FindByName(name string) (*market.Market, error) {
 	err := sqlx.Get(f.db, &m, query, name)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return &m, mm.ErrNotFound
+			return nil, mm.ErrNotFound
 		}
 
-		return &m, errors.Wrap(err, "Select market by name")
+		return nil, errors.Wrap(err, "Select market by name")
 	}
 
 	return &m, nil

@@ -1,6 +1,8 @@
 package stock
 
 import (
+	"time"
+
 	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
@@ -27,4 +29,14 @@ func NewStock(market *market.Market, exchange *exchange.Exchange, name, symbol s
 		Name:     name,
 		Symbol:   symbol,
 	}
+}
+
+// Price represents stock's price struct
+type Price struct {
+	Date   time.Time `json:"date"`
+	Close  float64   `json:"close"`
+	High   float64   `json:"high"`
+	Low    float64   `json:"low"`
+	Open   float64   `json:"open"`
+	Volume float64   `json:"volume"`
 }
