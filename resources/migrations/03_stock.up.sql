@@ -5,5 +5,5 @@ CREATE TABLE stock  (
     exchange_id UUID REFERENCES exchange(id),
     name VARCHAR(120) NOT NULL,
     symbol VARCHAR(10) NOT NULL,
-    value FLOAT
+    value FLOAT DEFAULT 0
 );

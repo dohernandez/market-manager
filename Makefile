@@ -67,7 +67,7 @@ clean:
 
 # Deps
 deps:
-	@git config --global url."https://${GITHUB_TOKEN}@github.com/hellofresh/".insteadOf "https://github.com/hellofresh/"
+	@git config --global url."https://${GITHUB_TOKEN}@github.com/dohernandez/".insteadOf "https://github.com/dohernandez/"
 	@git config --global http.https://gopkg.in.followRedirects true
 
 	@printf "$(OK_COLOR)==> Installing dep$(NO_COLOR)\n"

@@ -48,7 +48,7 @@ func (cmd *ImportCommand) Run(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
 	}
 
-	i, err := cmd.getImport(ctx, db, cliCtx.String("type"), cliCtx.String("file"))
+	i, err := cmd.getImport(cliCtx, ctx, db, cliCtx.String("type"), cliCtx.String("file"))
 	if err != nil {
 		logger.FromContext(context.TODO()).WithError(err).Error("Failed importing")
 
@@ -67,13 +67,23 @@ func (cmd *ImportCommand) Run(cliCtx *cli.Context) error {
 	return nil
 }
 
-func (cmd *ImportCommand) getImport(ctx context.Context, db *sqlx.DB, t, file string) (_import.Import, error) {
+func (cmd *ImportCommand) getImport(cliCtx *cli.Context, ctx context.Context, db *sqlx.DB, t, file string) (_import.Import, error) {
 	c := cmd.Container(db)
 	r := _import.NewCsvReader(file)
 
 	switch t {
 	case "stock":
 		return _import.NewImportStock(ctx, r, c.MarketFinderInstance(), c.ExchangeFinderInstance(), c.StockServiceInstance()), nil
+	case "dividend":
+		if cliCtx.String("stock") != "" {
+			ctx = context.WithValue(ctx, "stock", cliCtx.String("stock"))
+		}
+
+		if cliCtx.String("status") != "" {
+			ctx = context.WithValue(ctx, "status", cliCtx.String("status"))
+		}
+
+		return _import.NewImportStockDividend(ctx, r, c.StockServiceInstance()), nil
 	}
 
 	return nil, errors.New("type not supported")

@@ -52,6 +52,7 @@ func main() {
 	migrateCommand := command.NewMigrateCommand(baseCommand)
 	importCommand := command.NewImportCommand(baseCommand)
 	stocksCommand := command.NewStocksCommand(baseCommand)
+	apiCommand := command.NewApiCommand(baseCommand)
 
 	app.Commands = []cli.Command{
 		{
@@ -83,24 +84,69 @@ func main() {
 			},
 		},
 		{
-			Name:   "import",
-			Usage:  "Import csv files",
-			Action: importCommand.Run,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "type, t",
-					Usage: "Type of import",
+			Name:      "stocks",
+			Aliases:   []string{"s"},
+			Usage:     "Add/Update stock values",
+			Action:    stocksCommand.Run,
+			ArgsUsage: "",
+			Subcommands: []cli.Command{
+				{
+					Name:      "import",
+					Aliases:   []string{"i"},
+					Usage:     "Import stock from csv file",
+					Action:    importCommand.Run,
+					ArgsUsage: "",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "type, t",
+							Usage: "Type of import",
+						},
+						cli.StringFlag{
+							Name:  "file, f",
+							Usage: "csv file to import",
+						},
+						cli.StringFlag{
+							Name:  "stock, s",
+							Usage: "Stock symbol(tricker) to update dividend",
+						},
+						cli.StringFlag{
+							Name:  "status, st",
+							Usage: "Dividend status [payed, projected]",
+						},
+					},
 				},
-				cli.StringFlag{
-					Name:  "file, f",
-					Usage: "csv file to import",
+				{
+					Name:      "price",
+					Aliases:   []string{"p"},
+					Usage:     "Update stock price value based on the yahoo/google api",
+					Action:    stocksCommand.Price,
+					ArgsUsage: "",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "stock, s",
+							Usage: "Stock symbol(tricker) to update price",
+						},
+					},
+				},
+				{
+					Name:      "dividend",
+					Aliases:   []string{"d"},
+					Usage:     "Update stock dividend value based on the yahoo/iextrading api",
+					Action:    stocksCommand.Dividend,
+					ArgsUsage: "",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "stock, s",
+							Usage: "Stock symbol(tricker) to update price",
+						},
+					},
 				},
 			},
 		},
 		{
-			Name:   "stocks",
-			Usage:  "Update stock values based on the yahoo/google api finance",
-			Action: stocksCommand.Run,
+			Name:   "api",
+			Usage:  "Api test",
+			Action: apiCommand.Run,
 		},
 	}
 

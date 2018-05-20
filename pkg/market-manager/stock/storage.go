@@ -3,6 +3,7 @@ package stock
 type (
 	Finder interface {
 		FindAll() ([]*Stock, error)
+		FindBySymbol(symbol string) (*Stock, error)
 	}
 
 	Persister interface {

@@ -2,12 +2,10 @@ package command
 
 import (
 	"context"
-
-	"github.com/urfave/cli"
-
 	"fmt"
 
 	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/urfave/cli"
 )
 
 // StocksCommand ...
@@ -22,8 +20,13 @@ func NewStocksCommand(baseCommand *BaseCommand) *StocksCommand {
 	}
 }
 
-// Run runs the application import data
+// Run runs the application stock update
 func (cmd *StocksCommand) Run(cliCtx *cli.Context) error {
+	return cmd.Price(cliCtx)
+}
+
+// Price runs the application stock price update
+func (cmd *StocksCommand) Price(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -38,21 +41,74 @@ func (cmd *StocksCommand) Run(cliCtx *cli.Context) error {
 
 	stockService := c.StockServiceInstance()
 
-	stocks, errs := stockService.UpdateLastClosedPriceToAllStocks()
+	if cliCtx.String("stock") == "" {
+		stocks, err := stockService.Stocks()
+		if err != nil {
+			fmt.Printf("err: %v\n", err)
 
-	if len(errs) > 0 {
-		if stocks == nil {
-			fmt.Printf("err: %v\n", errs[0])
+			return err
+		}
 
-			return errs[0]
-		} else {
-			fmt.Printf("some errs happen while updating stocks price: %v\n", errs[0])
+		errs := stockService.UpdateLastClosedPriceStocks(stocks)
+		if len(errs) > 0 {
+			if stocks == nil {
+				fmt.Printf("err: %v\n", errs[0])
+
+				return errs[0]
+			} else {
+				fmt.Printf("some errs happen while updating stocks price: %v\n", errs[0])
+			}
+		}
+	} else {
+		stock, err := stockService.FindStockBySymbol(cliCtx.String("stock"))
+		if err != nil {
+			fmt.Printf("err: %v\n", err)
+
+			return err
+		}
+
+		err = stockService.UpdateLastClosedPriceStock(stock)
+		if err != nil {
+			fmt.Printf("err: %v\n", err)
+
+			return err
 		}
 	}
 
-	for _, stock := range stocks {
-		fmt.Printf("%+v\n", stock)
+	logger.FromContext(ctx).Info("Update finished")
+
+	return nil
+}
+
+// Dividend runs the application stock dividend update
+func (cmd *StocksCommand) Dividend(cliCtx *cli.Context) error {
+	if cliCtx.String("stock") == "" {
+		logger.FromContext(context.TODO()).Error("Please specify the stock tricker: market-manager stocks dividend [stock] [file]")
+
+		return nil
 	}
+
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	// Database connection
+	logger.FromContext(ctx).Info("Initializing database connection")
+	db, err := cmd.initDatabaseConnection()
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
+	}
+
+	c := cmd.Container(db)
+
+	stockService := c.StockServiceInstance()
+
+	stk, err := stockService.FindStockBySymbol(cliCtx.String("stock"))
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+
+		return err
+	}
+	fmt.Printf("%+v\n", stk)
 
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/market"
 	"github.com/dohernandez/market-manager/pkg/market-manager/stock"
+	"github.com/dohernandez/market-manager/pkg/market-manager/stock/dividend"
 	"github.com/dohernandez/market-manager/pkg/storage"
 	"github.com/jmoiron/sqlx"
 )
@@ -20,7 +21,8 @@ type Container struct {
 	exchangeFinder exchange.Finder
 	stockFinder    stock.Finder
 
-	stockPersister stock.Persister
+	stockPersister         stock.Persister
+	stockDividendPersister dividend.Persister
 
 	stockService *stock.Service
 }
@@ -72,6 +74,14 @@ func (c *Container) StockPersisterInstance() stock.Persister {
 	return c.stockPersister
 }
 
+func (c *Container) StockDividendPersisterInstance() dividend.Persister {
+	if c.stockDividendPersister == nil {
+		c.stockDividendPersister = storage.NewStockDividendPersister(c.db)
+	}
+
+	return c.stockDividendPersister
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SERVICE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +90,7 @@ func (c *Container) StockServiceInstance() *stock.Service {
 		c.stockService = stock.NewService(
 			c.StockPersisterInstance(),
 			c.StockFinderInstance(),
+			c.StockDividendPersisterInstance(),
 		)
 	}
 

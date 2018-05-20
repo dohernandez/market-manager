@@ -12,20 +12,27 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
+	"github.com/dohernandez/market-manager/pkg/market-manager/stock/dividend"
 )
 
 type (
 	Service struct {
-		stockPersister Persister
-		stockFinder    Finder
+		stockPersister         Persister
+		stockDividendPersister dividend.Persister
+		stockFinder            Finder
 	}
 )
 
-func NewService(stockPersister Persister, stockFinder Finder) *Service {
+func NewService(stockPersister Persister, stockFinder Finder, stockDividendPersister dividend.Persister) *Service {
 	return &Service{
-		stockPersister: stockPersister,
-		stockFinder:    stockFinder,
+		stockPersister:         stockPersister,
+		stockFinder:            stockFinder,
+		stockDividendPersister: stockDividendPersister,
 	}
+}
+
+func (s *Service) FindStockBySymbol(symbol string) (*Stock, error) {
+	return s.stockFinder.FindBySymbol(symbol)
 }
 
 func (s *Service) Stocks() ([]*Stock, error) {
@@ -85,18 +92,11 @@ func (s *Service) GetLastClosedPriceFromYahoo(stk *Stock) (Price, error) {
 	}, nil
 }
 
-func (s *Service) UpdateLastClosedPriceToAllStocks() ([]*Stock, []error) {
+func (s *Service) UpdateLastClosedPriceStocks(stks []*Stock) []error {
 	var (
 		wg   sync.WaitGroup
 		errs []error
 	)
-
-	stks, err := s.Stocks()
-	if err != nil {
-		errs = append(errs, err)
-
-		return nil, errs
-	}
 
 	for _, stk := range stks {
 		wg.Add(1)
@@ -105,26 +105,42 @@ func (s *Service) UpdateLastClosedPriceToAllStocks() ([]*Stock, []error) {
 		go func() {
 			defer wg.Done()
 
-			p, err := s.GetLastClosedPriceFromYahoo(st)
-			if err != nil {
-				p, err = s.GetLastClosedPriceFromGoogle(st)
-				if err != nil {
-					errs = append(errs, errors.New(fmt.Sprintf("%+v -> stock:%+v", err, st)))
-
-					return
-				}
+			if err := s.updateLastClosedPriceOfStock(st); err != nil {
+				errs = append(errs, errors.New(fmt.Sprintf("%+v -> stock:%+v", err, st)))
 			}
-
-			st.Value = mm.Value{
-				Amount:   p.Close,
-				Currency: mm.Dollar,
-			}
-
-			s.stockPersister.UpdatePrice(st)
 		}()
 	}
 
 	wg.Wait()
 
-	return stks, errs
+	return errs
+}
+
+func (s *Service) updateLastClosedPriceOfStock(st *Stock) error {
+	p, err := s.GetLastClosedPriceFromYahoo(st)
+	if err != nil {
+		p, err = s.GetLastClosedPriceFromGoogle(st)
+		if err != nil {
+			return err
+		}
+	}
+
+	st.Value = mm.Value{
+		Amount:   p.Close,
+		Currency: mm.Dollar,
+	}
+
+	return s.stockPersister.UpdatePrice(st)
+}
+
+func (s *Service) UpdateLastClosedPriceStock(stk *Stock) error {
+	if err := s.updateLastClosedPriceOfStock(stk); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Service) UpdateStockDividends(stk *Stock) error {
+	return s.stockDividendPersister.PersistAll(stk.ID, stk.Dividends)
 }

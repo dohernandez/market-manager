@@ -8,17 +8,31 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/market"
+	"github.com/dohernandez/market-manager/pkg/market-manager/stock/dividend"
 )
 
-// Stock represents stock struct
-type Stock struct {
-	ID       uuid.UUID
-	Market   *market.Market
-	Exchange *exchange.Exchange
-	Name     string
-	Symbol   string
-	Value    mm.Value
-}
+type (
+	// Stock represents stock struct
+	Stock struct {
+		ID        uuid.UUID
+		Market    *market.Market
+		Exchange  *exchange.Exchange
+		Name      string
+		Symbol    string
+		Value     mm.Value
+		Dividends []dividend.StockDividend
+	}
+
+	// Price represents stock's price struct
+	Price struct {
+		Date   time.Time `json:"date"`
+		Close  float64   `json:"close"`
+		High   float64   `json:"high"`
+		Low    float64   `json:"low"`
+		Open   float64   `json:"open"`
+		Volume float64   `json:"volume"`
+	}
+)
 
 // NewStock creates an stock instance
 func NewStock(market *market.Market, exchange *exchange.Exchange, name, symbol string) *Stock {
@@ -29,14 +43,4 @@ func NewStock(market *market.Market, exchange *exchange.Exchange, name, symbol s
 		Name:     name,
 		Symbol:   symbol,
 	}
-}
-
-// Price represents stock's price struct
-type Price struct {
-	Date   time.Time `json:"date"`
-	Close  float64   `json:"close"`
-	High   float64   `json:"high"`
-	Low    float64   `json:"low"`
-	Open   float64   `json:"open"`
-	Volume float64   `json:"volume"`
 }
