@@ -61,3 +61,24 @@ func (p *stockPersister) execUpdatePrice(tx *sqlx.Tx, s *stock.Stock) error {
 
 	return nil
 }
+
+func (p *stockPersister) UpdateDividendYield(s *stock.Stock) error {
+	return transaction(p.db, func(tx *sqlx.Tx) error {
+		if err := p.execUpdateDividendYield(tx, s); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (p *stockPersister) execUpdateDividendYield(tx *sqlx.Tx, s *stock.Stock) error {
+	query := `UPDATE stock SET dividend_yield = $1 WHERE id = $2`
+
+	_, err := tx.Exec(query, s.DividendYield, s.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

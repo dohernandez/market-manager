@@ -20,14 +20,16 @@ type (
 		stockPersister         Persister
 		stockDividendPersister dividend.Persister
 		stockFinder            Finder
+		stockDividendFinder    dividend.Finder
 	}
 )
 
-func NewService(stockPersister Persister, stockFinder Finder, stockDividendPersister dividend.Persister) *Service {
+func NewService(stockPersister Persister, stockFinder Finder, stockDividendPersister dividend.Persister, stockDividendFinder dividend.Finder) *Service {
 	return &Service{
 		stockPersister:         stockPersister,
 		stockFinder:            stockFinder,
 		stockDividendPersister: stockDividendPersister,
+		stockDividendFinder:    stockDividendFinder,
 	}
 }
 
@@ -116,21 +118,26 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*Stock) []error {
 	return errs
 }
 
-func (s *Service) updateLastClosedPriceOfStock(st *Stock) error {
-	p, err := s.GetLastClosedPriceFromYahoo(st)
+func (s *Service) updateLastClosedPriceOfStock(stk *Stock) error {
+	p, err := s.GetLastClosedPriceFromYahoo(stk)
 	if err != nil {
-		p, err = s.GetLastClosedPriceFromGoogle(st)
+		p, err = s.GetLastClosedPriceFromGoogle(stk)
 		if err != nil {
 			return err
 		}
 	}
 
-	st.Value = mm.Value{
+	stk.Value = mm.Value{
 		Amount:   p.Close,
 		Currency: mm.Dollar,
 	}
 
-	return s.stockPersister.UpdatePrice(st)
+	err = s.updateStockDividendYield(stk)
+	if err != nil {
+		return err
+	}
+
+	return s.stockPersister.UpdatePrice(stk)
 }
 
 func (s *Service) UpdateLastClosedPriceStock(stk *Stock) error {
@@ -142,5 +149,29 @@ func (s *Service) UpdateLastClosedPriceStock(stk *Stock) error {
 }
 
 func (s *Service) UpdateStockDividends(stk *Stock) error {
-	return s.stockDividendPersister.PersistAll(stk.ID, stk.Dividends)
+	err := s.stockDividendPersister.PersistAll(stk.ID, stk.Dividends)
+	if err != nil {
+		return err
+	}
+
+	return s.updateStockDividendYield(stk)
+}
+
+func (s *Service) updateStockDividendYield(stk *Stock) error {
+	d, err := s.stockDividendFinder.FindNextFromStock(stk.ID, time.Now())
+	if err != nil {
+		if err != mm.ErrNotFound {
+			return err
+		}
+
+		return nil
+	}
+
+	if stk.Value.Amount <= 0 {
+		return errors.New("stock value is 0 or less that 0")
+	}
+
+	stk.DividendYield = d.Amount * 4 / stk.Value.Amount
+
+	return s.stockPersister.UpdateDividendYield(stk)
 }

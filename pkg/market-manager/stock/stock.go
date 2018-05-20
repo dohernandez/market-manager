@@ -14,13 +14,14 @@ import (
 type (
 	// Stock represents stock struct
 	Stock struct {
-		ID        uuid.UUID
-		Market    *market.Market
-		Exchange  *exchange.Exchange
-		Name      string
-		Symbol    string
-		Value     mm.Value
-		Dividends []dividend.StockDividend
+		ID            uuid.UUID
+		Market        *market.Market
+		Exchange      *exchange.Exchange
+		Name          string
+		Symbol        string
+		Value         mm.Value
+		Dividends     []dividend.StockDividend
+		DividendYield float64
 	}
 
 	// Price represents stock's price struct

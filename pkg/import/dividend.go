@@ -72,9 +72,9 @@ func (i *ImportStockDividend) Import() error {
 			p12my, _ := strconv.ParseFloat(line[6], 64)
 
 			ds = append(ds, dividend.StockDividend{
-				ExDate:             ParseDateString(line[0]),
-				PaymentDate:        ParseDateString(line[1]),
-				RecordDate:         ParseDateString(line[2]),
+				ExDate:             parseDateString(line[0]),
+				PaymentDate:        parseDateString(line[1]),
+				RecordDate:         parseDateString(line[2]),
 				Status:             status,
 				Amount:             a,
 				ChangeFromPrev:     cfp,
@@ -85,8 +85,8 @@ func (i *ImportStockDividend) Import() error {
 			a, _ := strconv.ParseFloat(line[2], 64)
 
 			ds = append(ds, dividend.StockDividend{
-				ExDate:      ParseDateString(line[0]),
-				PaymentDate: ParseDateString(line[1]),
+				ExDate:      parseDateString(line[0]),
+				PaymentDate: parseDateString(line[1]),
 				Status:      status,
 				Amount:      a,
 			})
@@ -99,8 +99,8 @@ func (i *ImportStockDividend) Import() error {
 	return i.stockService.UpdateStockDividends(stk)
 }
 
-// ParseDateString - parse a potentially partial date string to Time
-func ParseDateString(dt string) time.Time {
+// parseDateString - parse a potentially partial date string to Time
+func parseDateString(dt string) time.Time {
 	if dt == "" {
 		return time.Now()
 	}

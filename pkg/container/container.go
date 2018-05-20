@@ -17,9 +17,10 @@ type Container struct {
 	db     *sqlx.DB
 	config *config.Specification
 
-	marketFinder   market.Finder
-	exchangeFinder exchange.Finder
-	stockFinder    stock.Finder
+	marketFinder        market.Finder
+	exchangeFinder      exchange.Finder
+	stockFinder         stock.Finder
+	stockDividendFinder dividend.Finder
 
 	stockPersister         stock.Persister
 	stockDividendPersister dividend.Persister
@@ -63,6 +64,14 @@ func (c *Container) StockFinderInstance() stock.Finder {
 	return c.stockFinder
 }
 
+func (c *Container) StockDividendFinderInstance() dividend.Finder {
+	if c.stockDividendFinder == nil {
+		c.stockDividendFinder = storage.NewStockDividendFinder(c.db)
+	}
+
+	return c.stockDividendFinder
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // PERSISTER
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +100,7 @@ func (c *Container) StockServiceInstance() *stock.Service {
 			c.StockPersisterInstance(),
 			c.StockFinderInstance(),
 			c.StockDividendPersisterInstance(),
+			c.StockDividendFinderInstance(),
 		)
 	}
 

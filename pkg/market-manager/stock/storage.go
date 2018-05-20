@@ -9,5 +9,6 @@ type (
 	Persister interface {
 		PersistAll(ss []*Stock) error
 		UpdatePrice(s *Stock) error
+		UpdateDividendYield(s *Stock) error
 	}
 )

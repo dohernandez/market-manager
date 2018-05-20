@@ -2,6 +2,8 @@ package storage
 
 import (
 	"database/sql"
+	"strconv"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -13,9 +15,23 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/stock/dividend"
 )
 
-type stockDividendFinder struct {
-	db sqlx.Queryer
-}
+type (
+	stockDividendFinder struct {
+		db sqlx.Queryer
+	}
+
+	dividendTuple struct {
+		StockID            uuid.UUID `db:"stock_id"`
+		ExDate             string    `db:"ex_date"`
+		PaymentDate        string    `db:"payment_date"`
+		RecordDate         string    `db:"record_date"`
+		Status             string    `db:"status"`
+		Amount             string    `db:"amount"`
+		ChangeFromPrev     string    `db:"change_from_prev"`
+		ChangeFromPrevYear string    `db:"change_from_prev_year"`
+		Prior12MonthsYield string    `db:"prior_12_months_yield"`
+	}
+)
 
 func NewStockDividendFinder(db sqlx.Queryer) *stockDividendFinder {
 	return &stockDividendFinder{
@@ -38,4 +54,40 @@ func (f *stockDividendFinder) FindAllFormStock(stockID uuid.UUID) ([]dividend.St
 	}
 
 	return ds, nil
+}
+
+func (f *stockDividendFinder) FindNextFromStock(stockID uuid.UUID, dt time.Time) (dividend.StockDividend, error) {
+	var tuple dividendTuple
+
+	query := `
+		SELECT *
+		FROM stock_dividend
+		WHERE stock_id = $1
+		AND ex_date >= $2 
+	`
+
+	err := sqlx.Get(f.db, &tuple, query, stockID, dt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return dividend.StockDividend{}, mm.ErrNotFound
+		}
+
+		return dividend.StockDividend{}, errors.Wrap(err, "Select stock by symbol")
+	}
+
+	a, _ := strconv.ParseFloat(tuple.Amount, 64)
+	cfp, _ := strconv.ParseFloat(tuple.ChangeFromPrev, 64)
+	cfpy, _ := strconv.ParseFloat(tuple.ChangeFromPrevYear, 64)
+	p12my, _ := strconv.ParseFloat(tuple.Prior12MonthsYield, 64)
+
+	return dividend.StockDividend{
+		ExDate:             parseDateString(tuple.ExDate),
+		PaymentDate:        parseDateString(tuple.ExDate),
+		RecordDate:         parseDateString(tuple.ExDate),
+		Status:             dividend.Status(tuple.Status),
+		Amount:             a,
+		ChangeFromPrev:     cfp,
+		ChangeFromPrevYear: cfpy,
+		Prior12MonthsYield: p12my,
+	}, nil
 }

@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"strconv"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -15,10 +16,11 @@ import (
 
 type (
 	stockTuple struct {
-		ID     uuid.UUID
-		Name   string
-		Symbol string
-		Value  string
+		ID            uuid.UUID
+		Name          string
+		Symbol        string
+		Value         string
+		DividendYield string `db:"dividend_yield"`
 
 		MarketID          uuid.UUID `db:"market_id"`
 		MarketName        string    `db:"market_name"`
@@ -27,18 +29,6 @@ type (
 		ExchangeID     uuid.UUID `db:"exchange_id"`
 		ExchangeName   string    `db:"exchange_name"`
 		ExchangeSymbol string    `db:"exchange_symbol"`
-	}
-
-	dividendTuple struct {
-		StockID            uuid.UUID `db:"stock_id"`
-		ExDate             string    `db:"ex_date"`
-		PaymentDate        string    `db:"payment_date"`
-		RecordDate         string    `db:"record_date"`
-		Status             string    `db:"status"`
-		Amount             string    `db:"amount"`
-		ChangeFromPrev     string    `db:"change_from_prev"`
-		ChangeFromPrevYear string    `db:"change_from_prev_year"`
-		Prior12MonthsYield string    `db:"prior_12_months_yield"`
 	}
 
 	stockFinder struct {
@@ -57,7 +47,7 @@ func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 
 	query := `
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value,
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -77,6 +67,9 @@ func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 	var ss []*stock.Stock
 
 	for _, s := range tuples {
+		dy, _ := strconv.ParseFloat(s.DividendYield, 64)
+		v, _ := strconv.ParseFloat(s.Value, 64)
+
 		ss = append(ss, &stock.Stock{
 			ID: s.ID,
 			Market: &market.Market{
@@ -89,8 +82,10 @@ func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 				Name:   s.ExchangeName,
 				Symbol: s.ExchangeSymbol,
 			},
-			Name:   s.Name,
-			Symbol: s.Symbol,
+			Name:          s.Name,
+			Symbol:        s.Symbol,
+			Value:         mm.Value{Amount: v},
+			DividendYield: dy,
 		})
 	}
 
@@ -102,7 +97,7 @@ func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
 
 	query := `
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value,
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -120,6 +115,9 @@ func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
 		return nil, errors.Wrap(err, "Select stock by symbol")
 	}
 
+	dy, _ := strconv.ParseFloat(tuple.DividendYield, 64)
+	v, _ := strconv.ParseFloat(tuple.Value, 64)
+
 	return &stock.Stock{
 		ID: tuple.ID,
 		Market: &market.Market{
@@ -132,7 +130,9 @@ func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
 			Name:   tuple.ExchangeName,
 			Symbol: tuple.ExchangeSymbol,
 		},
-		Name:   tuple.Name,
-		Symbol: tuple.Symbol,
+		Name:          tuple.Name,
+		Symbol:        tuple.Symbol,
+		Value:         mm.Value{Amount: v},
+		DividendYield: dy,
 	}, nil
 }
