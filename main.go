@@ -97,7 +97,7 @@ func main() {
 							Name:      "quote",
 							Aliases:   []string{"s"},
 							Usage:     "Import stock from csv file",
-							Action:    importCommand.RunImportQuote,
+							Action:    importCommand.Quote,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -110,7 +110,7 @@ func main() {
 							Name:      "dividend",
 							Aliases:   []string{"s"},
 							Usage:     "Import stock from csv file",
-							Action:    importCommand.RunImportDividend,
+							Action:    importCommand.Dividend,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

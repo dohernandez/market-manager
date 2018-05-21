@@ -27,8 +27,8 @@ func NewImportCommand(baseCommand *BaseCommand) *ImportCommand {
 	}
 }
 
-// RunImportQuote runs the application import data
-func (cmd *ImportCommand) RunImportQuote(cliCtx *cli.Context) error {
+// Quote runs the application import data
+func (cmd *ImportCommand) Quote(cliCtx *cli.Context) error {
 	if cliCtx.String("file") == "" {
 		logger.FromContext(context.TODO()).Fatal("Please specify the import file: market-manager [type] [file]")
 	}
@@ -61,8 +61,8 @@ func (cmd *ImportCommand) RunImportQuote(cliCtx *cli.Context) error {
 	return nil
 }
 
-// RunImportDividend runs the application import data
-func (cmd *ImportCommand) RunImportDividend(cliCtx *cli.Context) error {
+// Dividend runs the application import data
+func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 	if cliCtx.String("stock") == "" {
 		logger.FromContext(context.TODO()).Fatal("Please specify the stock: market-manager stocks import dividend [stock]")
 	}
