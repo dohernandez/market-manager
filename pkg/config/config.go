@@ -18,6 +18,10 @@ type Specification struct {
 		BaseURL string `envconfig:"HTTP_BASE_URL"`
 		Port    int    `envconfig:"HTTP_PORT" default:"8000"`
 	}
+	QUOTE struct {
+		StocksPath    string `envconfig:"STOCKS_PATH" default:"resources/import/stocks"`
+		DividendsPath string `envconfig:"DIVIDENDS_PATH" default:"resources/import/dividends"`
+	}
 }
 
 // LoadEnv load config variables into Specification.

@@ -84,34 +84,48 @@ func main() {
 			},
 		},
 		{
-			Name:      "stocks",
-			Aliases:   []string{"s"},
-			Usage:     "Add/Update stock values",
-			Action:    stocksCommand.Run,
-			ArgsUsage: "",
+			Name:    "stocks",
+			Aliases: []string{"s"},
+			Usage:   "Add/Update stock values",
 			Subcommands: []cli.Command{
 				{
-					Name:      "import",
-					Aliases:   []string{"i"},
-					Usage:     "Import stock from csv file",
-					Action:    importCommand.Run,
-					ArgsUsage: "",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "type, t",
-							Usage: "Type of import",
+					Name:    "import",
+					Aliases: []string{"i"},
+					Usage:   "Import stock from csv file",
+					Subcommands: []cli.Command{
+						{
+							Name:      "quote",
+							Aliases:   []string{"s"},
+							Usage:     "Import stock from csv file",
+							Action:    importCommand.RunImportQuote,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to import",
+								},
+							},
 						},
-						cli.StringFlag{
-							Name:  "file, f",
-							Usage: "csv file to import",
-						},
-						cli.StringFlag{
-							Name:  "stock, s",
-							Usage: "Stock symbol(tricker) to update dividend",
-						},
-						cli.StringFlag{
-							Name:  "status, st",
-							Usage: "Dividend status [payed, projected]",
+						{
+							Name:      "dividend",
+							Aliases:   []string{"s"},
+							Usage:     "Import stock from csv file",
+							Action:    importCommand.RunImportDividend,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to import",
+								},
+								cli.StringFlag{
+									Name:  "stock, s",
+									Usage: "Stock symbol (tricker) to update dividend.",
+								},
+								cli.StringFlag{
+									Name:  "status, st",
+									Usage: "Dividend status [payed, projected]. Default: payed",
+								},
+							},
 						},
 					},
 				},

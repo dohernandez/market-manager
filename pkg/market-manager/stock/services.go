@@ -171,7 +171,7 @@ func (s *Service) updateStockDividendYield(stk *Stock) error {
 		return errors.New("stock value is 0 or less that 0")
 	}
 
-	stk.DividendYield = d.Amount * 4 / stk.Value.Amount
+	stk.DividendYield = d.Amount * 4 / stk.Value.Amount * 100
 
 	return s.stockPersister.UpdateDividendYield(stk)
 }

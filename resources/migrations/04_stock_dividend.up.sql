@@ -7,10 +7,10 @@ CREATE TABLE stock_dividend  (
     payment_date timestamp,
     record_date timestamp,
     status dstatus DEFAULT 'projected',
-    amount FLOAT DEFAULT 0,
-    change_from_prev FLOAT DEFAULT 0,
-    change_from_prev_year FLOAT DEFAULT 0,
-    prior_12_months_yield FLOAT DEFAULT 0,
+    amount NUMERIC(7, 4) DEFAULT 0,
+    change_from_prev NUMERIC(7, 2) DEFAULT 0,
+    change_from_prev_year NUMERIC(7, 2) DEFAULT 0,
+    prior_12_months_yield NUMERIC(7, 2) DEFAULT 0,
     UNIQUE (stock_id, ex_date)
 );
 
