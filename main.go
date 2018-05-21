@@ -127,6 +127,19 @@ func main() {
 								},
 							},
 						},
+						{
+							Name:      "account",
+							Aliases:   []string{"a"},
+							Usage:     "Import account transaction from csv file",
+							Action:    importCommand.Account,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to import",
+								},
+							},
+						},
 					},
 				},
 				{

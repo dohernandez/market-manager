@@ -4,6 +4,7 @@ type (
 	Finder interface {
 		FindAll() ([]*Stock, error)
 		FindBySymbol(symbol string) (*Stock, error)
+		FindByName(name string) (*Stock, error)
 	}
 
 	Persister interface {

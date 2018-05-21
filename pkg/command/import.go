@@ -111,3 +111,36 @@ func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 
 	return nil
 }
+
+func (cmd *ImportCommand) Account(cliCtx *cli.Context) error {
+	if cliCtx.String("file") == "" {
+		logger.FromContext(context.TODO()).Fatal("Please specify the import file: market-manager [type] [file]")
+	}
+
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	// Database connection
+	logger.FromContext(ctx).Info("Initializing database connection")
+	db, err := cmd.initDatabaseConnection()
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
+	}
+
+	c := cmd.Container(db)
+
+	file := fmt.Sprintf("%s/account.csv", cmd.config.QUOTE.StocksPath)
+	r := _import.NewCsvReader(file)
+	i := _import.NewImportAccount(ctx, r, c.StockServiceInstance(), c.AccountServiceInstance())
+
+	err = i.Import()
+	if err != nil {
+		logger.FromContext(context.TODO()).WithError(err).Error("Failed importing")
+
+		return err
+	}
+
+	logger.FromContext(ctx).Info("Import finished")
+
+	return nil
+}

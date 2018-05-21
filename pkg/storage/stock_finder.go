@@ -67,29 +67,33 @@ func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 	var ss []*stock.Stock
 
 	for _, s := range tuples {
-		dy, _ := strconv.ParseFloat(s.DividendYield, 64)
-		v, _ := strconv.ParseFloat(s.Value, 64)
-
-		ss = append(ss, &stock.Stock{
-			ID: s.ID,
-			Market: &market.Market{
-				ID:          s.MarketID,
-				Name:        s.MarketName,
-				DisplayName: s.MarketDisplayName,
-			},
-			Exchange: &exchange.Exchange{
-				ID:     s.ExchangeID,
-				Name:   s.ExchangeName,
-				Symbol: s.ExchangeSymbol,
-			},
-			Name:          s.Name,
-			Symbol:        s.Symbol,
-			Value:         mm.Value{Amount: v},
-			DividendYield: dy,
-		})
+		ss = append(ss, f.hydrate(&s))
 	}
 
 	return ss, nil
+}
+
+func (f *stockFinder) hydrate(s *stockTuple) *stock.Stock {
+	dy, _ := strconv.ParseFloat(s.DividendYield, 64)
+	v, _ := strconv.ParseFloat(s.Value, 64)
+
+	return &stock.Stock{
+		ID: s.ID,
+		Market: &market.Market{
+			ID:          s.MarketID,
+			Name:        s.MarketName,
+			DisplayName: s.MarketDisplayName,
+		},
+		Exchange: &exchange.Exchange{
+			ID:     s.ExchangeID,
+			Name:   s.ExchangeName,
+			Symbol: s.ExchangeSymbol,
+		},
+		Name:          s.Name,
+		Symbol:        s.Symbol,
+		Value:         mm.Value{Amount: v},
+		DividendYield: dy,
+	}
 }
 
 func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
@@ -115,24 +119,31 @@ func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
 		return nil, errors.Wrap(err, "Select stock by symbol")
 	}
 
-	dy, _ := strconv.ParseFloat(tuple.DividendYield, 64)
-	v, _ := strconv.ParseFloat(tuple.Value, 64)
+	return f.hydrate(&tuple), nil
+}
 
-	return &stock.Stock{
-		ID: tuple.ID,
-		Market: &market.Market{
-			ID:          tuple.MarketID,
-			Name:        tuple.MarketName,
-			DisplayName: tuple.MarketDisplayName,
-		},
-		Exchange: &exchange.Exchange{
-			ID:     tuple.ExchangeID,
-			Name:   tuple.ExchangeName,
-			Symbol: tuple.ExchangeSymbol,
-		},
-		Name:          tuple.Name,
-		Symbol:        tuple.Symbol,
-		Value:         mm.Value{Amount: v},
-		DividendYield: dy,
-	}, nil
+func (f *stockFinder) FindByName(name string) (*stock.Stock, error) {
+	var tuple stockTuple
+
+	query := `
+		SELECT 
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield,
+			m.name AS market_name, m.display_name AS market_display_name,
+			e.name AS exchange_name, e.symbol AS exchange_symbol
+		FROM stock s 
+		INNER JOIN market m ON s.market_id = m.id
+		INNER JOIN exchange e ON s.exchange_id = e.id
+		WHERE s.name LIKE upper($1)
+	`
+
+	err := sqlx.Get(f.db, &tuple, query, name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, mm.ErrNotFound
+		}
+
+		return nil, errors.Wrap(err, "Select stock by name")
+	}
+
+	return f.hydrate(&tuple), nil
 }

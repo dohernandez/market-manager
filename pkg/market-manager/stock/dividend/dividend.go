@@ -3,7 +3,6 @@ package dividend
 import "time"
 
 type (
-	// Period - for quote history
 	Status string
 
 	StockDividend struct {

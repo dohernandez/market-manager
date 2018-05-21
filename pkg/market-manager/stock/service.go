@@ -33,16 +33,20 @@ func NewService(stockPersister Persister, stockFinder Finder, stockDividendPersi
 	}
 }
 
+func (s *Service) SaveAll(stks []*Stock) error {
+	return s.stockPersister.PersistAll(stks)
+}
+
 func (s *Service) FindStockBySymbol(symbol string) (*Stock, error) {
 	return s.stockFinder.FindBySymbol(symbol)
 }
 
-func (s *Service) Stocks() ([]*Stock, error) {
-	return s.stockFinder.FindAll()
+func (s *Service) FindStockByName(name string) (*Stock, error) {
+	return s.stockFinder.FindByName(name)
 }
 
-func (s *Service) SaveAll(stks []*Stock) error {
-	return s.stockPersister.PersistAll(stks)
+func (s *Service) Stocks() ([]*Stock, error) {
+	return s.stockFinder.FindAll()
 }
 
 func (s *Service) GetLastClosedPriceFromGoogle(stk *Stock) (Price, error) {

@@ -11,7 +11,5 @@ CREATE TABLE stock_dividend  (
     change_from_prev NUMERIC(7, 2) DEFAULT 0,
     change_from_prev_year NUMERIC(7, 2) DEFAULT 0,
     prior_12_months_yield NUMERIC(7, 2) DEFAULT 0,
-    UNIQUE (stock_id, ex_date)
+    PRIMARY KEY (stock_id, ex_date)
 );
-
-CREATE INDEX stock_dividend_stock_id_date_idx ON stock_dividend (stock_id, ex_date);

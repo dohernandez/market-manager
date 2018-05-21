@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dohernandez/market-manager/pkg/config"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/market"
 	"github.com/dohernandez/market-manager/pkg/market-manager/stock"
@@ -24,8 +25,10 @@ type Container struct {
 
 	stockPersister         stock.Persister
 	stockDividendPersister dividend.Persister
+	accountPersister       account.Persister
 
-	stockService *stock.Service
+	stockService   *stock.Service
+	accountService *account.Service
 }
 
 func NewContainer(ctx context.Context, db *sqlx.DB, config *config.Specification) *Container {
@@ -91,6 +94,14 @@ func (c *Container) StockDividendPersisterInstance() dividend.Persister {
 	return c.stockDividendPersister
 }
 
+func (c *Container) AccountPersisterInstance() account.Persister {
+	if c.accountPersister == nil {
+		c.accountPersister = storage.NewAccountPersister(c.db)
+	}
+
+	return c.accountPersister
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SERVICE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,4 +116,14 @@ func (c *Container) StockServiceInstance() *stock.Service {
 	}
 
 	return c.stockService
+}
+
+func (c *Container) AccountServiceInstance() *account.Service {
+	if c.accountService == nil {
+		c.accountService = account.NewService(
+			c.AccountPersisterInstance(),
+		)
+	}
+
+	return c.accountService
 }
