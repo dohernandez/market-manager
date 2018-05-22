@@ -133,7 +133,7 @@ func (f *stockFinder) FindByName(name string) (*stock.Stock, error) {
 		FROM stock s 
 		INNER JOIN market m ON s.market_id = m.id
 		INNER JOIN exchange e ON s.exchange_id = e.id
-		WHERE s.name LIKE upper($1)
+		WHERE s.name LIKE $1
 	`
 
 	err := sqlx.Get(f.db, &tuple, query, name)

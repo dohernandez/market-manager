@@ -1,2 +1,2 @@
 DROP TABLE IF EXISTS stock_dividend;
-DROP TYPE IF EXISTS dstatus;
+DROP TYPE IF EXISTS doperation;

@@ -8,10 +8,15 @@ import (
 
 	"strconv"
 
+	"strings"
+
+	"fmt"
+
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/stock"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -52,29 +57,27 @@ func (i *ImportAccount) Import() error {
 			logger.FromContext(i.ctx).Fatal(err)
 		}
 
-		s, err := i.stockService.FindStockByName(line[2])
+		operation, err := i.parseOperationString(line[3])
 		if err != nil {
 			return err
 		}
 
+		s := &stock.Stock{}
+		if operation != account.Connectivity && operation != account.Interest {
+			s, err = i.stockService.FindStockByName(line[2])
+			if err != nil {
+				return errors.New(fmt.Sprintf("%s: %s", line[2], err.Error()))
+			}
+		}
+
 		date := i.parseDateString(line[1])
-		operation := account.Operation(line[3])
 		amount, _ := strconv.Atoi(line[4])
 
-		pf, _ := strconv.ParseFloat(line[5], 64)
-		price := mm.Value{Amount: pf}
-
-		pf, _ = strconv.ParseFloat(line[6], 64)
-		priceChange := mm.Value{Amount: pf}
-
-		pf, _ = strconv.ParseFloat(line[7], 64)
-		priceChangeCommission := mm.Value{Amount: pf}
-
-		pf, _ = strconv.ParseFloat(line[8], 64)
-		value := mm.Value{Amount: pf}
-
-		pf, _ = strconv.ParseFloat(line[9], 64)
-		commission := mm.Value{Amount: pf}
+		price := mm.Value{Amount: i.parsePriceString(line[5])}
+		priceChange := mm.Value{Amount: i.parsePriceString(line[6])}
+		priceChangeCommission := mm.Value{Amount: i.parsePriceString(line[7])}
+		value := mm.Value{Amount: i.parsePriceString(line[8])}
+		commission := mm.Value{Amount: i.parsePriceString(line[9])}
 
 		a := account.NewAccount(date, s, operation, amount, price, priceChange, priceChangeCommission, value, commission)
 
@@ -93,4 +96,35 @@ func (i *ImportAccount) parseDateString(dt string) time.Time {
 	t, _ := time.Parse("2/1/2006", dt)
 
 	return t
+}
+
+// parseOperationString - parse a potentially partial date string to Time
+func (i *ImportAccount) parseOperationString(operation string) (account.Operation, error) {
+	if operation == "" {
+		return account.Operation(""), errors.New("operation can not be empty")
+	}
+
+	switch operation {
+	case "Compra":
+		return account.Buy, nil
+	case "Venta":
+		return account.Sell, nil
+	case "Conectividad":
+		return account.Connectivity, nil
+	case "Dividendo":
+		return account.Dividend, nil
+	case "Interés":
+		return account.Interest, nil
+	}
+
+	return account.Operation(""), errors.New("operation not valid")
+}
+
+// parseDateString - parse a potentially partial date string to Time
+func (i *ImportAccount) parsePriceString(price string) float64 {
+	price = strings.Replace(price, ",", ".", 1)
+
+	p, _ := strconv.ParseFloat(price, 64)
+
+	return p
 }

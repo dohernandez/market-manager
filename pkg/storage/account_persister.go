@@ -33,7 +33,7 @@ func (p *accountPersister) PersistAll(as []*account.Account) error {
 func (p *accountPersister) execInsert(tx *sqlx.Tx, a *account.Account) error {
 	query := `
 		INSERT INTO account(
-			id
+			id,
 			date, 
 			stock_id, 
 			operation, 

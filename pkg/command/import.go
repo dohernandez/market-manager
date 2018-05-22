@@ -113,10 +113,6 @@ func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 }
 
 func (cmd *ImportCommand) Account(cliCtx *cli.Context) error {
-	if cliCtx.String("file") == "" {
-		logger.FromContext(context.TODO()).Fatal("Please specify the import file: market-manager [type] [file]")
-	}
-
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -129,7 +125,11 @@ func (cmd *ImportCommand) Account(cliCtx *cli.Context) error {
 
 	c := cmd.Container(db)
 
-	file := fmt.Sprintf("%s/account.csv", cmd.config.QUOTE.StocksPath)
+	file := cliCtx.String("file")
+	if cliCtx.String("file") == "" {
+		file = fmt.Sprintf("%s/account.csv", cmd.config.QUOTE.StocksPath)
+	}
+
 	r := _import.NewCsvReader(file)
 	i := _import.NewImportAccount(ctx, r, c.StockServiceInstance(), c.AccountServiceInstance())
 
