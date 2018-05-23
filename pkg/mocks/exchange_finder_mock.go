@@ -1,8 +1,9 @@
 package mocks
 
 import (
-	"github.com/dohernandez/market-manager/pkg/market-manager/exchange"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 )
 
 type ExchangeFinderMock struct {

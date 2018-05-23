@@ -6,9 +6,10 @@ import (
 
 	"fmt"
 
+	"github.com/urfave/cli"
+
 	"github.com/dohernandez/market-manager/pkg/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/logger"
-	"github.com/urfave/cli"
 )
 
 // ApiCommand ...
@@ -37,7 +38,7 @@ func (cmd *ApiCommand) Run(cliCtx *cli.Context) error {
 
 	c := cmd.Container(db)
 
-	stockService := c.StockServiceInstance()
+	stockService := c.PurchaseServiceInstance()
 	stks, err := stockService.Stocks()
 	if err != nil {
 		fmt.Printf("%+v\n", err)

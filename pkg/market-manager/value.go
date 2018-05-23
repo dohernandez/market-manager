@@ -13,3 +13,17 @@ const (
 	Euro   Currency = "€"
 	Dollar          = "$"
 )
+
+func (v *Value) Increase(a Value) Value {
+	nv := Value{}
+	nv.Amount = v.Amount + a.Amount
+
+	return nv
+}
+
+func (v *Value) Decrease(a Value) Value {
+	nv := Value{}
+	nv.Amount = v.Amount - a.Amount
+
+	return nv
+}

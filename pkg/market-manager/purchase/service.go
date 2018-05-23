@@ -1,4 +1,4 @@
-package stock
+package purchase
 
 import (
 	"context"
@@ -7,49 +7,72 @@ import (
 
 	"fmt"
 
-	quote "github.com/dohernandez/go-quote"
-	gf "github.com/dohernandez/googlefinance-client-go"
 	"github.com/pkg/errors"
 
+	quote "github.com/dohernandez/go-quote"
+	gf "github.com/dohernandez/googlefinance-client-go"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/stock/dividend"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type (
 	Service struct {
-		stockPersister         Persister
+		stockPersister         stock.Persister
 		stockDividendPersister dividend.Persister
-		stockFinder            Finder
+		stockFinder            stock.Finder
 		stockDividendFinder    dividend.Finder
+		marketFinder           market.Finder
+		exchangeFinder         exchange.Finder
 	}
 )
 
-func NewService(stockPersister Persister, stockFinder Finder, stockDividendPersister dividend.Persister, stockDividendFinder dividend.Finder) *Service {
+func NewService(
+	stockPersister stock.Persister,
+	stockFinder stock.Finder,
+	stockDividendPersister dividend.Persister,
+	stockDividendFinder dividend.Finder,
+	marketFinder market.Finder,
+	exchangeFinder exchange.Finder,
+) *Service {
 	return &Service{
 		stockPersister:         stockPersister,
 		stockFinder:            stockFinder,
 		stockDividendPersister: stockDividendPersister,
 		stockDividendFinder:    stockDividendFinder,
+		marketFinder:           marketFinder,
+		exchangeFinder:         exchangeFinder,
 	}
 }
 
-func (s *Service) SaveAll(stks []*Stock) error {
+func (s *Service) FindMarketByName(name string) (*market.Market, error) {
+	return s.marketFinder.FindByName(name)
+}
+
+func (s *Service) FindExchangeBySymbol(symbol string) (*exchange.Exchange, error) {
+	return s.exchangeFinder.FindBySymbol(symbol)
+}
+
+func (s *Service) SaveAllStocks(stks []*stock.Stock) error {
 	return s.stockPersister.PersistAll(stks)
 }
 
-func (s *Service) FindStockBySymbol(symbol string) (*Stock, error) {
+func (s *Service) FindStockBySymbol(symbol string) (*stock.Stock, error) {
 	return s.stockFinder.FindBySymbol(symbol)
 }
 
-func (s *Service) FindStockByName(name string) (*Stock, error) {
+func (s *Service) FindStockByName(name string) (*stock.Stock, error) {
 	return s.stockFinder.FindByName(name)
 }
 
-func (s *Service) Stocks() ([]*Stock, error) {
+func (s *Service) Stocks() ([]*stock.Stock, error) {
 	return s.stockFinder.FindAll()
 }
 
-func (s *Service) GetLastClosedPriceFromGoogle(stk *Stock) (Price, error) {
+func (s *Service) GetLastClosedPriceFromGoogle(stk *stock.Stock) (stock.Price, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -60,16 +83,16 @@ func (s *Service) GetLastClosedPriceFromGoogle(stk *Stock) (Price, error) {
 		Q: stk.Symbol,
 	})
 	if err != nil {
-		return Price{}, err
+		return stock.Price{}, err
 	}
 
 	if len(gps) == 0 {
-		return Price{}, errors.New(fmt.Sprintf("symbol '%s' not found\n", stk.Symbol))
+		return stock.Price{}, errors.New(fmt.Sprintf("symbol '%s' not found\n", stk.Symbol))
 	}
 
 	p := gps[len(gps)-1]
 
-	return Price{
+	return stock.Price{
 		Date:   p.Date,
 		Close:  p.Close,
 		High:   p.High,
@@ -79,16 +102,16 @@ func (s *Service) GetLastClosedPriceFromGoogle(stk *Stock) (Price, error) {
 	}, nil
 }
 
-func (s *Service) GetLastClosedPriceFromYahoo(stk *Stock) (Price, error) {
+func (s *Service) GetLastClosedPriceFromYahoo(stk *stock.Stock) (stock.Price, error) {
 	endDate := time.Now()
 	startDate := endDate.Add(-24 * time.Hour)
 
 	q, err := quote.NewQuoteFromYahoo(stk.Symbol, startDate.Format("2006-01-02"), endDate.Format("2006-01-02"), quote.Daily, true)
 	if err != nil {
-		return Price{}, err
+		return stock.Price{}, err
 	}
 
-	return Price{
+	return stock.Price{
 		Date:   q.Date[0],
 		Close:  q.Close[0],
 		High:   q.High[0],
@@ -98,7 +121,7 @@ func (s *Service) GetLastClosedPriceFromYahoo(stk *Stock) (Price, error) {
 	}, nil
 }
 
-func (s *Service) UpdateLastClosedPriceStocks(stks []*Stock) []error {
+func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 	var (
 		wg   sync.WaitGroup
 		errs []error
@@ -122,7 +145,7 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*Stock) []error {
 	return errs
 }
 
-func (s *Service) updateLastClosedPriceOfStock(stk *Stock) error {
+func (s *Service) updateLastClosedPriceOfStock(stk *stock.Stock) error {
 	p, err := s.GetLastClosedPriceFromYahoo(stk)
 	if err != nil {
 		p, err = s.GetLastClosedPriceFromGoogle(stk)
@@ -144,7 +167,7 @@ func (s *Service) updateLastClosedPriceOfStock(stk *Stock) error {
 	return s.stockPersister.UpdatePrice(stk)
 }
 
-func (s *Service) UpdateLastClosedPriceStock(stk *Stock) error {
+func (s *Service) UpdateLastClosedPriceStock(stk *stock.Stock) error {
 	if err := s.updateLastClosedPriceOfStock(stk); err != nil {
 		return err
 	}
@@ -152,7 +175,7 @@ func (s *Service) UpdateLastClosedPriceStock(stk *Stock) error {
 	return nil
 }
 
-func (s *Service) UpdateStockDividends(stk *Stock) error {
+func (s *Service) UpdateStockDividends(stk *stock.Stock) error {
 	err := s.stockDividendPersister.PersistAll(stk.ID, stk.Dividends)
 	if err != nil {
 		return err
@@ -161,7 +184,7 @@ func (s *Service) UpdateStockDividends(stk *Stock) error {
 	return s.updateStockDividendYield(stk)
 }
 
-func (s *Service) updateStockDividendYield(stk *Stock) error {
+func (s *Service) updateStockDividendYield(stk *stock.Stock) error {
 	d, err := s.stockDividendFinder.FindNextFromStock(stk.ID, time.Now())
 	if err != nil {
 		if err != mm.ErrNotFound {

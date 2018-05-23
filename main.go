@@ -84,9 +84,9 @@ func main() {
 			},
 		},
 		{
-			Name:    "stocks",
-			Aliases: []string{"s"},
-			Usage:   "Add/Update stock values",
+			Name:    "market",
+			Aliases: []string{"m"},
+			Usage:   "Add/Update market values",
 			Subcommands: []cli.Command{
 				{
 					Name:    "import",
@@ -95,8 +95,8 @@ func main() {
 					Subcommands: []cli.Command{
 						{
 							Name:      "quote",
-							Aliases:   []string{"s"},
-							Usage:     "Import stock from csv file",
+							Aliases:   []string{"q"},
+							Usage:     "Import market stock from csv file",
 							Action:    importCommand.Quote,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
@@ -109,7 +109,7 @@ func main() {
 						{
 							Name:      "dividend",
 							Aliases:   []string{"s"},
-							Usage:     "Import stock from csv file",
+							Usage:     "Import market stock dividend from csv file",
 							Action:    importCommand.Dividend,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
@@ -124,19 +124,6 @@ func main() {
 								cli.StringFlag{
 									Name:  "status, st",
 									Usage: "Dividend status [payed, projected]. Default: payed",
-								},
-							},
-						},
-						{
-							Name:      "account",
-							Aliases:   []string{"a"},
-							Usage:     "Import account transaction from csv file",
-							Action:    importCommand.Account,
-							ArgsUsage: "",
-							Flags: []cli.Flag{
-								cli.StringFlag{
-									Name:  "file, f",
-									Usage: "csv file to import",
 								},
 							},
 						},
@@ -167,6 +154,19 @@ func main() {
 							Usage: "Stock symbol(tricker) to update price",
 						},
 					},
+				},
+			},
+		},
+		{
+			Name:      "account",
+			Aliases:   []string{"a"},
+			Usage:     "Import account transaction from csv file",
+			Action:    importCommand.Account,
+			ArgsUsage: "",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "file, f",
+					Usage: "csv file to import",
 				},
 			},
 		},

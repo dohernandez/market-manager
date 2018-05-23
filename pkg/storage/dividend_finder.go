@@ -12,7 +12,7 @@ import (
 	"fmt"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/stock/dividend"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type (

@@ -6,9 +6,9 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/exchange"
-	"github.com/dohernandez/market-manager/pkg/market-manager/market"
-	"github.com/dohernandez/market-manager/pkg/market-manager/stock/dividend"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type (

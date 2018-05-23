@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/exchange"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 )
 
 type exchangeFinder struct {

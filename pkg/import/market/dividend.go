@@ -1,4 +1,4 @@
-package _import
+package import_market
 
 import (
 	"context"
@@ -8,30 +8,32 @@ import (
 
 	"fmt"
 
-	"github.com/dohernandez/market-manager/pkg/logger"
-	"github.com/dohernandez/market-manager/pkg/market-manager/stock"
-	"github.com/dohernandez/market-manager/pkg/market-manager/stock/dividend"
 	"github.com/pkg/errors"
+
+	"github.com/dohernandez/market-manager/pkg/import"
+	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type (
 	ImportStockDividend struct {
 		ctx    context.Context
-		reader Reader
+		reader _import.Reader
 
-		stockService *stock.Service
+		purchaseService *purchase.Service
 	}
 )
 
 func NewImportStockDividend(
 	ctx context.Context,
-	reader Reader,
-	stockService *stock.Service,
+	reader _import.Reader,
+	purchaseService *purchase.Service,
 ) *ImportStockDividend {
 	return &ImportStockDividend{
-		ctx:          ctx,
-		reader:       reader,
-		stockService: stockService,
+		ctx:             ctx,
+		reader:          reader,
+		purchaseService: purchaseService,
 	}
 }
 
@@ -44,7 +46,7 @@ func (i *ImportStockDividend) Import() error {
 		return errors.New("Stock symbol not defined")
 	}
 
-	stk, err := i.stockService.FindStockBySymbol(symbol)
+	stk, err := i.purchaseService.FindStockBySymbol(symbol)
 	if err != nil {
 		return errors.New(fmt.Sprintf("%s [symbol %s]", err.Error(), symbol))
 	}
@@ -96,7 +98,7 @@ func (i *ImportStockDividend) Import() error {
 
 	stk.Dividends = ds
 
-	return i.stockService.UpdateStockDividends(stk)
+	return i.purchaseService.UpdateStockDividends(stk)
 }
 
 // parseDateString - parse a potentially partial date string to Time

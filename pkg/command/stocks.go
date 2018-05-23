@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/urfave/cli"
+
+	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
 // StocksCommand ...
@@ -39,7 +40,7 @@ func (cmd *StocksCommand) Price(cliCtx *cli.Context) error {
 
 	c := cmd.Container(db)
 
-	stockService := c.StockServiceInstance()
+	stockService := c.PurchaseServiceInstance()
 
 	if cliCtx.String("stock") == "" {
 		stocks, err := stockService.Stocks()
@@ -100,7 +101,7 @@ func (cmd *StocksCommand) Dividend(cliCtx *cli.Context) error {
 
 	c := cmd.Container(db)
 
-	stockService := c.StockServiceInstance()
+	stockService := c.PurchaseServiceInstance()
 
 	stk, err := stockService.FindStockBySymbol(cliCtx.String("stock"))
 	if err != nil {

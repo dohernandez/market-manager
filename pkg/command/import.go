@@ -2,16 +2,15 @@ package command
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/urfave/cli"
 
-	"errors"
-
-	"fmt"
-
-	"strings"
-
 	"github.com/dohernandez/market-manager/pkg/import"
+	"github.com/dohernandez/market-manager/pkg/import/account"
+	"github.com/dohernandez/market-manager/pkg/import/market"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
@@ -29,9 +28,6 @@ func NewImportCommand(baseCommand *BaseCommand) *ImportCommand {
 
 // Quote runs the application import data
 func (cmd *ImportCommand) Quote(cliCtx *cli.Context) error {
-	if cliCtx.String("file") == "" {
-		logger.FromContext(context.TODO()).Fatal("Please specify the import file: market-manager [type] [file]")
-	}
 
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
@@ -45,9 +41,13 @@ func (cmd *ImportCommand) Quote(cliCtx *cli.Context) error {
 
 	c := cmd.Container(db)
 
-	file := fmt.Sprintf("%s/stocks.csv", cmd.config.QUOTE.StocksPath)
+	file := cliCtx.String("file")
+	if cliCtx.String("file") == "" {
+		file = fmt.Sprintf("%s/stocks.csv", cmd.config.QUOTE.StocksPath)
+	}
+
 	r := _import.NewCsvReader(file)
-	i := _import.NewImportStock(ctx, r, c.MarketFinderInstance(), c.ExchangeFinderInstance(), c.StockServiceInstance())
+	i := import_market.NewImportStock(ctx, r, c.PurchaseServiceInstance())
 
 	err = i.Import()
 	if err != nil {
@@ -97,7 +97,7 @@ func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 		ctx = context.WithValue(ctx, "status", st)
 		file := fmt.Sprintf("%s/%s_%s.csv", cmd.config.QUOTE.DividendsPath, strings.ToLower(cliCtx.String("stock")), st)
 		r := _import.NewCsvReader(file)
-		i := _import.NewImportStockDividend(ctx, r, c.StockServiceInstance())
+		i := import_market.NewImportStockDividend(ctx, r, c.PurchaseServiceInstance())
 
 		err = i.Import()
 		if err != nil {
@@ -131,7 +131,7 @@ func (cmd *ImportCommand) Account(cliCtx *cli.Context) error {
 	}
 
 	r := _import.NewCsvReader(file)
-	i := _import.NewImportAccount(ctx, r, c.StockServiceInstance(), c.AccountServiceInstance())
+	i := import_account.NewImportAccount(ctx, r, c.PurchaseServiceInstance(), c.AccountServiceInstance())
 
 	err = i.Import()
 	if err != nil {

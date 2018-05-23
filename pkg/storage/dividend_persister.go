@@ -1,9 +1,10 @@
 package storage
 
 import (
-	"github.com/dohernandez/market-manager/pkg/market-manager/stock/dividend"
 	"github.com/jmoiron/sqlx"
 	"github.com/satori/go.uuid"
+
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type (

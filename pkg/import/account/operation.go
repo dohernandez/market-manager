@@ -1,4 +1,4 @@
-package _import
+package import_account
 
 import (
 	"context"
@@ -12,34 +12,38 @@ import (
 
 	"fmt"
 
+	"github.com/pkg/errors"
+
+	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
-	"github.com/dohernandez/market-manager/pkg/market-manager/stock"
-	"github.com/pkg/errors"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
 type (
 	ImportAccount struct {
 		ctx    context.Context
-		reader Reader
+		reader _import.Reader
 
-		stockService   *stock.Service
-		accountService *account.Service
+		purchaseService *purchase.Service
+		accountService  *account.Service
 	}
 )
 
 func NewImportAccount(
 	ctx context.Context,
-	reader Reader,
-	stockService *stock.Service,
+	reader _import.Reader,
+	purchaseService *purchase.Service,
 	accountService *account.Service,
 ) *ImportAccount {
 	return &ImportAccount{
-		ctx:            ctx,
-		reader:         reader,
-		stockService:   stockService,
-		accountService: accountService,
+		ctx:             ctx,
+		reader:          reader,
+		purchaseService: purchaseService,
+		accountService:  accountService,
 	}
 }
 
@@ -47,7 +51,7 @@ func (i *ImportAccount) Import() error {
 	i.reader.Open()
 	defer i.reader.Close()
 
-	var as []*account.Account
+	var os []*operation.Operation
 
 	for {
 		line, err := i.reader.ReadLine()
@@ -57,16 +61,16 @@ func (i *ImportAccount) Import() error {
 			logger.FromContext(i.ctx).Fatal(err)
 		}
 
-		operation, err := i.parseOperationString(line[3])
+		action, err := i.parseOperationString(line[3])
 		if err != nil {
 			return err
 		}
 
-		s := &stock.Stock{}
-		if operation != account.Connectivity && operation != account.Interest {
-			s, err = i.stockService.FindStockByName(line[2])
+		s := new(stock.Stock)
+		if action != operation.Connectivity && action != operation.Interest {
+			s, err = i.purchaseService.FindStockByName(line[2])
 			if err != nil {
-				return errors.New(fmt.Sprintf("%s: %s", line[2], err.Error()))
+				return errors.New(fmt.Sprintf("find stock %s: %s", line[2], err.Error()))
 			}
 		}
 
@@ -79,12 +83,12 @@ func (i *ImportAccount) Import() error {
 		value := mm.Value{Amount: i.parsePriceString(line[8])}
 		commission := mm.Value{Amount: i.parsePriceString(line[9])}
 
-		a := account.NewAccount(date, s, operation, amount, price, priceChange, priceChangeCommission, value, commission)
+		o := operation.NewOperation(date, s, action, amount, price, priceChange, priceChangeCommission, value, commission)
 
-		as = append(as, a)
+		os = append(os, o)
 	}
 
-	return i.accountService.SaveAll(as)
+	return i.accountService.SaveAllOperations(os)
 }
 
 // parseDateString - parse a potentially partial date string to Time
@@ -99,25 +103,25 @@ func (i *ImportAccount) parseDateString(dt string) time.Time {
 }
 
 // parseOperationString - parse a potentially partial date string to Time
-func (i *ImportAccount) parseOperationString(operation string) (account.Operation, error) {
-	if operation == "" {
-		return account.Operation(""), errors.New("operation can not be empty")
+func (i *ImportAccount) parseOperationString(o string) (operation.Action, error) {
+	if o == "" {
+		return operation.Action(""), errors.New("operation can not be empty")
 	}
 
-	switch operation {
+	switch o {
 	case "Compra":
-		return account.Buy, nil
+		return operation.Buy, nil
 	case "Venta":
-		return account.Sell, nil
+		return operation.Sell, nil
 	case "Conectividad":
-		return account.Connectivity, nil
+		return operation.Connectivity, nil
 	case "Dividendo":
-		return account.Dividend, nil
+		return operation.Dividend, nil
 	case "Interés":
-		return account.Interest, nil
+		return operation.Interest, nil
 	}
 
-	return account.Operation(""), errors.New("operation not valid")
+	return operation.Action(""), errors.New("operation not valid")
 }
 
 // parseDateString - parse a potentially partial date string to Time

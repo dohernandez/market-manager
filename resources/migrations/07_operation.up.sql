@@ -1,11 +1,11 @@
 -- Account Table
-CREATE TYPE doperation AS ENUM ('buy', 'sell', 'connectivity', 'dividend', 'interest');
+CREATE TYPE eaction AS ENUM ('buy', 'sell', 'connectivity', 'dividend', 'interest');
 
-CREATE TABLE account (
+CREATE TABLE operation (
     id UUID PRIMARY KEY NOT NULL,
     date timestamp NOT NULL,
     stock_id UUID,
-    operation doperation,
+    action eaction,
     amount INTEGER,
     price NUMERIC(7, 2) NOT NULL,
     price_change NUMERIC(7, 4),
@@ -14,4 +14,4 @@ CREATE TABLE account (
     commission NUMERIC(7, 2)
 );
 
-CREATE INDEX account_operation_idx ON account (operation);
+CREATE INDEX operation_type_idx ON operation (action);

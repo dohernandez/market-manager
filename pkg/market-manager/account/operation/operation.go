@@ -1,21 +1,21 @@
-package account
+package operation
 
 import (
 	"time"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/stock"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 	"github.com/satori/go.uuid"
 )
 
 type (
-	Operation string
+	Action string
 
-	Account struct {
+	Operation struct {
 		ID                    uuid.UUID
 		Date                  time.Time
 		Stock                 *stock.Stock
-		Operation             Operation
+		Action                Action
 		Amount                int
 		Price                 mm.Value
 		PriceChange           mm.Value
@@ -26,29 +26,29 @@ type (
 )
 
 const (
-	Buy          Operation = "buy"
-	Sell         Operation = "sell"
-	Connectivity Operation = "connectivity"
-	Dividend     Operation = "dividend"
-	Interest     Operation = "interest"
+	Buy          Action = "buy"
+	Sell         Action = "sell"
+	Connectivity Action = "connectivity"
+	Dividend     Action = "dividend"
+	Interest     Action = "interest"
 )
 
-func NewAccount(
+func NewOperation(
 	date time.Time,
 	stock *stock.Stock,
-	operation Operation,
+	action Action,
 	amount int,
 	price,
 	priceChange,
 	priceChangeCommission,
 	value,
 	commission mm.Value,
-) *Account {
-	return &Account{
+) *Operation {
+	return &Operation{
 		ID:                    uuid.NewV4(),
 		Date:                  date,
 		Stock:                 stock,
-		Operation:             operation,
+		Action:                action,
 		Amount:                amount,
 		Price:                 price,
 		PriceChange:           priceChange,

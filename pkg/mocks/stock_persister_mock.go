@@ -3,7 +3,7 @@ package mocks
 import (
 	"github.com/stretchr/testify/mock"
 
-	"github.com/dohernandez/market-manager/pkg/market-manager/stock"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
 type StockPersisterMock struct {

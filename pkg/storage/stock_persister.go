@@ -3,8 +3,9 @@ package storage
 import (
 	"time"
 
-	"github.com/dohernandez/market-manager/pkg/market-manager/stock"
 	"github.com/jmoiron/sqlx"
+
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
 type (
