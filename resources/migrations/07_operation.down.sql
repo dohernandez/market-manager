@@ -1,3 +1,3 @@
-DROP TABLE IF EXISTS account;
-DROP TYPE IF EXISTS dstatus;
+DROP TABLE IF EXISTS operation;
+DROP TYPE IF EXISTS eaction;
 

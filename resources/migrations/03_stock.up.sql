@@ -1,4 +1,4 @@
--- Stock Table
+-- stock Table
 CREATE TABLE stock  (
     id UUID PRIMARY KEY NOT NULL,
     market_id UUID REFERENCES market(id),

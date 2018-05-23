@@ -1,4 +1,4 @@
--- Stock Dividend Table
+-- stock_dividend Table
 CREATE TYPE estatus AS ENUM ('projected', 'announced', 'payed');
 
 CREATE TABLE stock_dividend  (

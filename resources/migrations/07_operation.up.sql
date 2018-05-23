@@ -1,10 +1,10 @@
--- Account Table
+-- operation Table
 CREATE TYPE eaction AS ENUM ('buy', 'sell', 'connectivity', 'dividend', 'interest');
 
 CREATE TABLE operation (
     id UUID PRIMARY KEY NOT NULL,
     date timestamp NOT NULL,
-    stock_id UUID,
+    stock_id UUID REFERENCES stock(id),
     action eaction,
     amount INTEGER,
     price NUMERIC(7, 2) NOT NULL,

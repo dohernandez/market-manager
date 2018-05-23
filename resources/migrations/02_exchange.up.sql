@@ -1,4 +1,4 @@
--- Exchange Table
+-- exchange Table
 CREATE TABLE exchange (
     id UUID PRIMARY KEY NOT NULL,
     name VARCHAR(120) NOT NULL,

@@ -1,4 +1,4 @@
--- Market Table
+-- market Table
 CREATE TABLE market (
     id UUID PRIMARY KEY NOT NULL,
     name text NOT NULL,
