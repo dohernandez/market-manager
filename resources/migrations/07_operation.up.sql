@@ -4,7 +4,7 @@ CREATE TYPE eaction AS ENUM ('buy', 'sell', 'connectivity', 'dividend', 'interes
 CREATE TABLE operation (
     id UUID PRIMARY KEY NOT NULL,
     date timestamp NOT NULL,
-    stock_id UUID REFERENCES stock(id),
+    stock_id UUID,
     action eaction,
     amount INTEGER,
     price NUMERIC(7, 2) NOT NULL,

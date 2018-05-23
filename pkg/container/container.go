@@ -26,12 +26,12 @@ type Container struct {
 	exchangeFinder      exchange.Finder
 	stockFinder         stock.Finder
 	stockDividendFinder dividend.Finder
-	walletFinder        wallet.Finder
+	walletItemFinder    wallet.Finder
 
 	stockPersister         stock.Persister
 	stockDividendPersister dividend.Persister
 	operationPersister     operation.Persister
-	walletPersister        wallet.Persister
+	walletItemPersister    wallet.Persister
 
 	purchaseService *purchase.Service
 	accountService  *account.Service
@@ -82,11 +82,11 @@ func (c *Container) stockDividendFinderInstance() dividend.Finder {
 }
 
 func (c *Container) walletItemFinderInstance() wallet.Finder {
-	if c.walletFinder == nil {
-		c.walletFinder = nil
+	if c.walletItemFinder == nil {
+		c.walletItemFinder = storage.NewWalletItemFinder(c.db)
 	}
 
-	return c.walletFinder
+	return c.walletItemFinder
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,11 +117,11 @@ func (c *Container) operationPersisterInstance() operation.Persister {
 }
 
 func (c *Container) walletItemPersisterInstance() wallet.Persister {
-	if c.walletPersister == nil {
-		c.walletPersister = nil
+	if c.walletItemPersister == nil {
+		c.walletItemPersister = storage.NewWalletItemPersister(c.db)
 	}
 
-	return c.walletPersister
+	return c.walletItemPersister
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

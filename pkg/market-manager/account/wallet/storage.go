@@ -10,7 +10,6 @@ type (
 	}
 
 	Persister interface {
-		Persist(i *Item) error
-		PersistAll(is []*Item) error
+		PersistAll(wis []*Item) error
 	}
 )

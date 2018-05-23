@@ -79,9 +79,9 @@ func (i *ImportAccount) Import() error {
 
 		price := mm.Value{Amount: i.parsePriceString(line[5])}
 		priceChange := mm.Value{Amount: i.parsePriceString(line[6])}
-		priceChangeCommission := mm.Value{Amount: i.parsePriceString(line[7])}
-		value := mm.Value{Amount: i.parsePriceString(line[8])}
-		commission := mm.Value{Amount: i.parsePriceString(line[9])}
+		priceChangeCommission := mm.Value{Amount: i.parsePriceString(line[7]), Currency: mm.Euro}
+		value := mm.Value{Amount: i.parsePriceString(line[8]), Currency: mm.Euro}
+		commission := mm.Value{Amount: i.parsePriceString(line[9]), Currency: mm.Euro}
 
 		o := operation.NewOperation(date, s, action, amount, price, priceChange, priceChangeCommission, value, commission)
 

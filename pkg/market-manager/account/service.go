@@ -1,8 +1,12 @@
 package account
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/satori/go.uuid"
+
+	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 )
@@ -24,41 +28,44 @@ func NewService(accountPersister operation.Persister, itemFinder wallet.Finder, 
 }
 
 func (s *Service) SaveAllOperations(os []*operation.Operation) error {
-	for _, o := range os {
-		fmt.Printf("%+v\n", o)
+	err := s.operationPersister.PersistAll(os)
+	if err != nil {
+		return err
 	}
-	//return s.operationPersister.PersistAll(os)
 
-	//for _, o := range os {
-	//
-	//}
+	cwis := make(map[uuid.UUID]*wallet.Item)
+	for _, o := range os {
+		if o.Action == operation.Buy || o.Action == operation.Sell || o.Action == operation.Dividend {
+			wi, ok := cwis[o.Stock.ID]
+			if !ok {
+				wi, err = s.itemFinder.FindByStock(o.Stock)
+				if err != nil {
+					if err != mm.ErrNotFound {
+						return errors.New(fmt.Sprintf("find wallet item for stock %s: %s", o.Stock.Symbol, err.Error()))
+					}
 
-	//if action == operation.Buy || action == operation.Sell || action == operation.Dividend {
-	//	wi, ok := cis[s.ID]
-	//	if !ok {
-	//		wi, err = i.walletService.FindWalletItem(s)
-	//		if err != nil {
-	//			if err != mm.ErrNotFound {
-	//				return errors.New(fmt.Sprintf("find wallet item for stock %s: %s", line[2], err.Error()))
-	//			}
-	//
-	//			wi = new(wallet.Item)
-	//			wi.Stock = s
-	//
-	//			cis[s.ID] = wi
-	//		}
-	//	}
-	//
-	//	switch action {
-	//	case operation.Buy:
-	//		wi.IncreaseInvestment(amount, value)
-	//	case operation.Sell:
-	//		wi.DecreaseInvestment(amount, value)
-	//	case operation.Dividend:
-	//		wi.IncreaseDividend(value)
-	//	}
-	//}
-	return nil
+					wi = wallet.NewItem(o.Stock)
+				}
+				cwis[o.Stock.ID] = wi
+			}
+
+			switch o.Action {
+			case operation.Buy:
+				wi.IncreaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
+			case operation.Sell:
+				wi.DecreaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
+			case operation.Dividend:
+				wi.IncreaseDividend(o.Value)
+			}
+		}
+	}
+
+	var wis []*wallet.Item
+	for _, wi := range cwis {
+		wis = append(wis, wi)
+	}
+
+	return s.itemPersister.PersistAll(wis)
 }
 
 //func (s *Service) FindWalletItem(stk *stock.Stock) (*wallet.Item, error) {
