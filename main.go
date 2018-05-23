@@ -84,14 +84,14 @@ func main() {
 			},
 		},
 		{
-			Name:    "market",
-			Aliases: []string{"m"},
-			Usage:   "Add/Update market values",
+			Name:    "purchase",
+			Aliases: []string{"p"},
+			Usage:   "Add/Update purchase values (markets, exchanges, stocks, cryptos)",
 			Subcommands: []cli.Command{
 				{
 					Name:    "import",
 					Aliases: []string{"i"},
-					Usage:   "Import stock from csv file",
+					Usage:   "Import from csv file",
 					Subcommands: []cli.Command{
 						{
 							Name:      "quote",
@@ -158,15 +158,28 @@ func main() {
 			},
 		},
 		{
-			Name:      "account",
-			Aliases:   []string{"a"},
-			Usage:     "Import account transaction from csv file",
-			Action:    importCommand.Account,
-			ArgsUsage: "",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "file, f",
-					Usage: "csv file to import",
+			Name:    "account",
+			Aliases: []string{"a"},
+			Usage:   "Add/Update account values (operations)",
+			Subcommands: []cli.Command{
+				{
+					Name:    "import",
+					Aliases: []string{"i"},
+					Usage:   "Import from csv file",
+					Subcommands: []cli.Command{
+						{
+							Name:      "operation",
+							Aliases:   []string{"o"},
+							Action:    importCommand.Operation,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to import",
+								},
+							},
+						},
+					},
 				},
 			},
 		},

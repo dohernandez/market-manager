@@ -112,7 +112,7 @@ func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 	return nil
 }
 
-func (cmd *ImportCommand) Account(cliCtx *cli.Context) error {
+func (cmd *ImportCommand) Operation(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
