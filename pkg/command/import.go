@@ -10,7 +10,7 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/import/account"
-	"github.com/dohernandez/market-manager/pkg/import/market"
+	"github.com/dohernandez/market-manager/pkg/import/purchase"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
@@ -47,7 +47,7 @@ func (cmd *ImportCommand) Quote(cliCtx *cli.Context) error {
 	}
 
 	r := _import.NewCsvReader(file)
-	i := import_market.NewImportStock(ctx, r, c.PurchaseServiceInstance())
+	i := import_purchase.NewImportStock(ctx, r, c.PurchaseServiceInstance())
 
 	err = i.Import()
 	if err != nil {
@@ -97,7 +97,7 @@ func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 		ctx = context.WithValue(ctx, "status", st)
 		file := fmt.Sprintf("%s/%s_%s.csv", cmd.config.QUOTE.DividendsPath, strings.ToLower(cliCtx.String("stock")), st)
 		r := _import.NewCsvReader(file)
-		i := import_market.NewImportStockDividend(ctx, r, c.PurchaseServiceInstance())
+		i := import_purchase.NewImportStockDividend(ctx, r, c.PurchaseServiceInstance())
 
 		err = i.Import()
 		if err != nil {

@@ -1,4 +1,4 @@
-package import_market
+package import_purchase
 
 //
 //import (
