@@ -2,6 +2,6 @@ package bank
 
 type (
 	Finder interface {
-		FindByAlias()
+		FindByAlias(alias string) (*Account, error)
 	}
 )
