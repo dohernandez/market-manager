@@ -1,15 +1,16 @@
 package wallet
 
-import (
-	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
-)
+import "github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 
 type (
 	Finder interface {
-		FindByStock(s *stock.Stock) (*Item, error)
+		FindByName(name string) (*Wallet, error)
+		FindByBankAccount(ba *bank.Account) (*Wallet, error)
 	}
 
 	Persister interface {
-		PersistAll(wis []*Wallet) error
+		PersistAll(ws []*Wallet) error
+		PersistOperations(w *Wallet) error
+		UpdateAllAccounting(ws []*Wallet) error
 	}
 )

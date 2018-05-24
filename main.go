@@ -193,6 +193,10 @@ func main() {
 									Name:  "file, f",
 									Usage: "csv file to import",
 								},
+								cli.StringFlag{
+									Name:  "wallet, w",
+									Usage: "Wallet name",
+								},
 							},
 						},
 					},

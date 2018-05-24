@@ -51,7 +51,15 @@ func (i *ImportAccount) Import() error {
 	i.reader.Open()
 	defer i.reader.Close()
 
-	var os []*operation.Operation
+	name := i.ctx.Value("wallet").(string)
+	if name == "" {
+		return errors.New("missing wallet name")
+	}
+
+	w, err := i.accountService.FindWalletByName(name)
+	if err != nil {
+		return err
+	}
 
 	for {
 		line, err := i.reader.ReadLine()
@@ -85,10 +93,10 @@ func (i *ImportAccount) Import() error {
 
 		o := operation.NewOperation(date, s, action, amount, price, priceChange, priceChangeCommission, value, commission)
 
-		os = append(os, o)
+		w.AddOperation(o)
 	}
 
-	return i.accountService.SaveAllOperations(os)
+	return i.accountService.SaveAllOperations(w)
 }
 
 // parseDateString - parse a potentially partial date string to Time

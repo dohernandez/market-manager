@@ -1,29 +1,21 @@
 package account
 
 import (
-	"errors"
-	"fmt"
-
-	"github.com/satori/go.uuid"
-
-	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
+	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 )
 
 type (
 	Service struct {
-		operationPersister operation.Persister
-		itemFinder         wallet.Finder
-		walletPersister    wallet.Persister
+		walletFinder    wallet.Finder
+		walletPersister wallet.Persister
 	}
 )
 
-func NewService(accountPersister operation.Persister, itemFinder wallet.Finder, walletPersister wallet.Persister) *Service {
+func NewService(walletFinder wallet.Finder, walletPersister wallet.Persister) *Service {
 	return &Service{
-		operationPersister: accountPersister,
-		itemFinder:         itemFinder,
-		walletPersister:    walletPersister,
+		walletFinder:    walletFinder,
+		walletPersister: walletPersister,
 	}
 }
 
@@ -31,50 +23,24 @@ func (s *Service) SaveAllWallets(ws []*wallet.Wallet) error {
 	return s.walletPersister.PersistAll(ws)
 }
 
-func (s *Service) SaveAllOperations(os []*operation.Operation) error {
-	err := s.operationPersister.PersistAll(os)
-	if err != nil {
-		return err
-	}
+func (s *Service) SaveAllOperations(w *wallet.Wallet) error {
+	return s.walletPersister.PersistOperations(w)
+}
 
-	cwis := make(map[uuid.UUID]*wallet.Item)
-	for _, o := range os {
-		if o.Action == operation.Buy || o.Action == operation.Sell || o.Action == operation.Dividend {
-			wi, ok := cwis[o.Stock.ID]
-			if !ok {
-				wi, err = s.itemFinder.FindByStock(o.Stock)
-				if err != nil {
-					if err != mm.ErrNotFound {
-						return errors.New(fmt.Sprintf("find wallet item for stock %s: %s", o.Stock.Symbol, err.Error()))
-					}
+func (s *Service) FindWalletByName(name string) (*wallet.Wallet, error) {
+	return s.walletFinder.FindByName(name)
+}
 
-					wi = wallet.NewItem(o.Stock)
-				}
-				cwis[o.Stock.ID] = wi
-			}
+func (s *Service) FindWalletByBankAccount(ba *bank.Account) (*wallet.Wallet, error) {
+	return s.walletFinder.FindByBankAccount(ba)
+}
 
-			switch o.Action {
-			case operation.Buy:
-				wi.IncreaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
-			case operation.Sell:
-				wi.DecreaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
-			case operation.Dividend:
-				wi.IncreaseDividend(o.Value)
-			}
-		}
-	}
-
-	var wis []*wallet.Item
-	for _, wi := range cwis {
-		wis = append(wis, wi)
-	}
-
-	//return s.itemPersister.PersistAll(wis)
-	return nil
+func (s *Service) UpdateAllWalletsAccounting(ws []*wallet.Wallet) error {
+	return s.walletPersister.UpdateAllAccounting(ws)
 }
 
 //func (s *Service) FindWalletItem(stk *stock.Stock) (*wallet.Item, error) {
-//	//return s.itemFinder.FindByStock(stk)
+//	//return s.walletFinder.FindByStock(stk)
 //	return nil, mm.ErrNotFound
 //}
 //
@@ -87,7 +53,7 @@ func (s *Service) SaveAllOperations(os []*operation.Operation) error {
 //}
 //
 //func (s *Service) BuyStock(o *operation.Operation) error {
-//	i, err := s.itemFinder.FindByStock(o.Stock)
+//	i, err := s.walletFinder.FindByStock(o.Stock)
 //	if err != nil {
 //		if err != mm.ErrNotFound {
 //			return err
@@ -96,7 +62,7 @@ func (s *Service) SaveAllOperations(os []*operation.Operation) error {
 //		i = wallet.NewItem(o.Stock)
 //	}
 //
-//	i.IncreaseInvestment(o.Amount, o.Price)
+//	i.increaseInvestment(o.Amount, o.Price)
 //	err = s.itemPersister.Persist(i)
 //	if err != nil {
 //		return err
@@ -106,12 +72,12 @@ func (s *Service) SaveAllOperations(os []*operation.Operation) error {
 //}
 //
 //func (s *Service) SellStock(o *operation.Operation) error {
-//	i, err := s.itemFinder.FindByStock(o.Stock)
+//	i, err := s.walletFinder.FindByStock(o.Stock)
 //	if err != nil {
 //		return err
 //	}
 //
-//	i.DecreaseInvestment(o.Amount, o.Price)
+//	i.decreaseInvestment(o.Amount, o.Price)
 //	err = s.itemPersister.Persist(i)
 //	if err != nil {
 //		return err
@@ -121,12 +87,12 @@ func (s *Service) SaveAllOperations(os []*operation.Operation) error {
 //}
 //
 //func (s *Service) Dividend(o *operation.Operation) error {
-//	i, err := s.itemFinder.FindByStock(o.Stock)
+//	i, err := s.walletFinder.FindByStock(o.Stock)
 //	if err != nil {
 //		return err
 //	}
 //
-//	i.IncreaseDividend(o.Price)
+//	i.increaseDividend(o.Price)
 //	err = s.itemPersister.Persist(i)
 //	if err != nil {
 //		return err

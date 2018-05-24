@@ -44,7 +44,7 @@ func (i *ImportWallet) Import() error {
 	i.reader.Open()
 	defer i.reader.Close()
 
-	name := i.ctx.Value("name").(string)
+	name := i.ctx.Value("wallet").(string)
 	if name == "" {
 		return errors.New("missing wallet name")
 	}
@@ -66,7 +66,10 @@ func (i *ImportWallet) Import() error {
 		}
 
 		w := wallet.NewWallet(name, url)
-		w.AddBankAccount(bankAccount)
+		err = w.AddBankAccount(bankAccount)
+		if err != nil {
+			return err
+		}
 
 		ws = append(ws, w)
 	}

@@ -20,8 +20,8 @@ type (
 	}
 
 	bankAccountTuple struct {
-		ID            uuid.UUID `json:"id"`
-		Name          string    `json:"name"`
+		ID            uuid.UUID `db:"id"`
+		Name          string    `db:"name"`
 		AccountNo     string    `db:"account_no"`
 		Alias         string    `db:"alias"`
 		AccountNoType string    `db:"account_no_type"`

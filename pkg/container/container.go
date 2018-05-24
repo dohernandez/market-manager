@@ -7,7 +7,6 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/config"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
-	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
@@ -29,13 +28,12 @@ type Container struct {
 	exchangeFinder      exchange.Finder
 	stockFinder         stock.Finder
 	stockDividendFinder dividend.Finder
-	walletItemFinder    wallet.Finder
+	walletFinder        wallet.Finder
 	bankAccountFinder   bank.Finder
 
 	stockPersister         stock.Persister
 	stockDividendPersister dividend.Persister
-	operationPersister     operation.Persister
-	walletItemPersister    wallet.Persister
+	walletPersister        wallet.Persister
 	transferPersister      transfer.Persister
 
 	purchaseService *purchase.Service
@@ -87,12 +85,12 @@ func (c *Container) stockDividendFinderInstance() dividend.Finder {
 	return c.stockDividendFinder
 }
 
-func (c *Container) walletItemFinderInstance() wallet.Finder {
-	if c.walletItemFinder == nil {
-		c.walletItemFinder = storage.NewWalletItemFinder(c.db)
+func (c *Container) walletFinderInstance() wallet.Finder {
+	if c.walletFinder == nil {
+		c.walletFinder = storage.NewWalletFinder(c.db)
 	}
 
-	return c.walletItemFinder
+	return c.walletFinder
 }
 
 func (c *Container) bankAccountFinderInstance() bank.Finder {
@@ -122,20 +120,12 @@ func (c *Container) stockDividendPersisterInstance() dividend.Persister {
 	return c.stockDividendPersister
 }
 
-func (c *Container) operationPersisterInstance() operation.Persister {
-	if c.operationPersister == nil {
-		c.operationPersister = storage.NewOperationPersister(c.db)
-	}
-
-	return c.operationPersister
-}
-
 func (c *Container) walletPersisterInstance() wallet.Persister {
-	if c.walletItemPersister == nil {
-		c.walletItemPersister = storage.NewWalletPersister(c.db)
+	if c.walletPersister == nil {
+		c.walletPersister = storage.NewWalletPersister(c.db)
 	}
 
-	return c.walletItemPersister
+	return c.walletPersister
 }
 
 func (c *Container) transferPersisterInstance() transfer.Persister {
@@ -167,8 +157,7 @@ func (c *Container) PurchaseServiceInstance() *purchase.Service {
 func (c *Container) AccountServiceInstance() *account.Service {
 	if c.accountService == nil {
 		c.accountService = account.NewService(
-			c.operationPersisterInstance(),
-			c.walletItemFinderInstance(),
+			c.walletFinderInstance(),
 			c.walletPersisterInstance(),
 		)
 	}
@@ -181,6 +170,7 @@ func (c *Container) BankingServiceInstance() *banking.Service {
 		c.bankingService = banking.NewService(
 			c.bankAccountFinderInstance(),
 			c.transferPersisterInstance(),
+			c.AccountServiceInstance(),
 		)
 	}
 

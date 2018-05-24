@@ -3,6 +3,7 @@ CREATE TYPE eaction AS ENUM ('buy', 'sell', 'connectivity', 'dividend', 'interes
 
 CREATE TABLE operation (
     id UUID PRIMARY KEY NOT NULL,
+    wallet_id UUID REFERENCES wallet(id),
     date timestamp NOT NULL,
     stock_id UUID,
     action eaction,
