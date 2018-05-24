@@ -23,7 +23,7 @@ type Specification struct {
 		DividendsPath string `envconfig:"DIVIDENDS_PATH" default:"resources/import/dividends"`
 	}
 	BANK struct {
-		TransferPath string `envconfig:"STOCKS_PATH" default:"resources/import/transfers"`
+		TransferPath string `envconfig:"TRANSFERS_PATH" default:"resources/import/transfers"`
 	}
 }
 

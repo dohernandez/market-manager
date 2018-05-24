@@ -160,7 +160,7 @@ func (cmd *ImportCommand) Transfer(cliCtx *cli.Context) error {
 
 	file := cliCtx.String("file")
 	if cliCtx.String("file") == "" {
-		file = fmt.Sprintf("%s/transfer.csv", cmd.config.BANK.TransferPath)
+		file = fmt.Sprintf("%s/transfers.csv", cmd.config.BANK.TransferPath)
 	}
 
 	r := _import.NewCsvReader(file)

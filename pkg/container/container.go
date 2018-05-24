@@ -10,6 +10,8 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking"
+	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
+	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
@@ -28,11 +30,13 @@ type Container struct {
 	stockFinder         stock.Finder
 	stockDividendFinder dividend.Finder
 	walletItemFinder    wallet.Finder
+	bankAccountFinder   bank.Finder
 
 	stockPersister         stock.Persister
 	stockDividendPersister dividend.Persister
 	operationPersister     operation.Persister
 	walletItemPersister    wallet.Persister
+	transferPersister      transfer.Persister
 
 	purchaseService *purchase.Service
 	accountService  *account.Service
@@ -91,6 +95,14 @@ func (c *Container) walletItemFinderInstance() wallet.Finder {
 	return c.walletItemFinder
 }
 
+func (c *Container) bankAccountFinderInstance() bank.Finder {
+	if c.bankAccountFinder == nil {
+		c.bankAccountFinder = storage.NewBankAccountFinder(c.db)
+	}
+
+	return c.bankAccountFinder
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // PERSISTER
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,6 +138,14 @@ func (c *Container) walletItemPersisterInstance() wallet.Persister {
 	return c.walletItemPersister
 }
 
+func (c *Container) transferPersisterInstance() transfer.Persister {
+	if c.transferPersister == nil {
+		c.transferPersister = storage.NewTransferPersister(c.db)
+	}
+
+	return c.transferPersister
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SERVICE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +178,10 @@ func (c *Container) AccountServiceInstance() *account.Service {
 
 func (c *Container) BankingServiceInstance() *banking.Service {
 	if c.bankingService == nil {
-		c.bankingService = banking.NewService()
+		c.bankingService = banking.NewService(
+			c.bankAccountFinderInstance(),
+			c.transferPersisterInstance(),
+		)
 	}
 
 	return c.bankingService
