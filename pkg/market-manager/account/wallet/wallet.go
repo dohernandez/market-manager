@@ -80,6 +80,6 @@ func NewWallet(name, url string) *Wallet {
 	}
 }
 
-func (w *Wallet) AddTrade() {
-
+func (w *Wallet) AddBankAccount(bankAccount *bank.Account) {
+	w.BankAccounts = append(w.BankAccounts, bankAccount)
 }

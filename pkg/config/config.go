@@ -22,7 +22,8 @@ type Specification struct {
 		AccountsPath  string `envconfig:"ACCOUNTS_PATH" default:"resources/import/accounts"`
 		StocksPath    string `envconfig:"STOCKS_PATH" default:"resources/import/stocks"`
 		DividendsPath string `envconfig:"DIVIDENDS_PATH" default:"resources/import/dividends"`
-		TransferPath  string `envconfig:"TRANSFERS_PATH" default:"resources/import/transfers"`
+		TransfersPath string `envconfig:"TRANSFERS_PATH" default:"resources/import/transfers"`
+		WalletSPath   string `envconfig:"WALLETS_PATH" default:"resources/import/wallets"`
 	}
 }
 

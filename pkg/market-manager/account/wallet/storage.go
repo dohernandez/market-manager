@@ -10,6 +10,6 @@ type (
 	}
 
 	Persister interface {
-		PersistAll(wis []*Item) error
+		PersistAll(wis []*Wallet) error
 	}
 )

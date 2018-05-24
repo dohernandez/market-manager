@@ -1,4 +1,4 @@
--- banking Table
+-- bank_account Table
 CREATE TYPE eaccountnotype AS ENUM ('iban', 'hash');
 
 CREATE TABLE bank_account (

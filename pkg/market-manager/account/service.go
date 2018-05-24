@@ -15,16 +15,20 @@ type (
 	Service struct {
 		operationPersister operation.Persister
 		itemFinder         wallet.Finder
-		itemPersister      wallet.Persister
+		walletPersister    wallet.Persister
 	}
 )
 
-func NewService(accountPersister operation.Persister, itemFinder wallet.Finder, itemPersister wallet.Persister) *Service {
+func NewService(accountPersister operation.Persister, itemFinder wallet.Finder, walletPersister wallet.Persister) *Service {
 	return &Service{
 		operationPersister: accountPersister,
 		itemFinder:         itemFinder,
-		itemPersister:      itemPersister,
+		walletPersister:    walletPersister,
 	}
+}
+
+func (s *Service) SaveAllWallets(ws []*wallet.Wallet) error {
+	return s.walletPersister.PersistAll(ws)
 }
 
 func (s *Service) SaveAllOperations(os []*operation.Operation) error {
@@ -65,7 +69,8 @@ func (s *Service) SaveAllOperations(os []*operation.Operation) error {
 		wis = append(wis, wi)
 	}
 
-	return s.itemPersister.PersistAll(wis)
+	//return s.itemPersister.PersistAll(wis)
+	return nil
 }
 
 //func (s *Service) FindWalletItem(stk *stock.Stock) (*wallet.Item, error) {

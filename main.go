@@ -168,6 +168,22 @@ func main() {
 					Usage:   "Import from csv file",
 					Subcommands: []cli.Command{
 						{
+							Name:      "wallet",
+							Aliases:   []string{"w"},
+							Action:    importCommand.Wallet,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to import",
+								},
+								cli.StringFlag{
+									Name:  "wallet, w",
+									Usage: "Wallet name",
+								},
+							},
+						},
+						{
 							Name:      "operation",
 							Aliases:   []string{"o"},
 							Action:    importCommand.Operation,

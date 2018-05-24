@@ -130,9 +130,9 @@ func (c *Container) operationPersisterInstance() operation.Persister {
 	return c.operationPersister
 }
 
-func (c *Container) walletItemPersisterInstance() wallet.Persister {
+func (c *Container) walletPersisterInstance() wallet.Persister {
 	if c.walletItemPersister == nil {
-		c.walletItemPersister = storage.NewWalletItemPersister(c.db)
+		c.walletItemPersister = storage.NewWalletPersister(c.db)
 	}
 
 	return c.walletItemPersister
@@ -169,7 +169,7 @@ func (c *Container) AccountServiceInstance() *account.Service {
 		c.accountService = account.NewService(
 			c.operationPersisterInstance(),
 			c.walletItemFinderInstance(),
-			c.walletItemPersisterInstance(),
+			c.walletPersisterInstance(),
 		)
 	}
 

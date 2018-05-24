@@ -8,6 +8,10 @@ import (
 
 	"github.com/urfave/cli"
 
+	"path/filepath"
+
+	"os"
+
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/import/account"
 	"github.com/dohernandez/market-manager/pkg/import/banking"
@@ -112,6 +116,88 @@ func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 	return nil
 }
 
+func (cmd *ImportCommand) Wallet(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	// Database connection
+	logger.FromContext(ctx).Info("Initializing database connection")
+	db, err := cmd.initDatabaseConnection()
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
+	}
+
+	c := cmd.Container(db)
+
+	type walletImport struct {
+		file   string
+		wallet string
+	}
+	var wis []walletImport
+
+	if cliCtx.String("file") == "" && cliCtx.String("wallet") != "" {
+		wallet := cliCtx.String("wallet")
+		file := fmt.Sprintf("%s/%s.csv", cmd.config.Import.WalletSPath, wallet)
+
+		wis = append(wis, walletImport{
+			file:   file,
+			wallet: wallet,
+		})
+	} else if cliCtx.String("wallet") == "" && cliCtx.String("file") != "" {
+		file := cliCtx.String("file")
+		wallet := cmd.getWalletFromFile(file)
+
+		wis = append(wis, walletImport{
+			file:   file,
+			wallet: wallet,
+		})
+	} else {
+		err := filepath.Walk(cmd.config.Import.WalletSPath, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			if filepath.Ext(path) == ".csv" {
+				file := path
+				wallet := cmd.getWalletFromFile(file)
+				wis = append(wis, walletImport{
+					file:   file,
+					wallet: wallet,
+				})
+			}
+
+			return nil
+		})
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	for _, wi := range wis {
+		ctx = context.WithValue(ctx, "name", wi.wallet)
+
+		r := _import.NewCsvReader(wi.file)
+		i := import_account.NewImportWallet(ctx, r, c.AccountServiceInstance(), c.BankingServiceInstance())
+
+		err = i.Import()
+		if err != nil {
+			logger.FromContext(ctx).WithError(err).Error("Failed importing")
+
+			return err
+		}
+	}
+
+	logger.FromContext(ctx).Info("Import finished")
+
+	return nil
+}
+
+func (cmd *ImportCommand) getWalletFromFile(file string) string {
+	var dir = filepath.Dir(file)
+	var ext = filepath.Ext(file)
+	return file[len(dir)+1 : len(file)-len(ext)]
+}
+
 func (cmd *ImportCommand) Operation(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
@@ -160,7 +246,7 @@ func (cmd *ImportCommand) Transfer(cliCtx *cli.Context) error {
 
 	file := cliCtx.String("file")
 	if cliCtx.String("file") == "" {
-		file = fmt.Sprintf("%s/transfers.csv", cmd.config.Import.TransferPath)
+		file = fmt.Sprintf("%s/transfers.csv", cmd.config.Import.TransfersPath)
 	}
 
 	r := _import.NewCsvReader(file)

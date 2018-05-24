@@ -6,3 +6,15 @@ vendor/
 *.coverprofile
 
 docs/api.html
+
+resources/import/accounts/
+!resources/import/accounts/.gitkeep
+
+resources/import/dividends/
+!resources/import/dividends/.gitkeep
+
+resources/import/transfers/
+!resources/import/transfers/.gitkeep
+
+resources/import/wallets/
+!resources/import/wallets/.gitkeep
