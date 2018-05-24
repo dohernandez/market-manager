@@ -184,6 +184,32 @@ func main() {
 			},
 		},
 		{
+			Name:    "banking",
+			Aliases: []string{"a"},
+			Usage:   "Add/Update banking values (transfers)",
+			Subcommands: []cli.Command{
+				{
+					Name:    "import",
+					Aliases: []string{"i"},
+					Usage:   "Import from csv file",
+					Subcommands: []cli.Command{
+						{
+							Name:      "transfer",
+							Aliases:   []string{"t"},
+							Action:    importCommand.Transfer,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to import",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			Name:   "api",
 			Usage:  "Api test",
 			Action: apiCommand.Run,

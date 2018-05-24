@@ -10,6 +10,7 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/import/account"
+	"github.com/dohernandez/market-manager/pkg/import/banking"
 	"github.com/dohernandez/market-manager/pkg/import/purchase"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
@@ -28,7 +29,6 @@ func NewImportCommand(baseCommand *BaseCommand) *ImportCommand {
 
 // Quote runs the application import data
 func (cmd *ImportCommand) Quote(cliCtx *cli.Context) error {
-
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -51,7 +51,7 @@ func (cmd *ImportCommand) Quote(cliCtx *cli.Context) error {
 
 	err = i.Import()
 	if err != nil {
-		logger.FromContext(context.TODO()).WithError(err).Error("Failed importing")
+		logger.FromContext(ctx).WithError(err).Error("Failed importing")
 
 		return err
 	}
@@ -63,12 +63,12 @@ func (cmd *ImportCommand) Quote(cliCtx *cli.Context) error {
 
 // Dividend runs the application import data
 func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
-	if cliCtx.String("stock") == "" {
-		logger.FromContext(context.TODO()).Fatal("Please specify the stock: market-manager stocks import dividend [stock]")
-	}
-
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
+
+	if cliCtx.String("stock") == "" {
+		logger.FromContext(ctx).Fatal("Please specify the stock: market-manager stocks import dividend [stock]")
+	}
 
 	// Database connection
 	logger.FromContext(ctx).Info("Initializing database connection")
@@ -101,7 +101,7 @@ func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 
 		err = i.Import()
 		if err != nil {
-			logger.FromContext(context.TODO()).WithError(err).Error("Failed importing")
+			logger.FromContext(ctx).WithError(err).Error("Failed importing")
 
 			return err
 		}
@@ -135,7 +135,40 @@ func (cmd *ImportCommand) Operation(cliCtx *cli.Context) error {
 
 	err = i.Import()
 	if err != nil {
-		logger.FromContext(context.TODO()).WithError(err).Error("Failed importing")
+		logger.FromContext(ctx).WithError(err).Error("Failed importing")
+
+		return err
+	}
+
+	logger.FromContext(ctx).Info("Import finished")
+
+	return nil
+}
+
+func (cmd *ImportCommand) Transfer(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	// Database connection
+	logger.FromContext(ctx).Info("Initializing database connection")
+	db, err := cmd.initDatabaseConnection()
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
+	}
+
+	c := cmd.Container(db)
+
+	file := cliCtx.String("file")
+	if cliCtx.String("file") == "" {
+		file = fmt.Sprintf("%s/transfer.csv", cmd.config.BANK.TransferPath)
+	}
+
+	r := _import.NewCsvReader(file)
+	i := import_banking.NewImportTransfer(ctx, r, c.BankingServiceInstance())
+
+	err = i.Import()
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Error("Failed importing")
 
 		return err
 	}

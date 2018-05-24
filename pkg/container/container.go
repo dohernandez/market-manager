@@ -9,6 +9,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
+	"github.com/dohernandez/market-manager/pkg/market-manager/banking"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
@@ -35,6 +36,7 @@ type Container struct {
 
 	purchaseService *purchase.Service
 	accountService  *account.Service
+	bankingService  *banking.Service
 }
 
 func NewContainer(ctx context.Context, db *sqlx.DB, config *config.Specification) *Container {
@@ -152,4 +154,12 @@ func (c *Container) AccountServiceInstance() *account.Service {
 	}
 
 	return c.accountService
+}
+
+func (c *Container) BankingServiceInstance() *banking.Service {
+	if c.bankingService == nil {
+		c.bankingService = banking.NewService()
+	}
+
+	return c.bankingService
 }

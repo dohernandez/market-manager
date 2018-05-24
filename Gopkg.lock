@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/almerlucke/go-iban"
+  packages = ["iban"]
+  revision = "316a6e2335b3b1b69e8b4faecbf3ac26a1aa3619"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -133,6 +139,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1d2f7d06a62ac482f533bcbfe2bf6848306217822abf0745e434db970baf0d3e"
+  inputs-digest = "e10a6245b691dcd13f9d0f609043974898a2e2bb74f31041e0d73e2cd1a331c1"
   solver-name = "gps-cdcl"
   solver-version = 1

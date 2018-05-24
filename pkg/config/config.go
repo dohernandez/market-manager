@@ -22,6 +22,9 @@ type Specification struct {
 		StocksPath    string `envconfig:"STOCKS_PATH" default:"resources/import/stocks"`
 		DividendsPath string `envconfig:"DIVIDENDS_PATH" default:"resources/import/dividends"`
 	}
+	BANK struct {
+		TransferPath string `envconfig:"STOCKS_PATH" default:"resources/import/transfers"`
+	}
 }
 
 // LoadEnv load config variables into Specification.
