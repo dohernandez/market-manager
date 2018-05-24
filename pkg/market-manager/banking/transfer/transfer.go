@@ -19,7 +19,7 @@ type (
 	}
 )
 
-func NewTransfer(From *bank.Account, To *bank.Account, amount float64, date time.Time) *Transfer {
+func NewTransfer(From, To *bank.Account, amount float64, date time.Time) *Transfer {
 	return &Transfer{
 		ID:     uuid.NewV4(),
 		From:   From,

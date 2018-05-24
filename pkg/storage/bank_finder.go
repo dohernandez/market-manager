@@ -20,10 +20,11 @@ type (
 	}
 
 	bankAccountTuple struct {
-		ID    uuid.UUID `json:"id"`
-		Name  string    `json:"name"`
-		IBAN  string    `db:"iban"`
-		Alias string    `db:"alias"`
+		ID            uuid.UUID `json:"id"`
+		Name          string    `json:"name"`
+		AccountNo     string    `db:"account_no"`
+		Alias         string    `db:"alias"`
+		AccountNoType string    `db:"account_no_type"`
 	}
 )
 
@@ -49,15 +50,20 @@ func (f *bankAccountFinder) FindByAlias(alias string) (*bank.Account, error) {
 		return nil, errors.New(fmt.Sprintf("Select bank_account form alias %q", alias))
 	}
 
-	IBAN, err := iban.NewIBAN(tuple.IBAN)
-	if err != nil {
-		return nil, err
+	var AccountNo string
+	if bank.AccountNoType(tuple.AccountNoType) == bank.IBAN {
+		IBAN, err := iban.NewIBAN(tuple.AccountNo)
+		if err != nil {
+			return nil, err
+		}
+
+		AccountNo = IBAN.PrintCode
 	}
 
 	return &bank.Account{
-		ID:    tuple.ID,
-		Name:  tuple.Name,
-		IBAN:  IBAN,
-		Alias: alias,
+		ID:        tuple.ID,
+		Name:      tuple.Name,
+		AccountNo: AccountNo,
+		Alias:     alias,
 	}, nil
 }

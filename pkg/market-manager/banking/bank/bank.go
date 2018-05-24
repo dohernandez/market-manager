@@ -1,13 +1,18 @@
 package bank
 
 import (
-	"github.com/almerlucke/go-iban/iban"
 	"github.com/satori/go.uuid"
 )
 
+type AccountNoType string
+
 type Account struct {
-	ID    uuid.UUID
-	Name  string
-	IBAN  *iban.IBAN
-	Alias string
+	ID        uuid.UUID
+	Name      string
+	AccountNo string
+	Alias     string
 }
+
+const (
+	IBAN AccountNoType = "iban"
+)
