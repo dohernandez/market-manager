@@ -18,12 +18,11 @@ type Specification struct {
 		BaseURL string `envconfig:"HTTP_BASE_URL"`
 		Port    int    `envconfig:"HTTP_PORT" default:"8000"`
 	}
-	QUOTE struct {
+	Import struct {
+		AccountsPath  string `envconfig:"ACCOUNTS_PATH" default:"resources/import/accounts"`
 		StocksPath    string `envconfig:"STOCKS_PATH" default:"resources/import/stocks"`
 		DividendsPath string `envconfig:"DIVIDENDS_PATH" default:"resources/import/dividends"`
-	}
-	BANK struct {
-		TransferPath string `envconfig:"TRANSFERS_PATH" default:"resources/import/transfers"`
+		TransferPath  string `envconfig:"TRANSFERS_PATH" default:"resources/import/transfers"`
 	}
 }
 

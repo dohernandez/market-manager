@@ -43,7 +43,7 @@ func (cmd *ImportCommand) Quote(cliCtx *cli.Context) error {
 
 	file := cliCtx.String("file")
 	if cliCtx.String("file") == "" {
-		file = fmt.Sprintf("%s/stocks.csv", cmd.config.QUOTE.StocksPath)
+		file = fmt.Sprintf("%s/stocks.csv", cmd.config.Import.StocksPath)
 	}
 
 	r := _import.NewCsvReader(file)
@@ -95,7 +95,7 @@ func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 
 	for _, st := range status {
 		ctx = context.WithValue(ctx, "status", st)
-		file := fmt.Sprintf("%s/%s_%s.csv", cmd.config.QUOTE.DividendsPath, strings.ToLower(cliCtx.String("stock")), st)
+		file := fmt.Sprintf("%s/%s_%s.csv", cmd.config.Import.DividendsPath, strings.ToLower(cliCtx.String("stock")), st)
 		r := _import.NewCsvReader(file)
 		i := import_purchase.NewImportStockDividend(ctx, r, c.PurchaseServiceInstance())
 
@@ -127,7 +127,7 @@ func (cmd *ImportCommand) Operation(cliCtx *cli.Context) error {
 
 	file := cliCtx.String("file")
 	if cliCtx.String("file") == "" {
-		file = fmt.Sprintf("%s/account.csv", cmd.config.QUOTE.StocksPath)
+		file = fmt.Sprintf("%s/account.csv", cmd.config.Import.StocksPath)
 	}
 
 	r := _import.NewCsvReader(file)
@@ -160,7 +160,7 @@ func (cmd *ImportCommand) Transfer(cliCtx *cli.Context) error {
 
 	file := cliCtx.String("file")
 	if cliCtx.String("file") == "" {
-		file = fmt.Sprintf("%s/transfers.csv", cmd.config.BANK.TransferPath)
+		file = fmt.Sprintf("%s/transfers.csv", cmd.config.Import.TransferPath)
 	}
 
 	r := _import.NewCsvReader(file)
