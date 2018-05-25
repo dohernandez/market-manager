@@ -113,42 +113,32 @@ func (w *Wallet) AddOperation(o *operation.Operation) {
 		switch o.Action {
 		case operation.Buy:
 			increased := wi.increaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
-			w.decreaseFunds(increased)
+
+			w.Funds = w.Funds.Decrease(increased)
+			w.Capital = w.Capital.Increase(increased)
 		case operation.Sell:
 			decreased := wi.decreaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
-			w.increaseFunds(decreased)
+
+			w.Funds = w.Funds.Increase(decreased)
+			w.Capital = w.Capital.Decrease(decreased)
 		case operation.Dividend:
 			wi.increaseDividend(o.Value)
-			w.increaseFunds(o.Value)
+
+			w.Funds = w.Funds.Increase(o.Value)
 		}
 	}
 }
 
-func (w *Wallet) decreaseFunds(v mm.Value) {
-	w.Funds = w.Funds.Decrease(v)
-}
-
-func (w *Wallet) increaseFunds(v mm.Value) {
-	w.Funds = w.Funds.Increase(v)
-}
-
 func (w *Wallet) IncreaseInvestment(v mm.Value) {
 	w.Invested = w.Invested.Increase(v)
-	w.IncreaseCapital(v)
+	w.Funds = w.Funds.Increase(v)
 }
 
 func (w *Wallet) DecreaseInvestment(v mm.Value) {
 	w.Invested = w.Invested.Decrease(v)
-	w.DecreaseCapital(v)
+	w.Funds = w.Funds.Decrease(v)
 }
 
 func (w *Wallet) IncreaseCapital(v mm.Value) {
 	w.Capital = w.Capital.Increase(v)
-	w.Funds = w.Funds.Increase(v)
-}
-
-func (w *Wallet) DecreaseCapital(v mm.Value) {
-	w.Invested = w.Invested.Decrease(v)
-	w.Capital = w.Capital.Decrease(v)
-	w.Funds = w.Funds.Decrease(v)
 }

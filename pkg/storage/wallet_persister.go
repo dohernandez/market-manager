@@ -169,3 +169,9 @@ func (p *walletPersister) execUpdateAccounting(tx *sqlx.Tx, w *wallet.Wallet) er
 
 	return err
 }
+
+func (p *walletPersister) UpdateAccounting(w *wallet.Wallet) error {
+	return transaction(p.db, func(tx *sqlx.Tx) error {
+		return p.execUpdateAccounting(tx, w)
+	})
+}

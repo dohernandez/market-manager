@@ -28,7 +28,12 @@ func (s *Service) SaveAllWallets(ws []*wallet.Wallet) error {
 }
 
 func (s *Service) SaveAllOperations(w *wallet.Wallet) error {
-	return s.walletPersister.PersistOperations(w)
+	err := s.walletPersister.PersistOperations(w)
+	if err != nil {
+		return err
+	}
+
+	return s.walletPersister.UpdateAccounting(w)
 }
 
 func (s *Service) FindWalletByName(name string) (*wallet.Wallet, error) {
