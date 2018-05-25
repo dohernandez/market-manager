@@ -55,9 +55,9 @@ func (p *stockPersister) UpdatePrice(s *stock.Stock) error {
 }
 
 func (p *stockPersister) execUpdatePrice(tx *sqlx.Tx, s *stock.Stock) error {
-	query := `UPDATE stock SET value = $1, last_price_update = $2 WHERE id = $3`
+	query := `UPDATE stock SET value = $1, last_price_update = $2, change = $4 WHERE id = $3`
 
-	_, err := tx.Exec(query, s.Value.Amount, time.Now(), s.ID)
+	_, err := tx.Exec(query, s.Value.Amount, time.Now(), s.ID, s.Change.Amount)
 	if err != nil {
 		return err
 	}

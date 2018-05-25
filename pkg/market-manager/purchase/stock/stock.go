@@ -22,6 +22,7 @@ type (
 		Value         mm.Value
 		Dividends     []dividend.StockDividend
 		DividendYield float64
+		Change        mm.Value
 	}
 
 	// Price represents stock's price struct

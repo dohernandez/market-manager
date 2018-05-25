@@ -21,6 +21,7 @@ type (
 		Symbol        string
 		Value         string
 		DividendYield string `db:"dividend_yield"`
+		Change        string `db:"change"`
 
 		MarketID          uuid.UUID `db:"market_id"`
 		MarketName        string    `db:"market_name"`
@@ -47,7 +48,7 @@ func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 
 	query := `
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield,
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -75,7 +76,6 @@ func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 
 func (f *stockFinder) hydrate(s *stockTuple) *stock.Stock {
 	dy, _ := strconv.ParseFloat(s.DividendYield, 64)
-	v, _ := strconv.ParseFloat(s.Value, 64)
 
 	return &stock.Stock{
 		ID: s.ID,
@@ -91,8 +91,9 @@ func (f *stockFinder) hydrate(s *stockTuple) *stock.Stock {
 		},
 		Name:          s.Name,
 		Symbol:        s.Symbol,
-		Value:         mm.Value{Amount: v},
+		Value:         mm.ValueFromString(s.Value),
 		DividendYield: dy,
+		Change:        mm.ValueFromString(s.Change),
 	}
 }
 
@@ -101,7 +102,7 @@ func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
 
 	query := `
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield,
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -127,7 +128,7 @@ func (f *stockFinder) FindByName(name string) (*stock.Stock, error) {
 
 	query := `
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield,
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 

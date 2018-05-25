@@ -13,6 +13,7 @@ import (
 	gf "github.com/dohernandez/googlefinance-client-go"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -27,6 +28,8 @@ type (
 		stockDividendFinder    dividend.Finder
 		marketFinder           market.Finder
 		exchangeFinder         exchange.Finder
+
+		accountService *account.Service
 	}
 )
 
@@ -37,6 +40,7 @@ func NewService(
 	stockDividendFinder dividend.Finder,
 	marketFinder market.Finder,
 	exchangeFinder exchange.Finder,
+	accountService *account.Service,
 ) *Service {
 	return &Service{
 		stockPersister:         stockPersister,
@@ -45,6 +49,7 @@ func NewService(
 		stockDividendFinder:    stockDividendFinder,
 		marketFinder:           marketFinder,
 		exchangeFinder:         exchangeFinder,
+		accountService:         accountService,
 	}
 }
 
@@ -129,6 +134,7 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 
 	for _, stk := range stks {
 		wg.Add(1)
+		fmt.Printf("start updating stock %s\n", stk.Symbol)
 
 		st := stk
 		go func() {
@@ -136,11 +142,19 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 
 			if err := s.updateLastClosedPriceOfStock(st); err != nil {
 				errs = append(errs, errors.New(fmt.Sprintf("%+v -> stock:%+v", err, st)))
+
+				return
 			}
+			fmt.Printf("finish updating stock %s\n", stk.Symbol)
 		}()
 	}
 
 	wg.Wait()
+
+	err := s.accountService.UpdateWalletsAccountingByStocks(stks)
+	if err != nil {
+		errs = append(errs, err)
+	}
 
 	return errs
 }
@@ -154,10 +168,14 @@ func (s *Service) updateLastClosedPriceOfStock(stk *stock.Stock) error {
 		}
 	}
 
+	pv := stk.Value
+
 	stk.Value = mm.Value{
 		Amount:   p.Close,
 		Currency: mm.Dollar,
 	}
+
+	stk.Change = stk.Value.Decrease(pv)
 
 	err = s.updateStockDividendYield(stk)
 	if err != nil {
