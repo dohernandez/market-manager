@@ -145,7 +145,7 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 
 				return
 			}
-			fmt.Printf("finish updating stock %s\n", stk.Symbol)
+			fmt.Printf("finish updating stock %s\n", st.Symbol)
 		}()
 	}
 

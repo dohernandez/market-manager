@@ -101,15 +101,16 @@ func (f *walletFinder) FindWalletsByStock(stk *stock.Stock) ([]*wallet.Wallet, e
 	query := `SELECT w.* 
 			FROM wallet w
 			INNER JOIN wallet_item wi ON w.ID = wi.wallet_id 
-			WHERE wb.stock_id = $1`
+			WHERE wi.stock_id = $1`
 
-	err := sqlx.Get(f.db, &tuples, query, stk.ID)
+	err := sqlx.Select(f.db, &tuples, query, stk.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, mm.ErrNotFound
 		}
 
-		return nil, errors.New(fmt.Sprintf("Select wallets with stock %q", stk.ID))
+		//return nil, errors.New(fmt.Sprintf("Select wallets with stock %q", stk.ID))
+		return nil, err
 	}
 
 	var ws []*wallet.Wallet
