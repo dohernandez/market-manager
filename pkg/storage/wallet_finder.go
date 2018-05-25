@@ -12,6 +12,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
 type (
@@ -92,4 +93,29 @@ func (f *walletFinder) FindByBankAccount(ba *bank.Account) (*wallet.Wallet, erro
 	}
 
 	return w, nil
+}
+
+func (f *walletFinder) FindWalletsByStock(stk *stock.Stock) ([]*wallet.Wallet, error) {
+	var tuples []walletTuple
+
+	query := `SELECT w.* 
+			FROM wallet w
+			INNER JOIN wallet_item wi ON w.ID = wi.wallet_id 
+			WHERE wb.stock_id = $1`
+
+	err := sqlx.Get(f.db, &tuples, query, stk.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, mm.ErrNotFound
+		}
+
+		return nil, errors.New(fmt.Sprintf("Select wallets with stock %q", stk.ID))
+	}
+
+	var ws []*wallet.Wallet
+	for _, tuple := range tuples {
+		ws = append(ws, f.hydrateWallet(&tuple))
+	}
+
+	return ws, nil
 }

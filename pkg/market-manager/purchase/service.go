@@ -189,6 +189,10 @@ func (s *Service) UpdateLastClosedPriceStock(stk *stock.Stock) error {
 	if err := s.updateLastClosedPriceOfStock(stk); err != nil {
 		return err
 	}
+	err := s.accountService.UpdateWalletsAccountingByStock(stk)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

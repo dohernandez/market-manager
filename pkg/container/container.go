@@ -148,6 +148,7 @@ func (c *Container) PurchaseServiceInstance() *purchase.Service {
 			c.stockDividendFinderInstance(),
 			c.marketFinderInstance(),
 			c.exchangeFinderInstance(),
+			c.AccountServiceInstance(),
 		)
 	}
 

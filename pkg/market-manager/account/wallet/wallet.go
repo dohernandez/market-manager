@@ -134,11 +134,20 @@ func (w *Wallet) increaseFunds(v mm.Value) {
 
 func (w *Wallet) IncreaseInvestment(v mm.Value) {
 	w.Invested = w.Invested.Increase(v)
+	w.IncreaseCapital(v)
+}
+
+func (w *Wallet) DecreaseInvestment(v mm.Value) {
+	w.Invested = w.Invested.Decrease(v)
+	w.DecreaseCapital(v)
+}
+
+func (w *Wallet) IncreaseCapital(v mm.Value) {
 	w.Capital = w.Capital.Increase(v)
 	w.Funds = w.Funds.Increase(v)
 }
 
-func (w *Wallet) DecreaseInvestment(v mm.Value) {
+func (w *Wallet) DecreaseCapital(v mm.Value) {
 	w.Invested = w.Invested.Decrease(v)
 	w.Capital = w.Capital.Decrease(v)
 	w.Funds = w.Funds.Decrease(v)
