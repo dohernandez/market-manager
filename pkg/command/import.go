@@ -12,6 +12,8 @@ import (
 
 	"os"
 
+	"regexp"
+
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/import/account"
 	"github.com/dohernandez/market-manager/pkg/import/banking"
@@ -129,61 +131,20 @@ func (cmd *ImportCommand) Wallet(cliCtx *cli.Context) error {
 
 	c := cmd.Container(db)
 
-	type walletImport struct {
-		file   string
-		wallet string
-	}
-	var wis []walletImport
-
-	if cliCtx.String("file") == "" && cliCtx.String("wallet") != "" {
-		wallet := cliCtx.String("wallet")
-		file := fmt.Sprintf("%s/%s.csv", cmd.config.Import.WalletSPath, wallet)
-
-		wis = append(wis, walletImport{
-			file:   file,
-			wallet: wallet,
-		})
-	} else if cliCtx.String("wallet") == "" && cliCtx.String("file") != "" {
-		file := cliCtx.String("file")
-		wallet := cmd.getWalletFromFile(file)
-
-		wis = append(wis, walletImport{
-			file:   file,
-			wallet: wallet,
-		})
-	} else {
-		err := filepath.Walk(cmd.config.Import.WalletSPath, func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() {
-				return nil
-			}
-
-			if filepath.Ext(path) == ".csv" {
-				file := path
-				wallet := cmd.getWalletFromFile(file)
-				wis = append(wis, walletImport{
-					file:   file,
-					wallet: wallet,
-				})
-			}
-
-			return nil
-		})
-		if err != nil {
-			panic(err)
-		}
+	wis, err := cmd.getWalletImport(cliCtx, cmd.config.Import.WalletsPath)
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
 	for _, wi := range wis {
-		ctx = context.WithValue(ctx, "name", wi.wallet)
+		ctx = context.WithValue(ctx, "wallet", wi.walletName)
 
-		r := _import.NewCsvReader(wi.file)
+		r := _import.NewCsvReader(wi.filePath)
 		i := import_account.NewImportWallet(ctx, r, c.AccountServiceInstance(), c.BankingServiceInstance())
 
 		err = i.Import()
 		if err != nil {
-			logger.FromContext(ctx).WithError(err).Error("Failed importing")
-
-			return err
+			logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 		}
 	}
 
@@ -192,10 +153,65 @@ func (cmd *ImportCommand) Wallet(cliCtx *cli.Context) error {
 	return nil
 }
 
-func (cmd *ImportCommand) getWalletFromFile(file string) string {
+type walletImport struct {
+	filePath   string
+	walletName string
+}
+
+func (cmd *ImportCommand) getWalletImport(cliCtx *cli.Context, importPath string) ([]walletImport, error) {
+	var wis []walletImport
+
+	if cliCtx.String("file") == "" && cliCtx.String("wallet") != "" {
+		walletName := cliCtx.String("wallet")
+		filePath := fmt.Sprintf("%s/%s.csv", importPath, walletName)
+
+		wis = append(wis, walletImport{
+			filePath:   filePath,
+			walletName: walletName,
+		})
+	} else if cliCtx.String("wallet") == "" && cliCtx.String("file") != "" {
+		filePath := cliCtx.String("file")
+		walletName := cmd.getWalletNameFromFilePath(filePath)
+
+		wis = append(wis, walletImport{
+			filePath:   filePath,
+			walletName: walletName,
+		})
+	} else {
+		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			if filepath.Ext(path) == ".csv" {
+				filePath := path
+				walletName := cmd.getWalletNameFromFilePath(filePath)
+				wis = append(wis, walletImport{
+					filePath:   filePath,
+					walletName: walletName,
+				})
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return wis, nil
+}
+
+func (cmd *ImportCommand) getWalletNameFromFilePath(file string) string {
 	var dir = filepath.Dir(file)
 	var ext = filepath.Ext(file)
-	return file[len(dir)+1 : len(file)-len(ext)]
+
+	name := file[len(dir)+1 : len(file)-len(ext)]
+
+	reg := regexp.MustCompile(`(^[0-9]+_)+(.*)`)
+	res := reg.ReplaceAllString(name, "${2}")
+
+	return res
 }
 
 func (cmd *ImportCommand) Operation(cliCtx *cli.Context) error {
@@ -211,19 +227,21 @@ func (cmd *ImportCommand) Operation(cliCtx *cli.Context) error {
 
 	c := cmd.Container(db)
 
-	file := cliCtx.String("file")
-	if cliCtx.String("file") == "" {
-		file = fmt.Sprintf("%s/account.csv", cmd.config.Import.StocksPath)
+	ois, err := cmd.getWalletImport(cliCtx, cmd.config.Import.AccountsPath)
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
-	r := _import.NewCsvReader(file)
-	i := import_account.NewImportAccount(ctx, r, c.PurchaseServiceInstance(), c.AccountServiceInstance())
+	for _, oi := range ois {
+		ctx = context.WithValue(ctx, "wallet", oi.walletName)
 
-	err = i.Import()
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Error("Failed importing")
+		r := _import.NewCsvReader(oi.filePath)
+		i := import_account.NewImportAccount(ctx, r, c.PurchaseServiceInstance(), c.AccountServiceInstance())
 
-		return err
+		err = i.Import()
+		if err != nil {
+			logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+		}
 	}
 
 	logger.FromContext(ctx).Info("Import finished")
@@ -254,9 +272,7 @@ func (cmd *ImportCommand) Transfer(cliCtx *cli.Context) error {
 
 	err = i.Import()
 	if err != nil {
-		logger.FromContext(ctx).WithError(err).Error("Failed importing")
-
-		return err
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
 	logger.FromContext(ctx).Info("Import finished")
