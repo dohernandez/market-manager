@@ -5,13 +5,12 @@ import (
 	"sync"
 	"time"
 
-	"fmt"
-
 	"github.com/pkg/errors"
 
 	quote "github.com/dohernandez/go-quote"
 	gf "github.com/dohernandez/googlefinance-client-go"
 
+	"github.com/dohernandez/market-manager/pkg/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
@@ -22,12 +21,15 @@ import (
 
 type (
 	Service struct {
+		stockFinder         stock.Finder
+		stockDividendFinder dividend.Finder
+		marketFinder        market.Finder
+		exchangeFinder      exchange.Finder
+
 		stockPersister         stock.Persister
 		stockDividendPersister dividend.Persister
-		stockFinder            stock.Finder
-		stockDividendFinder    dividend.Finder
-		marketFinder           market.Finder
-		exchangeFinder         exchange.Finder
+
+		iexClient *iex.Client
 
 		accountService *account.Service
 	}
@@ -77,37 +79,59 @@ func (s *Service) Stocks() ([]*stock.Stock, error) {
 	return s.stockFinder.FindAll()
 }
 
-func (s *Service) GetLastClosedPriceFromGoogle(stk *stock.Stock) (stock.Price, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
+	var (
+		wg   sync.WaitGroup
+		errs []error
+	)
 
-	gps, err := gf.GetPrices(ctx, &gf.Query{
-		P: "2d",
-		I: "86400",
-		X: stk.Exchange.Symbol,
-		Q: stk.Symbol,
-	})
+	for _, stk := range stks {
+		wg.Add(1)
+
+		st := stk
+		go func() {
+			defer wg.Done()
+			p, err := s.getLastClosedPriceOfStock(st)
+			if err != nil {
+				errs = append(errs, errors.Wrapf(err, "symbol : %s", st.Symbol))
+
+				return
+			}
+
+			if err := s.updateLastClosedPriceOfStock(st, p); err != nil {
+				errs = append(errs, errors.Wrapf(err, "symbol : %s", st.Symbol))
+
+				return
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	err := s.accountService.UpdateWalletsAccountingByStocks(stks)
 	if err != nil {
-		return stock.Price{}, err
+		errs = append(errs, err)
 	}
 
-	if len(gps) == 0 {
-		return stock.Price{}, errors.New(fmt.Sprintf("symbol '%s' not found\n", stk.Symbol))
-	}
-
-	p := gps[len(gps)-1]
-
-	return stock.Price{
-		Date:   p.Date,
-		Close:  p.Close,
-		High:   p.High,
-		Low:    p.Low,
-		Open:   p.Open,
-		Volume: float64(p.Volume),
-	}, nil
+	return errs
 }
 
-func (s *Service) GetLastClosedPriceFromYahoo(stk *stock.Stock) (stock.Price, error) {
+func (s *Service) getLastClosedPriceOfStock(stk *stock.Stock) (stock.Price, error) {
+	p, err := s.getLastClosedPriceFromYahoo(stk)
+	if err != nil {
+		p, err = s.getLastClosedPriceFromGoogle(stk)
+		if err != nil {
+			p, err = s.getLastClosedPriceFromIEXTrading(stk)
+			if err != nil {
+				return stock.Price{}, errors.WithStack(err)
+			}
+		}
+	}
+
+	return p, nil
+}
+
+func (s *Service) getLastClosedPriceFromYahoo(stk *stock.Stock) (stock.Price, error) {
 	endDate := time.Now()
 	startDate := endDate.Add(-24 * time.Hour)
 
@@ -126,48 +150,52 @@ func (s *Service) GetLastClosedPriceFromYahoo(stk *stock.Stock) (stock.Price, er
 	}, nil
 }
 
-func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
-	var (
-		wg   sync.WaitGroup
-		errs []error
-	)
+func (s *Service) getLastClosedPriceFromGoogle(stk *stock.Stock) (stock.Price, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-	for _, stk := range stks {
-		wg.Add(1)
-		fmt.Printf("start updating stock %s\n", stk.Symbol)
-
-		st := stk
-		go func() {
-			defer wg.Done()
-
-			if err := s.updateLastClosedPriceOfStock(st); err != nil {
-				errs = append(errs, errors.New(fmt.Sprintf("%+v -> stock:%+v", err, st)))
-
-				return
-			}
-			fmt.Printf("finish updating stock %s\n", st.Symbol)
-		}()
-	}
-
-	wg.Wait()
-
-	err := s.accountService.UpdateWalletsAccountingByStocks(stks)
+	gps, err := gf.GetPrices(ctx, &gf.Query{
+		P: "2d",
+		I: "86400",
+		X: stk.Exchange.Symbol,
+		Q: stk.Symbol,
+	})
 	if err != nil {
-		errs = append(errs, err)
+		return stock.Price{}, err
 	}
 
-	return errs
+	if len(gps) == 0 {
+		return stock.Price{}, errors.Errorf("symbol '%s' not found\n", stk.Symbol)
+	}
+
+	p := gps[len(gps)-1]
+
+	return stock.Price{
+		Date:   p.Date,
+		Close:  p.Close,
+		High:   p.High,
+		Low:    p.Low,
+		Open:   p.Open,
+		Volume: float64(p.Volume),
+	}, nil
 }
 
-func (s *Service) updateLastClosedPriceOfStock(stk *stock.Stock) error {
-	p, err := s.GetLastClosedPriceFromYahoo(stk)
+func (s *Service) getLastClosedPriceFromIEXTrading(stk *stock.Stock) (stock.Price, error) {
+	q, err := s.iexClient.Quote.Get(stk.Symbol)
 	if err != nil {
-		p, err = s.GetLastClosedPriceFromGoogle(stk)
-		if err != nil {
-			return err
-		}
+		return stock.Price{}, err
 	}
+	return stock.Price{
+		Date:   q.LatestUpdate,
+		Close:  q.Close,
+		High:   q.High,
+		Low:    q.Low,
+		Open:   q.Open,
+		Volume: q.Volume,
+	}, nil
+}
 
+func (s *Service) updateLastClosedPriceOfStock(stk *stock.Stock, p stock.Price) error {
 	pv := stk.Value
 
 	stk.Value = mm.Value{
@@ -177,7 +205,7 @@ func (s *Service) updateLastClosedPriceOfStock(stk *stock.Stock) error {
 
 	stk.Change = stk.Value.Decrease(pv)
 
-	err = s.updateStockDividendYield(stk)
+	err := s.updateStockDividendYield(stk)
 	if err != nil {
 		return err
 	}
@@ -186,10 +214,16 @@ func (s *Service) updateLastClosedPriceOfStock(stk *stock.Stock) error {
 }
 
 func (s *Service) UpdateLastClosedPriceStock(stk *stock.Stock) error {
-	if err := s.updateLastClosedPriceOfStock(stk); err != nil {
+	p, err := s.getLastClosedPriceOfStock(stk)
+	if err != nil {
 		return err
 	}
-	err := s.accountService.UpdateWalletsAccountingByStock(stk)
+
+	if err := s.updateLastClosedPriceOfStock(stk, p); err != nil {
+		return err
+	}
+
+	err = s.accountService.UpdateWalletsAccountingByStock(stk)
 	if err != nil {
 		return err
 	}

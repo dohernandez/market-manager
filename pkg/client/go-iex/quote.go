@@ -3,6 +3,7 @@ package iex
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 const quoteUrl = "%s/stock/%s/quote"
@@ -13,11 +14,14 @@ type (
 	}
 
 	Quote struct {
-		Symbol       string  `json:"symbol"`
-		CompanyName  string  `json:"companyName"`
-		Open         float64 `json:"open"`
-		Close        float64 `json:"close"`
-		LatestUpdate int     `json:"latestUpdate"`
+		LatestUpdate time.Time `json:"latestUpdate"`
+		Symbol       string    `json:"symbol"`
+		CompanyName  string    `json:"companyName"`
+		Close        float64   `json:"close"`
+		High         float64   `json:"high"`
+		Low          float64   `json:"low"`
+		Open         float64   `json:"open"`
+		Volume       float64   `json:"volume"`
 	}
 )
 
