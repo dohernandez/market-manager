@@ -8,10 +8,10 @@ CREATE TABLE operation (
     stock_id UUID,
     action eaction,
     amount INTEGER,
-    price NUMERIC(7, 2) NOT NULL,
-    price_change NUMERIC(7, 4),
+    price NUMERIC(11, 2) NOT NULL,
+    price_change NUMERIC(5, 4),
     price_change_commission NUMERIC(7, 2),
-    value NUMERIC(7, 2) NOT NULL,
+    value NUMERIC(11, 2) NOT NULL,
     commission NUMERIC(7, 2)
 );
 

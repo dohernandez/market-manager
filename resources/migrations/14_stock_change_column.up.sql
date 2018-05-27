@@ -1,2 +1,2 @@
 -- Add new column.
-ALTER TABLE stock ADD change NUMERIC(7, 2) DEFAULT 0;
+ALTER TABLE stock ADD change NUMERIC(11, 2) DEFAULT 0;
