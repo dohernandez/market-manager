@@ -2,10 +2,23 @@ package container
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
+	"fmt"
+
+	"github.com/sirupsen/logrus"
+	"github.com/sony/gobreaker"
+
+	"github.com/f2prateek/train"
+
+	"github.com/dohernandez/market-manager/pkg/client"
+	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
+	"github.com/dohernandez/market-manager/pkg/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/config"
+	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking"
@@ -35,6 +48,9 @@ type Container struct {
 	stockDividendPersister dividend.Persister
 	walletPersister        wallet.Persister
 	transferPersister      transfer.Persister
+
+	iexClient *iex.Client
+	ccClient  *cc.Client
 
 	purchaseService *purchase.Service
 	accountService  *account.Service
@@ -137,6 +153,57 @@ func (c *Container) transferPersisterInstance() transfer.Persister {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CLIENT
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+func (c *Container) newHTTPClient(name string, timeout time.Duration) *http.Client {
+	clt := http.Client{}
+
+	// Add middleware
+	st := gobreaker.Settings{
+		Name: fmt.Sprintf("%s Client Circuit breaker", name),
+		OnStateChange: func(name string, from gobreaker.State, to gobreaker.State) {
+			logger.FromContext(c.ctx).WithFields(logrus.Fields{
+				"name": name,
+				"from": from,
+				"to":   to,
+			}).Error("Circuit breaker state changed")
+		},
+	}
+	cbInterceptor := client.NewCircuitBreaker(st)
+
+	clt.Timeout = timeout
+
+	if clt.Transport != nil {
+		clt.Transport = train.TransportWith(clt.Transport, cbInterceptor)
+		return &clt
+	}
+
+	clt.Transport = train.Transport(cbInterceptor)
+
+	return &clt
+}
+
+func (c *Container) IEXTradingClientInstance() *iex.Client {
+	if c.iexClient == nil {
+		timeout := time.Second * time.Duration(c.config.IEXTrading.Timeout)
+
+		c.iexClient = iex.NewClient(c.newHTTPClient("IEX-TRADING", timeout))
+	}
+
+	return c.iexClient
+}
+
+func (c *Container) CurrencyConverterClientInstance() *cc.Client {
+	if c.ccClient == nil {
+		timeout := time.Second * time.Duration(c.config.CurrencyConverter.Timeout)
+
+		c.ccClient = cc.NewClient(c.newHTTPClient("CURRENCY-CONVERTER", timeout))
+	}
+
+	return c.ccClient
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SERVICE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 func (c *Container) PurchaseServiceInstance() *purchase.Service {
@@ -149,6 +216,7 @@ func (c *Container) PurchaseServiceInstance() *purchase.Service {
 			c.marketFinderInstance(),
 			c.exchangeFinderInstance(),
 			c.AccountServiceInstance(),
+			c.IEXTradingClientInstance(),
 		)
 	}
 
@@ -160,6 +228,7 @@ func (c *Container) AccountServiceInstance() *account.Service {
 		c.accountService = account.NewService(
 			c.walletFinderInstance(),
 			c.walletPersisterInstance(),
+			c.CurrencyConverterClientInstance(),
 		)
 	}
 
