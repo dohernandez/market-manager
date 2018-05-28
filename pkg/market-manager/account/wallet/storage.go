@@ -10,6 +10,7 @@ type (
 		FindByName(name string) (*Wallet, error)
 		FindByBankAccount(ba *bank.Account) (*Wallet, error)
 		FindWalletsWithItemByStock(stk *stock.Stock) ([]*Wallet, error)
+		LoadActiveWalletItems(w *Wallet) error
 	}
 
 	Persister interface {

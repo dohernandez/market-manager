@@ -15,7 +15,8 @@ import (
 
 type (
 	walletFinder struct {
-		db sqlx.Queryer
+		db          sqlx.Queryer
+		stockFinder stock.Finder
 	}
 
 	walletTuple struct {
@@ -26,13 +27,27 @@ type (
 		Capital  string    `db:"capital"`
 		Funds    string    `db:"funds"`
 	}
+
+	walletItemTuple struct {
+		ID          uuid.UUID `db:"id"`
+		Amount      int       `db:"amount"`
+		Invested    string    `db:"invested"`
+		Dividend    string    `db:"dividend"`
+		Buys        string    `db:"buys"`
+		Sells       string    `db:"sells"`
+		Capital     string    `db:"capital"`
+		CapitalRate float64   `db:"capital_rate"`
+		StockID     uuid.UUID `db:"stock_id"`
+		WalletID    uuid.UUID `db:"wallet_id"`
+	}
 )
 
 var _ wallet.Finder = &walletFinder{}
 
-func NewWalletFinder(db sqlx.Queryer) *walletFinder {
+func NewWalletFinder(db sqlx.Queryer, stockFinder stock.Finder) *walletFinder {
 	return &walletFinder{
-		db: db,
+		db:          db,
+		stockFinder: stockFinder,
 	}
 }
 
@@ -131,4 +146,48 @@ func (f *walletFinder) FindWalletsWithItemByStock(stk *stock.Stock) ([]*wallet.W
 	}
 
 	return ws, nil
+}
+
+func (f *walletFinder) LoadActiveWalletItems(w *wallet.Wallet) error {
+	var tuples []walletItemTuple
+
+	query := `SELECT * FROM wallet_item WHERE wallet_id = $1 AND amount > 0`
+
+	err := sqlx.Select(f.db, &tuples, query, w.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return mm.ErrNotFound
+		}
+
+		return errors.Wrapf(err, "Select wallet items from wallet %q", w.ID)
+	}
+
+	for _, tuple := range tuples {
+		item, err := f.hydrateWalletItem(&tuple)
+		if err != nil {
+			return errors.Wrapf(err, "Hydrate wallet item from wallet %q", w.ID)
+		}
+
+		w.Items[item.Stock.ID] = item
+	}
+
+	return nil
+}
+
+func (f *walletFinder) hydrateWalletItem(tuple *walletItemTuple) (*wallet.Item, error) {
+	stk, err := f.stockFinder.FindByID(tuple.StockID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wallet.Item{
+		ID:          tuple.ID,
+		Stock:       stk,
+		Amount:      tuple.Amount,
+		Invested:    mm.ValueFromString(tuple.Invested),
+		Dividend:    mm.ValueFromString(tuple.Dividend),
+		Buys:        mm.ValueFromString(tuple.Buys),
+		Sells:       mm.ValueFromString(tuple.Sells),
+		CapitalRate: tuple.CapitalRate,
+	}, nil
 }

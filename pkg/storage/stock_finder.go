@@ -37,6 +37,8 @@ type (
 	}
 )
 
+var _ stock.Finder = &stockFinder{}
+
 func NewStockFinder(db sqlx.Queryer) *stockFinder {
 	return &stockFinder{
 		db: db,
@@ -117,7 +119,7 @@ func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
 			return nil, mm.ErrNotFound
 		}
 
-		return nil, errors.Wrap(err, "Select stock by symbol")
+		return nil, errors.Wrapf(err, "Select stock by symbol %q", symbol)
 	}
 
 	return f.hydrate(&tuple), nil
@@ -143,7 +145,33 @@ func (f *stockFinder) FindByName(name string) (*stock.Stock, error) {
 			return nil, mm.ErrNotFound
 		}
 
-		return nil, errors.Wrap(err, "Select stock by name")
+		return nil, errors.Wrapf(err, "Select stock by name %q", name)
+	}
+
+	return f.hydrate(&tuple), nil
+}
+
+func (f *stockFinder) FindByID(ID uuid.UUID) (*stock.Stock, error) {
+	var tuple stockTuple
+
+	query := `
+		SELECT 
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change,
+			m.name AS market_name, m.display_name AS market_display_name,
+			e.name AS exchange_name, e.symbol AS exchange_symbol
+		FROM stock s 
+		INNER JOIN market m ON s.market_id = m.id
+		INNER JOIN exchange e ON s.exchange_id = e.id
+		WHERE s.id = $1
+	`
+
+	err := sqlx.Get(f.db, &tuple, query, ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, mm.ErrNotFound
+		}
+
+		return nil, errors.Wrapf(err, "Select stock by ID %q", ID)
 	}
 
 	return f.hydrate(&tuple), nil

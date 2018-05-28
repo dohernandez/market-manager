@@ -52,6 +52,7 @@ func main() {
 	migrateCommand := command.NewMigrateCommand(baseCommand)
 	importCommand := command.NewImportCommand(baseCommand)
 	stocksCommand := command.NewStocksCommand(baseCommand)
+	accountCommand := command.NewAccountCommand(baseCommand)
 	apiCommand := command.NewApiCommand(baseCommand)
 
 	app.Commands = []cli.Command{
@@ -192,6 +193,29 @@ func main() {
 								cli.StringFlag{
 									Name:  "file, f",
 									Usage: "csv file to import",
+								},
+								cli.StringFlag{
+									Name:  "wallet, w",
+									Usage: "Wallet name",
+								},
+							},
+						},
+					},
+				},
+				{
+					Name:    "export",
+					Aliases: []string{"e"},
+					Usage:   "Export to csv file",
+					Subcommands: []cli.Command{
+						{
+							Name:      "walletItems",
+							Aliases:   []string{"wi"},
+							Action:    accountCommand.WalletItems,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to export",
 								},
 								cli.StringFlag{
 									Name:  "wallet, w",

@@ -113,10 +113,11 @@ func (s *Service) UpdateWalletsCapitalByStocks(stks []*stock.Stock) error {
 
 			capital := w.Items[stk.ID].Capital()
 			fmt.Printf(
-				"increasing capital %f in wallet %s from stock %s\n",
+				"increasing capital %f in wallet %s from stock %s with rate %f\n",
 				w.Items[stk.ID].Capital().Amount,
 				w.Name,
 				stk.Symbol,
+				w.Items[stk.ID].CapitalRate,
 			)
 			w.Capital = capital
 		}
@@ -150,10 +151,11 @@ func (s *Service) UpdateWalletsCapitalByStock(stk *stock.Stock) error {
 
 		capital := w.Items[stk.ID].Capital()
 		fmt.Printf(
-			"increasing capital %f in wallet %s from stock %s\n",
+			"increasing capital %f in wallet %s from stock %s with rate %f\n",
 			w.Items[stk.ID].Capital().Amount,
 			w.Name,
 			stk.Symbol,
+			w.Items[stk.ID].CapitalRate,
 		)
 		w.Capital = capital
 	}
@@ -166,64 +168,16 @@ func (s *Service) UpdateWalletsCapitalByStock(stk *stock.Stock) error {
 	return nil
 }
 
-//func (s *Service) FindWalletItem(stk *stock.Stock) (*wallet.Item, error) {
-//	//return s.walletFinder.FindByStock(stk)
-//	return nil, mm.ErrNotFound
-//}
-//
-//func (s *Service) SaveAllWalletItem(is []*wallet.Item) error {
-//	for _, i := range is {
-//		fmt.Printf("%+v\n", i)
-//	}
-//	//return s.itemPersister.PersistAll(is)
-//	return nil
-//}
-//
-//func (s *Service) BuyStock(o *operation.Operation) error {
-//	i, err := s.walletFinder.FindByStock(o.Stock)
-//	if err != nil {
-//		if err != mm.ErrNotFound {
-//			return err
-//		}
-//
-//		i = wallet.NewItem(o.Stock)
-//	}
-//
-//	i.increaseInvestment(o.Amount, o.Price)
-//	err = s.itemPersister.Persist(i)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
-//
-//func (s *Service) SellStock(o *operation.Operation) error {
-//	i, err := s.walletFinder.FindByStock(o.Stock)
-//	if err != nil {
-//		return err
-//	}
-//
-//	i.decreaseInvestment(o.Amount, o.Price)
-//	err = s.itemPersister.Persist(i)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
-//
-//func (s *Service) Dividend(o *operation.Operation) error {
-//	i, err := s.walletFinder.FindByStock(o.Stock)
-//	if err != nil {
-//		return err
-//	}
-//
-//	i.increaseDividend(o.Price)
-//	err = s.itemPersister.Persist(i)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
+func (s *Service) GetWalletWithAllItems(wName string) (*wallet.Wallet, error) {
+	w, err := s.FindWalletByName(wName)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.walletFinder.LoadActiveWalletItems(w)
+	if err != nil {
+		return nil, err
+	}
+
+	return w, nil
+}
