@@ -3,9 +3,10 @@ package cc
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 )
 
-const converterUrl = "%s/convert?q=EUR_USD&compact=y"
+const converterUrl = "%s/convert?q=EUR_USD&compact=ultra"
 
 type (
 	converterEndpoint struct {
@@ -26,19 +27,12 @@ func (e *converterEndpoint) Get() (Converter, error) {
 		return c, err
 	}
 
-	type ConverterResp struct {
-		EURUSD struct {
-			Val float64 `json:"val"`
-		} `json:"EUR_USD"`
-	}
-	var cr ConverterResp
-
-	err = json.NewDecoder(resp.Body).Decode(&cr)
+	err = json.NewDecoder(resp.Body).Decode(&c)
 	if err != nil {
 		return c, err
 	}
 
-	c.EURUSD = cr.EURUSD.Val
+	c.EURUSD, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", c.EURUSD), 64)
 
 	return c, nil
 }
