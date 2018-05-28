@@ -8,6 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
+	"time"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
@@ -16,12 +18,13 @@ import (
 
 type (
 	stockTuple struct {
-		ID            uuid.UUID
-		Name          string
-		Symbol        string
-		Value         string
-		DividendYield string `db:"dividend_yield"`
-		Change        string `db:"change"`
+		ID              uuid.UUID
+		Name            string
+		Symbol          string
+		Value           string
+		DividendYield   string    `db:"dividend_yield"`
+		Change          string    `db:"change"`
+		LastPriceUpdate time.Time `db:"last_price_update"`
 
 		MarketID          uuid.UUID `db:"market_id"`
 		MarketName        string    `db:"market_name"`
@@ -50,7 +53,7 @@ func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 
 	query := `
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change,
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -91,11 +94,12 @@ func (f *stockFinder) hydrate(s *stockTuple) *stock.Stock {
 			Name:   s.ExchangeName,
 			Symbol: s.ExchangeSymbol,
 		},
-		Name:          s.Name,
-		Symbol:        s.Symbol,
-		Value:         mm.ValueFromString(s.Value),
-		DividendYield: dy,
-		Change:        mm.ValueFromString(s.Change),
+		Name:            s.Name,
+		Symbol:          s.Symbol,
+		Value:           mm.ValueFromString(s.Value),
+		DividendYield:   dy,
+		Change:          mm.ValueFromString(s.Change),
+		LastPriceUpdate: s.LastPriceUpdate,
 	}
 }
 
@@ -104,7 +108,7 @@ func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
 
 	query := `
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change,
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -130,7 +134,7 @@ func (f *stockFinder) FindByName(name string) (*stock.Stock, error) {
 
 	query := `
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change,
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -156,7 +160,7 @@ func (f *stockFinder) FindByID(ID uuid.UUID) (*stock.Stock, error) {
 
 	query := `
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change,
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
