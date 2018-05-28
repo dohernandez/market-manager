@@ -1,9 +1,8 @@
 package wallet
 
 import (
-	"github.com/satori/go.uuid"
-
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
@@ -70,6 +69,29 @@ func (i *Item) Capital() mm.Value {
 	capital := float64(i.Amount) * i.Stock.Value.Amount / i.CapitalRate
 
 	return mm.Value{Amount: capital}
+}
+
+func (i *Item) NetBenefits() mm.Value {
+	benefits := i.benefits()
+	benefits = benefits.Decrease(i.Buys)
+
+	return benefits
+}
+
+func (i *Item) benefits() mm.Value {
+	benefits := i.Capital()
+	benefits = benefits.Increase(i.Sells)
+	benefits = benefits.Increase(i.Dividend)
+
+	return benefits
+}
+
+func (i *Item) PercentageBenefits() float64 {
+	benefits := i.benefits()
+
+	percent := (benefits.Amount * float64(100)) / i.Buys.Amount
+
+	return percent - 100
 }
 
 type Wallet struct {
