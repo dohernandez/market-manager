@@ -156,6 +156,25 @@ func main() {
 						},
 					},
 				},
+				{
+					Name:    "export",
+					Aliases: []string{"e"},
+					Usage:   "Export to csv file",
+					Subcommands: []cli.Command{
+						{
+							Name:      "stocks",
+							Aliases:   []string{"s"},
+							Action:    stocksCommand.Stocks,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to export",
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 		{

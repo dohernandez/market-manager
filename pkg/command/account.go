@@ -57,19 +57,19 @@ func (cmd *AccountCommand) WalletItems(cliCtx *cli.Context) error {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // START Wallet Items Sort
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ByName implements sort.Interface by providing Less and using the Len and
 // Swap methods of the embedded wallet items value.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 type WalletItems []*wallet.Item
 
 func (s WalletItems) Len() int      { return len(s) }
 func (s WalletItems) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
-type ByName struct {
+type WalletItemsByName struct {
 	WalletItems
 }
 
-func (s ByName) Less(i, j int) bool {
+func (s WalletItemsByName) Less(i, j int) bool {
 	return s.WalletItems[i].Stock.Name < s.WalletItems[j].Stock.Name
 }
 
@@ -77,21 +77,21 @@ func (s ByName) Less(i, j int) bool {
 // END Wallet Items Sort
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// formatItemsToCSV - convert Items structure to csv string
+// formatItemsToScreen - convert Items structure to csv string
 func (cmd *AccountCommand) formatItemsToScreen(items map[uuid.UUID]*wallet.Item) *tabwriter.Writer {
 	precision := 2
-	sortedItems := make([]*wallet.Item, 0, len(items))
+	sortItems := make([]*wallet.Item, 0, len(items))
 
 	for _, item := range items {
-		sortedItems = append(sortedItems, item)
+		sortItems = append(sortItems, item)
 	}
 
-	sort.Sort(ByName{sortedItems})
+	sort.Sort(WalletItemsByName{sortItems})
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
 
 	fmt.Fprintln(w, "#\tStock\tMarket\tSymbol\tAmount\tCapital\tInvested\tDividend\tBuys\tSells\tBenefits\t% Benefits\t")
-	for i, item := range sortedItems {
+	for i, item := range sortItems {
 		str := fmt.Sprintf(
 			"%d\t%s\t%s\t%s\t%d\t%.*f\t%.*f\t%.*f\t%.*f\t%.*f\t%.*f\t%.*f\t",
 			i+1,
