@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/urfave/cli"
 
@@ -178,10 +179,10 @@ func (cmd *StocksCommand) formatStocksToScreen(stks []*stock.Stock) *tabwriter.W
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
 
-	fmt.Fprintln(w, "#\tStock\tMarket\tSymbol\tValue\tDividend Yield\tChange\t")
+	fmt.Fprintln(w, "#\t Stock\t Market\t Symbol\t Value\t Dividend Yield\t Change\t Last Price Update\t")
 	for i, stk := range sortStks {
 		str := fmt.Sprintf(
-			"%d\t%s\t%s\t%s\t%.*f\t%.*f\t%.*f\t",
+			"%d\t %s\t %s\t %s\t %.*f\t %.*f\t %.*f\t %s\t",
 			i+1,
 			stk.Name,
 			stk.Exchange.Symbol,
@@ -192,6 +193,7 @@ func (cmd *StocksCommand) formatStocksToScreen(stks []*stock.Stock) *tabwriter.W
 			stk.DividendYield,
 			precision,
 			stk.Change.Amount,
+			stk.LastPriceUpdate.Format(time.RFC822),
 		)
 		fmt.Fprintln(w, str)
 	}
