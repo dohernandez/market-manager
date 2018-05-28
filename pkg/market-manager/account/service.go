@@ -1,8 +1,11 @@
 package account
 
 import (
+	"fmt"
+
 	uuid "github.com/satori/go.uuid"
 
+	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
@@ -13,13 +16,16 @@ type (
 	Service struct {
 		walletFinder    wallet.Finder
 		walletPersister wallet.Persister
+
+		ccClient *cc.Client
 	}
 )
 
-func NewService(walletFinder wallet.Finder, walletPersister wallet.Persister) *Service {
+func NewService(walletFinder wallet.Finder, walletPersister wallet.Persister, ccClient *cc.Client) *Service {
 	return &Service{
 		walletFinder:    walletFinder,
 		walletPersister: walletPersister,
+		ccClient:        ccClient,
 	}
 }
 
@@ -86,40 +92,51 @@ func (s *Service) UpdateWalletsAccountingByTransfers(ts []*transfer.Transfer) er
 	return s.walletPersister.UpdateAllAccounting(ws)
 }
 
-func (s *Service) UpdateWalletsAccountingByStocks(stks []*stock.Stock) error {
-	var ws []*wallet.Wallet
-	cwms := map[uuid.UUID][]*wallet.Wallet{}
+func (s *Service) UpdateWalletsCapitalByStocks(stks []*stock.Stock) error {
+	cEURUSD, err := s.ccClient.Converter.Get()
+	if err != nil {
+		return err
+	}
 
 	for _, stk := range stks {
-		var err error
-		rws, ok := cwms[stk.ID]
-		if !ok {
-			rws, err = s.walletFinder.FindWalletsByStock(stk)
-			if err != nil {
-				if err != mm.ErrNotFound {
-					return err
-				}
-
-				continue
+		ws, err := s.walletFinder.FindWalletsWithItemByStock(stk)
+		if err != nil {
+			if err != mm.ErrNotFound {
+				return err
 			}
 
-			cwms[stk.ID] = rws
-
-			for _, w := range rws {
-				ws = append(ws, w)
-			}
+			continue
 		}
 
 		for _, w := range ws {
-			w.IncreaseCapital(stk.Change)
+			w.Items[stk.ID].CapitalRate = cEURUSD.EURUSD
+
+			capital := w.Items[stk.ID].Capital()
+			fmt.Printf(
+				"increasing capital %f in wallet %s from stock %s\n",
+				w.Items[stk.ID].Capital().Amount,
+				w.Name,
+				stk.Symbol,
+			)
+			w.Capital = capital
+		}
+
+		err = s.walletPersister.UpdateAllItemsCapital(ws)
+		if err != nil {
+			return err
 		}
 	}
 
-	return s.walletPersister.UpdateAllAccounting(ws)
+	return nil
 }
 
-func (s *Service) UpdateWalletsAccountingByStock(stk *stock.Stock) error {
-	ws, err := s.walletFinder.FindWalletsByStock(stk)
+func (s *Service) UpdateWalletsCapitalByStock(stk *stock.Stock) error {
+	cEURUSD, err := s.ccClient.Converter.Get()
+	if err != nil {
+		return err
+	}
+
+	ws, err := s.walletFinder.FindWalletsWithItemByStock(stk)
 	if err != nil {
 		if err != mm.ErrNotFound {
 			return err
@@ -129,10 +146,24 @@ func (s *Service) UpdateWalletsAccountingByStock(stk *stock.Stock) error {
 	}
 
 	for _, w := range ws {
-		w.IncreaseCapital(stk.Change)
+		w.Items[stk.ID].CapitalRate = cEURUSD.EURUSD
+
+		capital := w.Items[stk.ID].Capital()
+		fmt.Printf(
+			"increasing capital %f in wallet %s from stock %s\n",
+			w.Items[stk.ID].Capital().Amount,
+			w.Name,
+			stk.Symbol,
+		)
+		w.Capital = capital
 	}
 
-	return s.walletPersister.UpdateAllAccounting(ws)
+	err = s.walletPersister.UpdateAllItemsCapital(ws)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 //func (s *Service) FindWalletItem(stk *stock.Stock) (*wallet.Item, error) {

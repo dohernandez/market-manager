@@ -1,6 +1,8 @@
 package mm
 
-import "strconv"
+import (
+	"strconv"
+)
 
 type Value struct {
 	Amount   float64

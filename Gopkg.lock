@@ -26,6 +26,12 @@
   version = "1.0.3"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/f2prateek/train"
+  packages = ["."]
+  revision = "523ebcaf2f005ed0eff7096782c93ba9bfe352aa"
+
+[[projects]]
   name = "github.com/go-chi/chi"
   packages = [
     ".",
@@ -101,6 +107,12 @@
   version = "v1.0.5"
 
 [[projects]]
+  name = "github.com/sony/gobreaker"
+  packages = ["."]
+  revision = "e9556a45379ef1da12e54847edb2fb3d7d566f36"
+  version = "0.3.0"
+
+[[projects]]
   name = "github.com/stretchr/objx"
   packages = ["."]
   revision = "facf9a85c22f48d2f52f2380e4efce1768749a89"
@@ -139,6 +151,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e10a6245b691dcd13f9d0f609043974898a2e2bb74f31041e0d73e2cd1a331c1"
+  inputs-digest = "da3a6d93eb08d768617526e261a266bfb1c7f2bfbbbb1c14d9c9d8f87391aaba"
   solver-name = "gps-cdcl"
   solver-version = 1

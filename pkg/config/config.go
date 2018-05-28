@@ -25,6 +25,12 @@ type Specification struct {
 		TransfersPath string `envconfig:"TRANSFERS_PATH" default:"resources/import/transfers"`
 		WalletsPath   string `envconfig:"WALLETS_PATH" default:"resources/import/wallets"`
 	}
+	IEXTrading struct {
+		Timeout int `envconfig:"IEX_TRADING_TIMEOUT" default:"15"`
+	}
+	CurrencyConverter struct {
+		Timeout int `envconfig:"CURRENCY_CONVERTER_TIMEOUT" default:"15"`
+	}
 }
 
 // LoadEnv load config variables into Specification.

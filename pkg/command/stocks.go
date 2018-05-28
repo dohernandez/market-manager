@@ -57,14 +57,13 @@ func (cmd *StocksCommand) Price(cliCtx *cli.Context) error {
 
 				return errs[0]
 			} else {
-				fmt.Printf("some errs happen while updating stocks price: %v\n", errs[0])
+				fmt.Printf("some errs happen while updating stocks price: %+v\n", errs)
 			}
 		}
 	} else {
 		stock, err := stockService.FindStockBySymbol(cliCtx.String("stock"))
 		if err != nil {
 			fmt.Printf("err: %v\n", err)
-
 			return err
 		}
 

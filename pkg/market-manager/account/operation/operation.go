@@ -3,9 +3,10 @@ package operation
 import (
 	"time"
 
+	"github.com/satori/go.uuid"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
-	"github.com/satori/go.uuid"
 )
 
 type (
@@ -56,4 +57,14 @@ func NewOperation(
 		Value:      value,
 		Commission: commission,
 	}
+}
+
+func (o *Operation) Capital() mm.Value {
+	if o.Stock.ID == uuid.Nil {
+		return mm.Value{}
+	}
+
+	capital := float64(o.Amount) * o.Stock.Value.Amount
+
+	return mm.Value{Amount: capital}
 }

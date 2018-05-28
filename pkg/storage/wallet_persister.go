@@ -175,3 +175,45 @@ func (p *walletPersister) UpdateAccounting(w *wallet.Wallet) error {
 		return p.execUpdateAccounting(tx, w)
 	})
 }
+
+// UpdateAllItemsCapital Update the capital of all items from all wallets, along with the capital of the wallet
+func (p *walletPersister) UpdateAllItemsCapital(ws []*wallet.Wallet) error {
+	return transaction(p.db, func(tx *sqlx.Tx) error {
+		for _, w := range ws {
+			if err := p.execUpdateItemCapital(tx, w); err != nil {
+				return err
+			}
+			if err := p.execUpdateCapital(tx, w); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func (p *walletPersister) execUpdateItemCapital(tx *sqlx.Tx, w *wallet.Wallet) error {
+	for _, i := range w.Items {
+		query := `UPDATE wallet_item SET capital = $1, capital_rate = $2 WHERE id = $3`
+
+		_, err := tx.Exec(query, i.Capital().Amount, i.CapitalRate, i.ID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (p *walletPersister) execUpdateCapital(tx *sqlx.Tx, w *wallet.Wallet) error {
+	query := `UPDATE wallet SET capital = (
+		SELECT SUM(wi.capital)
+		FROM wallet w
+		INNER JOIN wallet_item wi ON w.id = wi.wallet_id
+		WHERE w.id = $1
+	) WHERE id = $2`
+
+	_, err := tx.Exec(query, w.ID, w.ID)
+
+	return err
+}

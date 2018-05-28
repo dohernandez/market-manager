@@ -9,7 +9,7 @@ type (
 	Finder interface {
 		FindByName(name string) (*Wallet, error)
 		FindByBankAccount(ba *bank.Account) (*Wallet, error)
-		FindWalletsByStock(stk *stock.Stock) ([]*Wallet, error)
+		FindWalletsWithItemByStock(stk *stock.Stock) ([]*Wallet, error)
 	}
 
 	Persister interface {
@@ -17,5 +17,6 @@ type (
 		PersistOperations(w *Wallet) error
 		UpdateAllAccounting(ws []*Wallet) error
 		UpdateAccounting(w *Wallet) error
+		UpdateAllItemsCapital(ws []*Wallet) error
 	}
 )

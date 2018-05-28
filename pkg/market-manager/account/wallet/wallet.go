@@ -12,13 +12,14 @@ import (
 )
 
 type Item struct {
-	ID       uuid.UUID
-	Stock    *stock.Stock
-	Amount   int
-	Invested mm.Value
-	Dividend mm.Value
-	Buys     mm.Value
-	Sells    mm.Value
+	ID          uuid.UUID
+	Stock       *stock.Stock
+	Amount      int
+	Invested    mm.Value
+	Dividend    mm.Value
+	Buys        mm.Value
+	Sells       mm.Value
+	CapitalRate float64
 }
 
 func NewItem(stock *stock.Stock) *Item {
@@ -35,34 +36,40 @@ func NewItem(stock *stock.Stock) *Item {
 func (i *Item) increaseInvestment(amount int, invested, priceChangeCommission, commission mm.Value) mm.Value {
 	i.Amount = i.Amount + amount
 
-	increase := invested.Increase(priceChangeCommission)
-	increase = increase.Increase(commission)
+	invested = invested.Increase(priceChangeCommission)
+	invested = invested.Increase(commission)
 
-	i.Invested = i.Invested.Increase(increase)
-	i.Buys = i.Buys.Increase(increase)
+	i.Invested = i.Invested.Increase(invested)
+	i.Buys = i.Buys.Increase(invested)
 
-	return increase
+	return invested
 }
 
-func (i *Item) decreaseInvestment(amount int, invested, priceChangeCommission, commission mm.Value) mm.Value {
+func (i *Item) decreaseInvestment(amount int, buyout, priceChangeCommission, commission mm.Value) mm.Value {
 	i.Amount = i.Amount - amount
 
-	decrease := invested.Increase(priceChangeCommission)
-	decrease = decrease.Increase(commission)
+	buyout = buyout.Decrease(priceChangeCommission)
+	buyout = buyout.Decrease(commission)
 
-	i.Invested = i.Invested.Decrease(decrease)
+	i.Invested = i.Invested.Decrease(buyout)
 
 	if i.Invested.Amount < 0 {
 		i.Invested = mm.Value{}
 	}
 
-	i.Sells = i.Sells.Increase(invested)
+	i.Sells = i.Sells.Increase(buyout)
 
-	return decrease
+	return buyout
 }
 
 func (i *Item) increaseDividend(dividend mm.Value) {
 	i.Dividend = i.Dividend.Increase(dividend)
+}
+
+func (i *Item) Capital() mm.Value {
+	capital := float64(i.Amount) * i.Stock.Value.Amount / i.CapitalRate
+
+	return mm.Value{Amount: capital}
 }
 
 type Wallet struct {
@@ -74,7 +81,7 @@ type Wallet struct {
 	Items map[uuid.UUID]*Item
 	// inital capital
 	Invested mm.Value
-	// capital (sum of all stock values)
+	// capital (sum of all wallet item capital)
 	Capital    mm.Value
 	Funds      mm.Value
 	Operations []*operation.Operation
@@ -103,29 +110,37 @@ func (w *Wallet) AddBankAccount(ba *bank.Account) error {
 func (w *Wallet) AddOperation(o *operation.Operation) {
 	w.Operations = append(w.Operations, o)
 
-	if o.Action == operation.Buy || o.Action == operation.Sell || o.Action == operation.Dividend {
-		wi, ok := w.Items[o.Stock.ID]
-		if !ok {
+	wi, ok := w.Items[o.Stock.ID]
+	if !ok {
+		if o.Stock.ID != uuid.Nil {
 			wi = NewItem(o.Stock)
 			w.Items[o.Stock.ID] = wi
 		}
+	}
 
-		switch o.Action {
-		case operation.Buy:
-			increased := wi.increaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
+	switch o.Action {
+	case operation.Buy:
+		invested := wi.increaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
 
-			w.Funds = w.Funds.Decrease(increased)
-			w.Capital = w.Capital.Increase(increased)
-		case operation.Sell:
-			decreased := wi.decreaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
+		w.Funds = w.Funds.Decrease(invested)
+		w.Capital = w.Capital.Increase(o.Capital())
 
-			w.Funds = w.Funds.Increase(decreased)
-			w.Capital = w.Capital.Decrease(decreased)
-		case operation.Dividend:
-			wi.increaseDividend(o.Value)
+	case operation.Sell:
+		buyout := wi.decreaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
 
-			w.Funds = w.Funds.Increase(o.Value)
-		}
+		w.Funds = w.Funds.Increase(buyout)
+		w.Capital = w.Capital.Decrease(o.Capital())
+
+	case operation.Dividend:
+		wi.increaseDividend(o.Value)
+
+		w.Funds = w.Funds.Increase(o.Value)
+
+	case operation.Interest:
+		w.Funds = w.Funds.Decrease(o.Value)
+
+	case operation.Connectivity:
+		w.Funds = w.Funds.Decrease(o.Value)
 	}
 }
 
@@ -139,6 +154,6 @@ func (w *Wallet) DecreaseInvestment(v mm.Value) {
 	w.Funds = w.Funds.Decrease(v)
 }
 
-func (w *Wallet) IncreaseCapital(v mm.Value) {
+func (w *Wallet) UpdateCapital(v mm.Value) {
 	w.Capital = w.Capital.Increase(v)
 }

@@ -1,13 +1,11 @@
 package storage
 
 import (
-	"fmt"
+	"database/sql"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
-
-	"database/sql"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
@@ -49,7 +47,7 @@ func (f *walletFinder) FindByName(name string) (*wallet.Wallet, error) {
 			return nil, mm.ErrNotFound
 		}
 
-		return nil, errors.New(fmt.Sprintf("Select wallet with name %q", name))
+		return nil, errors.Wrapf(err, "Select wallet with name %q", name)
 	}
 
 	return f.hydrateWallet(&tuple), nil
@@ -82,7 +80,7 @@ func (f *walletFinder) FindByBankAccount(ba *bank.Account) (*wallet.Wallet, erro
 			return nil, mm.ErrNotFound
 		}
 
-		return nil, errors.New(fmt.Sprintf("Select wallet with bank_account_id %q", ba.ID))
+		return nil, errors.Wrapf(err, "Select wallet with bank_account_id %q", ba.ID)
 	}
 
 	w := f.hydrateWallet(&tuple)
@@ -95,10 +93,17 @@ func (f *walletFinder) FindByBankAccount(ba *bank.Account) (*wallet.Wallet, erro
 	return w, nil
 }
 
-func (f *walletFinder) FindWalletsByStock(stk *stock.Stock) ([]*wallet.Wallet, error) {
-	var tuples []walletTuple
+func (f *walletFinder) FindWalletsWithItemByStock(stk *stock.Stock) ([]*wallet.Wallet, error) {
+	type walletWithWalletItemTuple struct {
+		walletTuple
+		ID     uuid.UUID `db:"wallet_item_id"`
+		Amount int       `db:"wallet_item_amount"`
+	}
 
-	query := `SELECT w.* 
+	var tuples []walletWithWalletItemTuple
+
+	query := `SELECT w.*,
+			wi.ID as wallet_item_id, wi.amount as wallet_item_amount
 			FROM wallet w
 			INNER JOIN wallet_item wi ON w.ID = wi.wallet_id 
 			WHERE wi.stock_id = $1`
@@ -109,13 +114,20 @@ func (f *walletFinder) FindWalletsByStock(stk *stock.Stock) ([]*wallet.Wallet, e
 			return nil, mm.ErrNotFound
 		}
 
-		//return nil, errors.New(fmt.Sprintf("Select wallets with stock %q", stk.ID))
-		return nil, err
+		return nil, errors.Wrapf(err, "Select wallets with item with stock %q", stk.ID)
 	}
 
 	var ws []*wallet.Wallet
 	for _, tuple := range tuples {
-		ws = append(ws, f.hydrateWallet(&tuple))
+		w := f.hydrateWallet(&tuple.walletTuple)
+
+		w.Items[stk.ID] = &wallet.Item{
+			ID:     tuple.ID,
+			Amount: tuple.Amount,
+			Stock:  stk,
+		}
+
+		ws = append(ws, w)
 	}
 
 	return ws, nil

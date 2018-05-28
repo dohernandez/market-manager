@@ -99,7 +99,7 @@ install:
 
 codecov: deps-dev-overalls
 	@printf "$(OK_COLOR)==> Running code coverage $(NO_COLOR)\n"
-	@overalls -project=github.com/hellofresh/market-manager -ignore="adapter,vendor,.glide,common" -covermode=count
+	@overalls -project=github.com/dohernandez/market-manager -ignore="adapter,vendor,.glide,common" -covermode=count
 
 # Test
 test: test-unit test-integration

@@ -10,6 +10,8 @@ import (
 	quote "github.com/dohernandez/go-quote"
 	gf "github.com/dohernandez/googlefinance-client-go"
 
+	"fmt"
+
 	"github.com/dohernandez/market-manager/pkg/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
@@ -43,6 +45,7 @@ func NewService(
 	marketFinder market.Finder,
 	exchangeFinder exchange.Finder,
 	accountService *account.Service,
+	iexClient *iex.Client,
 ) *Service {
 	return &Service{
 		stockPersister:         stockPersister,
@@ -52,6 +55,7 @@ func NewService(
 		marketFinder:           marketFinder,
 		exchangeFinder:         exchangeFinder,
 		accountService:         accountService,
+		iexClient:              iexClient,
 	}
 }
 
@@ -81,8 +85,10 @@ func (s *Service) Stocks() ([]*stock.Stock, error) {
 
 func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 	var (
-		wg   sync.WaitGroup
-		errs []error
+		wg    sync.WaitGroup
+		errs  []error
+		calls int
+		ustk  []*stock.Stock
 	)
 
 	for _, stk := range stks {
@@ -91,6 +97,9 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 		st := stk
 		go func() {
 			defer wg.Done()
+
+			calls++
+
 			p, err := s.getLastClosedPriceOfStock(st)
 			if err != nil {
 				errs = append(errs, errors.Wrapf(err, "symbol : %s", st.Symbol))
@@ -103,12 +112,22 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 
 				return
 			}
+
+			ustk = append(ustk, st)
+
 		}()
+
+		if calls >= 30 {
+			fmt.Printf("Going to sleep, due to exede amount of call to the api")
+			time.Sleep(time.Second * 60)
+
+			calls = 0
+		}
 	}
 
 	wg.Wait()
 
-	err := s.accountService.UpdateWalletsAccountingByStocks(stks)
+	err := s.accountService.UpdateWalletsCapitalByStocks(ustk)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -123,6 +142,10 @@ func (s *Service) getLastClosedPriceOfStock(stk *stock.Stock) (stock.Price, erro
 		if err != nil {
 			p, err = s.getLastClosedPriceFromIEXTrading(stk)
 			if err != nil {
+				if err == mm.ErrNotFound {
+					return stock.Price{}, err
+				}
+
 				return stock.Price{}, errors.WithStack(err)
 			}
 		}
@@ -186,7 +209,7 @@ func (s *Service) getLastClosedPriceFromIEXTrading(stk *stock.Stock) (stock.Pric
 		return stock.Price{}, err
 	}
 	return stock.Price{
-		Date:   q.LatestUpdate,
+		//Date:   q.LatestUpdate,
 		Close:  q.Close,
 		High:   q.High,
 		Low:    q.Low,
@@ -223,7 +246,7 @@ func (s *Service) UpdateLastClosedPriceStock(stk *stock.Stock) error {
 		return err
 	}
 
-	err = s.accountService.UpdateWalletsAccountingByStock(stk)
+	err = s.accountService.UpdateWalletsCapitalByStock(stk)
 	if err != nil {
 		return err
 	}
