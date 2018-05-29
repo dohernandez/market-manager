@@ -2,9 +2,7 @@ package command
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/urfave/cli"
 
@@ -16,11 +14,13 @@ import (
 
 	"path"
 
+	"github.com/dohernandez/market-manager/pkg/container"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/import/account"
 	"github.com/dohernandez/market-manager/pkg/import/banking"
 	"github.com/dohernandez/market-manager/pkg/import/purchase"
 	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/dohernandez/market-manager/pkg/market-manager"
 )
 
 type (
@@ -81,10 +81,6 @@ func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
-	if cliCtx.String("stock") == "" {
-		logger.FromContext(ctx).Fatal("Please specify the stock: market-manager stocks import dividend [stock]")
-	}
-
 	// Database connection
 	logger.FromContext(ctx).Info("Initializing database connection")
 	db, err := cmd.initDatabaseConnection()
@@ -92,37 +88,116 @@ func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
 	}
 
-	ctx = context.WithValue(ctx, "stock", cliCtx.String("stock"))
-
-	var status []string
-	if cliCtx.String("status") != "" {
-		if cliCtx.String("status") != "payed" || cliCtx.String("status") != "projected" {
-			return errors.New("invalid status value. Status values allow [projected]")
-		}
-
-		status = append(status, cliCtx.String("status"))
-	} else {
-		status = append(status, "payed")
-		status = append(status, "projected")
-	}
-
 	c := cmd.Container(db)
 
-	for _, st := range status {
-		ctx = context.WithValue(ctx, "status", st)
-		file := fmt.Sprintf("%s/%s_%s.csv", cmd.config.Import.DividendsPath, strings.ToLower(cliCtx.String("stock")), st)
-		r := _import.NewCsvReader(file)
+	sdis, err := cmd.getStockDividendImport(cliCtx, cmd.config.Import.DividendsPath)
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	err = runImport(ctx, c, "dividends", sdis, func(ctx context.Context, c *container.Container, ri resourceImport) error {
+		ctx = context.WithValue(ctx, "stock", ri.resourceName)
+
+		r := _import.NewCsvReader(ri.filePath)
 		i := import_purchase.NewImportStockDividend(ctx, r, c.PurchaseServiceInstance())
 
 		err = i.Import()
 		if err != nil {
-			logger.FromContext(ctx).WithError(err).Error("Failed importing")
-
-			return err
+			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
 		}
+
+		return nil
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
 	logger.FromContext(ctx).Info("Import finished")
+
+	return nil
+}
+
+func (cmd *ImportCommand) getStockDividendImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
+	var ris []resourceImport
+
+	stockName := cliCtx.String("stock")
+	if cliCtx.String("file") != "" && cliCtx.String("stock") != "" {
+		filePath := fmt.Sprintf("%s/%s.csv", importPath, cliCtx.String("file"))
+
+		ris = append(ris, resourceImport{
+			filePath:     filePath,
+			resourceName: stockName,
+		})
+	} else {
+		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			if filepath.Ext(path) == ".csv" {
+				filePath := path
+				stockNameFromFile := cmd.geResourceNameFromFilePath(filePath)
+				if len(stockName) == 0 || stockName == stockNameFromFile {
+					ris = append(ris, resourceImport{
+						filePath:     filePath,
+						resourceName: stockNameFromFile,
+					})
+				}
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return ris, nil
+}
+
+func runImport(
+	ctx context.Context,
+	c *container.Container,
+	resourceType string,
+	ris []resourceImport,
+	fn func(ctx context.Context, c *container.Container, ri resourceImport) error,
+) error {
+	is := c.ImportStorageInstance()
+	irs, err := is.FindAllByResource(resourceType)
+	if err != nil {
+		if err != mm.ErrNotFound {
+			return err
+		}
+
+		irs = []_import.Resource{}
+	}
+
+	for _, ri := range ris {
+		fileName := path.Base(ri.filePath)
+
+		var found bool
+		for _, ir := range irs {
+			if ir.FileName == fileName {
+				found = true
+
+				break
+			}
+		}
+
+		if !found {
+			if err := fn(ctx, c, ri); err != nil {
+				return err
+			}
+
+			ir := _import.NewResource(resourceType, fileName)
+			err := is.Persist(ir)
+			if err != nil {
+				return err
+			}
+
+			logger.FromContext(ctx).Infof("Imported file %s", fileName)
+		}
+	}
 
 	return nil
 }
@@ -145,44 +220,19 @@ func (cmd *ImportCommand) Wallet(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
-	is := c.ImportStorageInstance()
-	irs, err := is.FindAllByResource("wallets")
-	if err != nil {
-		return err
-	}
+	runImport(ctx, c, "wallets", wis, func(ctx context.Context, c *container.Container, ri resourceImport) error {
+		ctx = context.WithValue(ctx, "wallet", ri.resourceName)
 
-	for _, wi := range wis {
-		fileName := path.Base(wi.filePath)
+		r := _import.NewCsvReader(ri.filePath)
+		i := import_account.NewImportWallet(ctx, r, c.AccountServiceInstance(), c.BankingServiceInstance())
 
-		var found bool
-		for _, ir := range irs {
-			if ir.FileName == fileName {
-				found = true
-
-				break
-			}
+		err = i.Import()
+		if err != nil {
+			logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 		}
 
-		if !found {
-			ctx = context.WithValue(ctx, "wallet", wi.resourceName)
-
-			r := _import.NewCsvReader(wi.filePath)
-			i := import_account.NewImportWallet(ctx, r, c.AccountServiceInstance(), c.BankingServiceInstance())
-
-			err = i.Import()
-			if err != nil {
-				logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-			}
-
-			ir := _import.NewResource("wallets", fileName)
-			err := is.Persist(ir)
-			if err != nil {
-				return err
-			}
-
-			logger.FromContext(ctx).Infof("Imported file %s", fileName)
-		}
-	}
+		return nil
+	})
 
 	logger.FromContext(ctx).Info("Import finished")
 

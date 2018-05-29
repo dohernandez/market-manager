@@ -12,10 +12,10 @@ type (
 	}
 
 	Resource struct {
-		ID        uuid.UUID
-		Resource  string
-		FileName  string
-		CreatedAt time.Time
+		ID        uuid.UUID `db:"id"`
+		Resource  string    `db:"resource"`
+		FileName  string    `db:"file_name"`
+		CreatedAt time.Time `db:"created_at"`
 	}
 
 	Storage interface {

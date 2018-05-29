@@ -34,7 +34,7 @@ func (s *importStorage) execInsert(tx *sqlx.Tx, r _import.Resource) error {
 			id, 
 			resource, 
 			file_name, 
-			created_at, 
+			created_at 
 		) VALUES ($1, $2, $3, $4)
 	`
 
@@ -62,7 +62,7 @@ func (s *importStorage) FindAllByResource(resource string) ([]_import.Resource, 
 			return nil, mm.ErrNotFound
 		}
 
-		return nil, errors.Wrap(err, fmt.Sprintf("Select import form resource %s", resource))
+		return nil, errors.Wrap(err, fmt.Sprintf("Select import form resource %q", resource))
 	}
 
 	return rs, nil

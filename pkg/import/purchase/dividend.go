@@ -53,12 +53,6 @@ func (i *ImportStockDividend) Import() error {
 
 	var ds []dividend.StockDividend
 
-	status := dividend.Payed
-
-	if s, _ := i.ctx.Value("status").(string); s == "projected" {
-		status = dividend.Projected
-	}
-
 	for {
 		line, err := i.reader.ReadLine()
 		if err == io.EOF {
@@ -67,33 +61,55 @@ func (i *ImportStockDividend) Import() error {
 			logger.FromContext(i.ctx).Fatal(err)
 		}
 
-		if status == dividend.Payed {
-			a, _ := strconv.ParseFloat(line[3], 64)
-			cfp, _ := strconv.ParseFloat(line[4], 64)
-			cfpy, _ := strconv.ParseFloat(line[5], 64)
-			p12my, _ := strconv.ParseFloat(line[6], 64)
-
-			ds = append(ds, dividend.StockDividend{
-				ExDate:             i.parseDateString(line[0]),
-				PaymentDate:        i.parseDateString(line[1]),
-				RecordDate:         i.parseDateString(line[2]),
-				Status:             status,
-				Amount:             a,
-				ChangeFromPrev:     cfp,
-				ChangeFromPrevYear: cfpy,
-				Prior12MonthsYield: p12my,
-			})
-		} else {
-			a, _ := strconv.ParseFloat(line[2], 64)
-
-			ds = append(ds, dividend.StockDividend{
-				ExDate:      i.parseDateString(line[0]),
-				PaymentDate: i.parseDateString(line[1]),
-				Status:      status,
-				Amount:      a,
-			})
+		var status dividend.Status
+		switch line[3] {
+		case "Payed":
+			status = dividend.Payed
+		case "Announced":
+			status = dividend.Announced
+		case "Projected":
+			status = dividend.Projected
+		default:
+			return errors.New("Dividend status not defined")
 		}
 
+		d := dividend.StockDividend{
+			Status: status,
+		}
+
+		if len(line[0]) > 0 {
+			d.ExDate = i.parseDateString(line[0])
+		}
+
+		if len(line[1]) > 0 {
+			d.PaymentDate = i.parseDateString(line[1])
+		}
+
+		if len(line[2]) > 0 {
+			d.RecordDate = i.parseDateString(line[2])
+		}
+
+		if len(line[3]) > 0 {
+			a, _ := strconv.ParseFloat(line[4], 64)
+			d.Amount = a
+		}
+
+		if len(line[5]) > 0 {
+			cfp, _ := strconv.ParseFloat(line[5], 64)
+			d.ChangeFromPrev = cfp
+		}
+
+		if len(line[6]) > 0 {
+			cfpy, _ := strconv.ParseFloat(line[6], 64)
+			d.ChangeFromPrevYear = cfpy
+		}
+
+		if len(line[7]) > 0 {
+			p12my, _ := strconv.ParseFloat(line[7], 64)
+			d.Prior12MonthsYield = p12my
+		}
+
+		ds = append(ds, d)
 	}
 
 	stk.Dividends = ds

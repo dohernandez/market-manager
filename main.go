@@ -122,10 +122,6 @@ func main() {
 									Name:  "stock, s",
 									Usage: "Stock symbol (tricker) to update dividend.",
 								},
-								cli.StringFlag{
-									Name:  "status, st",
-									Usage: "Dividend status [payed, projected]. Default: payed",
-								},
 							},
 						},
 					},
