@@ -1,9 +1,7 @@
 package account
 
 import (
-	"fmt"
-
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
@@ -112,13 +110,6 @@ func (s *Service) UpdateWalletsCapitalByStocks(stks []*stock.Stock) error {
 			w.Items[stk.ID].CapitalRate = cEURUSD.EURUSD
 
 			capital := w.Items[stk.ID].Capital()
-			fmt.Printf(
-				"increasing capital %f in wallet %s from stock %s with rate %f\n",
-				w.Items[stk.ID].Capital().Amount,
-				w.Name,
-				stk.Symbol,
-				w.Items[stk.ID].CapitalRate,
-			)
 			w.Capital = capital
 		}
 
@@ -150,13 +141,6 @@ func (s *Service) UpdateWalletsCapitalByStock(stk *stock.Stock) error {
 		w.Items[stk.ID].CapitalRate = cEURUSD.EURUSD
 
 		capital := w.Items[stk.ID].Capital()
-		fmt.Printf(
-			"increasing capital %f in wallet %s from stock %s with rate %f\n",
-			w.Items[stk.ID].Capital().Amount,
-			w.Name,
-			stk.Symbol,
-			w.Items[stk.ID].CapitalRate,
-		)
 		w.Capital = capital
 	}
 

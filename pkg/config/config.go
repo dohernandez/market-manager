@@ -26,7 +26,7 @@ type Specification struct {
 		WalletsPath   string `envconfig:"WALLETS_PATH" default:"resources/import/wallets"`
 	}
 	IEXTrading struct {
-		Timeout int `envconfig:"IEX_TRADING_TIMEOUT" default:"15"`
+		Timeout int `envconfig:"IEX_TRADING_TIMEOUT" default:"30"`
 	}
 	CurrencyConverter struct {
 		Timeout int `envconfig:"CURRENCY_CONVERTER_TIMEOUT" default:"15"`

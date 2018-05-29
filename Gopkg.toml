@@ -55,12 +55,8 @@
   version = "1.0.3"
 
 [[constraint]]
-  name = "github.com/markcheno/go-quote"
-  branch = "master"
-
-[[constraint]]
   name = "github.com/dohernandez/go-quote"
-  branch = "master"
+  version = "1.0.2"
 
 [[constraint]]
   name = "github.com/timpalpant/go-iex"

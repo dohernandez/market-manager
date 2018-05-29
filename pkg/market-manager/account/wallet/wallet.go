@@ -66,7 +66,11 @@ func (i *Item) increaseDividend(dividend mm.Value) {
 }
 
 func (i *Item) Capital() mm.Value {
-	capital := float64(i.Amount) * i.Stock.Value.Amount / i.CapitalRate
+	capital := float64(i.Amount) * i.Stock.Value.Amount
+
+	if i.Stock.Exchange.Symbol == "NASDAQ" || i.Stock.Exchange.Symbol == "NYSE" {
+		capital = capital / i.CapitalRate
+	}
 
 	return mm.Value{Amount: capital}
 }

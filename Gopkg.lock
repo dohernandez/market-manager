@@ -8,22 +8,16 @@
   revision = "316a6e2335b3b1b69e8b4faecbf3ac26a1aa3619"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/dariubs/percent"
-  packages = ["."]
-  revision = "6a210960ed74f0c94ad2c45fb5ba2a49b7fd7b1c"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/dohernandez/go-quote"
   packages = ["."]
-  revision = "296483cdaf29a02871c0c58f7fe0b5eedf7ca9cd"
+  revision = "df00069452bb60fc3458dbd41be39b7f8575acb4"
+  version = "1.0.2"
 
 [[projects]]
   name = "github.com/dohernandez/googlefinance-client-go"
@@ -157,6 +151,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a9cedcc730820d921d7c47b70a1dd345f6d90eb89008fd6979e26bebd1d282b6"
+  inputs-digest = "097b8d49173aad4210f6780607b1bf60b85343833550ba914c8d87bf9b346caf"
   solver-name = "gps-cdcl"
   solver-version = 1

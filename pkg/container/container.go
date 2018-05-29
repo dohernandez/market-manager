@@ -209,6 +209,7 @@ func (c *Container) CurrencyConverterClientInstance() *cc.Client {
 func (c *Container) PurchaseServiceInstance() *purchase.Service {
 	if c.purchaseService == nil {
 		c.purchaseService = purchase.NewService(
+			c.ctx,
 			c.stockPersisterInstance(),
 			c.stockFinderInstance(),
 			c.stockDividendPersisterInstance(),

@@ -7,12 +7,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	quote "github.com/dohernandez/go-quote"
+	"github.com/dohernandez/go-quote"
 	gf "github.com/dohernandez/googlefinance-client-go"
 
-	"fmt"
-
 	"github.com/dohernandez/market-manager/pkg/client/go-iex"
+	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
@@ -21,8 +20,12 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
+const UpdatePriceConcurrency = 10
+
 type (
 	Service struct {
+		ctx context.Context
+
 		stockFinder         stock.Finder
 		stockDividendFinder dividend.Finder
 		marketFinder        market.Finder
@@ -38,6 +41,7 @@ type (
 )
 
 func NewService(
+	ctx context.Context,
 	stockPersister stock.Persister,
 	stockFinder stock.Finder,
 	stockDividendPersister dividend.Persister,
@@ -48,6 +52,7 @@ func NewService(
 	iexClient *iex.Client,
 ) *Service {
 	return &Service{
+		ctx:                    ctx,
 		stockPersister:         stockPersister,
 		stockFinder:            stockFinder,
 		stockDividendPersister: stockDividendPersister,
@@ -85,20 +90,19 @@ func (s *Service) Stocks() ([]*stock.Stock, error) {
 
 func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 	var (
-		wg    sync.WaitGroup
-		errs  []error
-		calls int
-		ustk  []*stock.Stock
+		wg   sync.WaitGroup
+		errs []error
+		ustk []*stock.Stock
 	)
 
+	concurrency := UpdatePriceConcurrency
 	for _, stk := range stks {
 		wg.Add(1)
+		concurrency--
 
 		st := stk
 		go func() {
 			defer wg.Done()
-
-			calls++
 
 			p, err := s.getLastClosedPriceOfStock(st)
 			if err != nil {
@@ -117,11 +121,16 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 
 		}()
 
-		if calls >= 30 {
-			fmt.Printf("Going to sleep, due to exede amount of call to the api")
-			time.Sleep(time.Second * 60)
+		if concurrency == 0 {
+			wg.Wait()
 
-			calls = 0
+			concurrency = UpdatePriceConcurrency
+			err := s.accountService.UpdateWalletsCapitalByStocks(ustk)
+			if err != nil {
+				errs = append(errs, err)
+			}
+
+			ustk = make([]*stock.Stock, 0)
 		}
 	}
 
@@ -136,10 +145,20 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 }
 
 func (s *Service) getLastClosedPriceOfStock(stk *stock.Stock) (stock.Price, error) {
+	method := "getLastClosedPriceFromYahoo"
+
 	p, err := s.getLastClosedPriceFromYahoo(stk)
 	if err != nil {
+		logger.FromContext(s.ctx).WithError(err).Debugf("failed %s for stock %q", method, stk.Symbol)
+		time.Sleep(5 * time.Second)
+		method = "getLastClosedPriceFromGoogle"
+
 		p, err = s.getLastClosedPriceFromGoogle(stk)
 		if err != nil {
+			logger.FromContext(s.ctx).WithError(err).Debugf("failed %s for stock %q", method, stk.Symbol)
+			time.Sleep(5 * time.Second)
+			method = "getLastClosedPriceFromIEXTrading"
+
 			p, err = s.getLastClosedPriceFromIEXTrading(stk)
 			if err != nil {
 				if err == mm.ErrNotFound {
@@ -150,6 +169,7 @@ func (s *Service) getLastClosedPriceOfStock(stk *stock.Stock) (stock.Price, erro
 			}
 		}
 	}
+	logger.FromContext(s.ctx).Debugf("got price %+v from stock %s with method %s", p, stk.Symbol, method)
 
 	return p, nil
 }
@@ -169,7 +189,8 @@ func (s *Service) getLastClosedPriceFromYahoo(stk *stock.Stock) (stock.Price, er
 		High:   q.High[0],
 		Low:    q.Low[0],
 		Open:   q.Open[0],
-		Volume: q.Volume[0],
+		Volume: int64(q.Volume[0]),
+		Change: q.Close[0] - q.Open[0],
 	}, nil
 }
 
@@ -199,7 +220,8 @@ func (s *Service) getLastClosedPriceFromGoogle(stk *stock.Stock) (stock.Price, e
 		High:   p.High,
 		Low:    p.Low,
 		Open:   p.Open,
-		Volume: float64(p.Volume),
+		Volume: p.Volume,
+		Change: p.Close - p.Open,
 	}, nil
 }
 
@@ -215,18 +237,20 @@ func (s *Service) getLastClosedPriceFromIEXTrading(stk *stock.Stock) (stock.Pric
 		Low:    q.Low,
 		Open:   q.Open,
 		Volume: q.Volume,
+		Change: q.Close - q.Open,
 	}, nil
 }
 
 func (s *Service) updateLastClosedPriceOfStock(stk *stock.Stock, p stock.Price) error {
-	pv := stk.Value
-
 	stk.Value = mm.Value{
 		Amount:   p.Close,
 		Currency: mm.Dollar,
 	}
 
-	stk.Change = stk.Value.Decrease(pv)
+	stk.Change = mm.Value{
+		Amount:   p.Change,
+		Currency: mm.Dollar,
+	}
 
 	err := s.updateStockDividendYield(stk)
 	if err != nil {

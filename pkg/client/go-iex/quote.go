@@ -23,7 +23,7 @@ type (
 		High         float64 `json:"high"`
 		Low          float64 `json:"low"`
 		Open         float64 `json:"open"`
-		Volume       float64 `json:"volume"`
+		Volume       int64   `json:"volume"`
 	}
 )
 

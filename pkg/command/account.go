@@ -90,10 +90,10 @@ func (cmd *AccountCommand) formatItemsToScreen(items map[uuid.UUID]*wallet.Item)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
 
-	fmt.Fprintln(w, "#\tStock\tMarket\tSymbol\tAmount\tCapital\tInvested\tDividend\tBuys\tSells\tBenefits\t% Benefits\t")
+	fmt.Fprintln(w, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t Dividend\t Buys\t Sells\t Benefits\t % Benefits\t")
 	for i, item := range sortItems {
 		str := fmt.Sprintf(
-			"%d\t%s\t%s\t%s\t%d\t%.*f\t%.*f\t%.*f\t%.*f\t%.*f\t%.*f\t%.*f\t",
+			"%d\t %s\t %s\t %s\t %d\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t",
 			i+1,
 			item.Stock.Name,
 			item.Stock.Exchange.Symbol,

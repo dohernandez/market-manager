@@ -28,12 +28,13 @@ type (
 
 	// Price represents stock's price struct
 	Price struct {
-		Date   time.Time `json:"date"`
-		Close  float64   `json:"close"`
-		High   float64   `json:"high"`
-		Low    float64   `json:"low"`
-		Open   float64   `json:"open"`
-		Volume float64   `json:"volume"`
+		Date   time.Time
+		Close  float64
+		High   float64
+		Low    float64
+		Open   float64
+		Change float64
+		Volume int64
 	}
 )
 

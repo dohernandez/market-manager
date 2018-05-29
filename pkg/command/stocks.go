@@ -51,7 +51,7 @@ func (cmd *StocksCommand) Price(cliCtx *cli.Context) error {
 	if cliCtx.String("stock") == "" {
 		stocks, err := stockService.Stocks()
 		if err != nil {
-			fmt.Printf("err: %v\n", err)
+			logger.FromContext(ctx).Debugf("err: %v\n", err)
 
 			return err
 		}
@@ -59,23 +59,30 @@ func (cmd *StocksCommand) Price(cliCtx *cli.Context) error {
 		errs := stockService.UpdateLastClosedPriceStocks(stocks)
 		if len(errs) > 0 {
 			if stocks == nil {
-				fmt.Printf("err: %v\n", errs[0])
+				for _, err := range errs {
+					logger.FromContext(ctx).Debugf("err: %v\n", err)
+				}
 
 				return errs[0]
 			} else {
-				fmt.Printf("some errs happen while updating stocks price: %+v\n", errs)
+				logger.FromContext(ctx).Debug("some errs happen while updating stocks price:")
+				for _, err := range errs {
+					logger.FromContext(ctx).Debugf("err: %v\n", err)
+				}
 			}
 		}
 	} else {
 		stock, err := stockService.FindStockBySymbol(cliCtx.String("stock"))
 		if err != nil {
-			fmt.Printf("err: %v\n", err)
+			logger.FromContext(ctx).Debugf("err: %v\n", err)
+
 			return err
 		}
 
 		err = stockService.UpdateLastClosedPriceStock(stock)
 		if err != nil {
-			fmt.Printf("err: %v\n", err)
+			logger.FromContext(ctx).Debug("some errs happen while updating stocks price:")
+			logger.FromContext(ctx).Debugf("err: %v\n", err)
 
 			return err
 		}
