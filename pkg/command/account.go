@@ -3,12 +3,13 @@ package command
 import (
 	"context"
 	"fmt"
-	"os"
 	"sort"
 	"text/tabwriter"
 
 	"github.com/satori/go.uuid"
 	"github.com/urfave/cli"
+
+	"os"
 
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
@@ -49,7 +50,7 @@ func (cmd *AccountCommand) WalletItems(cliCtx *cli.Context) error {
 		return err
 	}
 
-	tabw := cmd.formatItemsToScreen(w.Items)
+	tabw := cmd.formatWalletItemsToScreen(w)
 	tabw.Flush()
 
 	return nil
@@ -78,8 +79,42 @@ func (s WalletItemsByName) Less(i, j int) bool {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // formatItemsToScreen - convert Items structure to csv string
-func (cmd *AccountCommand) formatItemsToScreen(items map[uuid.UUID]*wallet.Item) *tabwriter.Writer {
+func (cmd *AccountCommand) formatWalletItemsToScreen(w *wallet.Wallet) *tabwriter.Writer {
 	precision := 2
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
+
+	fmt.Fprintln(tw, "")
+	cmd.formatWalletToScreen(tw, precision, w)
+
+	fmt.Fprintln(tw, "")
+
+	cmd.formatItemsToScreen(tw, precision, w.Items)
+	fmt.Fprintln(tw, "")
+
+	return tw
+}
+
+// formatItemsToScreen - convert wallet structure to csv string
+func (cmd *AccountCommand) formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet) {
+	fmt.Fprintln(tw, "Invested\t Capital\t Funds\t Benefits\t % Benefits\t")
+	str := fmt.Sprintf(
+		"%.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t",
+		precision,
+		w.Invested.Amount,
+		precision,
+		w.Capital.Amount,
+		precision,
+		w.Funds.Amount,
+		precision,
+		w.NetBenefits().Amount,
+		precision,
+		w.PercentageBenefits(),
+	)
+	fmt.Fprintln(tw, str)
+}
+
+// formatItemsToScreen - convert Items structure to csv string
+func (cmd *AccountCommand) formatItemsToScreen(tw *tabwriter.Writer, precision int, items map[uuid.UUID]*wallet.Item) {
 	sortItems := make([]*wallet.Item, 0, len(items))
 
 	for _, item := range items {
@@ -88,9 +123,7 @@ func (cmd *AccountCommand) formatItemsToScreen(items map[uuid.UUID]*wallet.Item)
 
 	sort.Sort(WalletItemsByName{sortItems})
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
-
-	fmt.Fprintln(w, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t Dividend\t Buys\t Sells\t Benefits\t % Benefits\t")
+	fmt.Fprintln(tw, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t Dividend\t Buys\t Sells\t Benefits\t % Benefits\t")
 	for i, item := range sortItems {
 		str := fmt.Sprintf(
 			"%d\t %s\t %s\t %s\t %d\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t",
@@ -114,8 +147,6 @@ func (cmd *AccountCommand) formatItemsToScreen(items map[uuid.UUID]*wallet.Item)
 			precision,
 			item.PercentageBenefits(),
 		)
-		fmt.Fprintln(w, str)
+		fmt.Fprintln(tw, str)
 	}
-
-	return w
 }
