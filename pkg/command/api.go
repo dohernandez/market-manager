@@ -2,13 +2,11 @@ package command
 
 import (
 	"context"
-	"net/http"
-
-	"fmt"
 
 	"github.com/urfave/cli"
 
-	"github.com/dohernandez/market-manager/pkg/client/go-iex"
+	"fmt"
+
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
@@ -37,25 +35,42 @@ func (cmd *ApiCommand) Run(cliCtx *cli.Context) error {
 	}
 
 	c := cmd.Container(db)
+	//
+	//stockService := c.PurchaseServiceInstance()
+	//stks, err := stockService.Stocks()
+	//if err != nil {
+	//	fmt.Printf("%+v\n", err)
+	//
+	//	return err
+	//}
+	//
+	//for _, stk := range stks {
+	//	client := iex.NewClient(&http.Client{})
+	//
+	//	q, err := client.Quote.Get(stk.Symbol)
+	//	if err != nil {
+	//		fmt.Printf("%+v\n", err)
+	//	}
+	//
+	//	fmt.Printf("%s %+v\n", stk.Symbol, q)
+	//}
+	//
+	//iban, err := iban.NewIBAN("ES54 0019 0020 9049 3004 7531")
+	//
+	//if err != nil {
+	//	fmt.Printf("%v\n", err)
+	//} else {
+	//	fmt.Printf("%v\n", iban.PrintCode)
+	//	fmt.Printf("%v\n", iban.Code)
+	//}
 
-	stockService := c.PurchaseServiceInstance()
-	stks, err := stockService.Stocks()
+	clt := c.CurrencyConverterClientInstance()
+	cr, err := clt.Converter.Get()
 	if err != nil {
-		fmt.Printf("%+v\n", err)
-
 		return err
 	}
 
-	for _, stk := range stks {
-		client := iex.NewClient(&http.Client{})
-
-		q, err := client.Quote.Get(stk.Symbol)
-		if err != nil {
-			fmt.Printf("%+v\n", err)
-		}
-
-		fmt.Printf("%s %+v\n", stk.Symbol, q)
-	}
+	fmt.Printf("%+v\n", cr)
 
 	return nil
 }

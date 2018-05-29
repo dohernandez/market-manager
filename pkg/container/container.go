@@ -18,6 +18,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/config"
+	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
@@ -48,6 +49,8 @@ type Container struct {
 	stockDividendPersister dividend.Persister
 	walletPersister        wallet.Persister
 	transferPersister      transfer.Persister
+
+	importStorage _import.Storage
 
 	iexClient *iex.Client
 	ccClient  *cc.Client
@@ -150,6 +153,17 @@ func (c *Container) transferPersisterInstance() transfer.Persister {
 	}
 
 	return c.transferPersister
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// STORAGE
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+func (c *Container) ImportStorageInstance() _import.Storage {
+	if c.importStorage == nil {
+		c.importStorage = storage.NewImportStorage(c.db)
+	}
+
+	return c.importStorage
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -14,6 +14,8 @@ import (
 
 	"regexp"
 
+	"path"
+
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/import/account"
 	"github.com/dohernandez/market-manager/pkg/import/banking"
@@ -21,10 +23,17 @@ import (
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
-// ImportCommand ...
-type ImportCommand struct {
-	*BaseCommand
-}
+type (
+	// ImportCommand ...
+	ImportCommand struct {
+		*BaseCommand
+	}
+
+	resourceImport struct {
+		filePath     string
+		resourceName string
+	}
+)
 
 // NewImportCommand constructs ImportCommand
 func NewImportCommand(baseCommand *BaseCommand) *ImportCommand {
@@ -136,15 +145,42 @@ func (cmd *ImportCommand) Wallet(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
+	is := c.ImportStorageInstance()
+	irs, err := is.FindAllByResource("wallets")
+	if err != nil {
+		return err
+	}
+
 	for _, wi := range wis {
-		ctx = context.WithValue(ctx, "wallet", wi.walletName)
+		fileName := path.Base(wi.filePath)
 
-		r := _import.NewCsvReader(wi.filePath)
-		i := import_account.NewImportWallet(ctx, r, c.AccountServiceInstance(), c.BankingServiceInstance())
+		var found bool
+		for _, ir := range irs {
+			if ir.FileName == fileName {
+				found = true
 
-		err = i.Import()
-		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+				break
+			}
+		}
+
+		if !found {
+			ctx = context.WithValue(ctx, "wallet", wi.resourceName)
+
+			r := _import.NewCsvReader(wi.filePath)
+			i := import_account.NewImportWallet(ctx, r, c.AccountServiceInstance(), c.BankingServiceInstance())
+
+			err = i.Import()
+			if err != nil {
+				logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+			}
+
+			ir := _import.NewResource("wallets", fileName)
+			err := is.Persist(ir)
+			if err != nil {
+				return err
+			}
+
+			logger.FromContext(ctx).Infof("Imported file %s", fileName)
 		}
 	}
 
@@ -153,29 +189,24 @@ func (cmd *ImportCommand) Wallet(cliCtx *cli.Context) error {
 	return nil
 }
 
-type walletImport struct {
-	filePath   string
-	walletName string
-}
-
-func (cmd *ImportCommand) getWalletImport(cliCtx *cli.Context, importPath string) ([]walletImport, error) {
-	var wis []walletImport
+func (cmd *ImportCommand) getWalletImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
+	var wis []resourceImport
 
 	if cliCtx.String("file") == "" && cliCtx.String("wallet") != "" {
 		walletName := cliCtx.String("wallet")
 		filePath := fmt.Sprintf("%s/%s.csv", importPath, walletName)
 
-		wis = append(wis, walletImport{
-			filePath:   filePath,
-			walletName: walletName,
+		wis = append(wis, resourceImport{
+			filePath:     filePath,
+			resourceName: walletName,
 		})
 	} else if cliCtx.String("wallet") == "" && cliCtx.String("file") != "" {
 		filePath := cliCtx.String("file")
-		walletName := cmd.getWalletNameFromFilePath(filePath)
+		walletName := cmd.geResourceNameFromFilePath(filePath)
 
-		wis = append(wis, walletImport{
-			filePath:   filePath,
-			walletName: walletName,
+		wis = append(wis, resourceImport{
+			filePath:     filePath,
+			resourceName: walletName,
 		})
 	} else {
 		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
@@ -185,10 +216,10 @@ func (cmd *ImportCommand) getWalletImport(cliCtx *cli.Context, importPath string
 
 			if filepath.Ext(path) == ".csv" {
 				filePath := path
-				walletName := cmd.getWalletNameFromFilePath(filePath)
-				wis = append(wis, walletImport{
-					filePath:   filePath,
-					walletName: walletName,
+				walletName := cmd.geResourceNameFromFilePath(filePath)
+				wis = append(wis, resourceImport{
+					filePath:     filePath,
+					resourceName: walletName,
 				})
 			}
 
@@ -202,7 +233,7 @@ func (cmd *ImportCommand) getWalletImport(cliCtx *cli.Context, importPath string
 	return wis, nil
 }
 
-func (cmd *ImportCommand) getWalletNameFromFilePath(file string) string {
+func (cmd *ImportCommand) geResourceNameFromFilePath(file string) string {
 	var dir = filepath.Dir(file)
 	var ext = filepath.Ext(file)
 
@@ -233,7 +264,7 @@ func (cmd *ImportCommand) Operation(cliCtx *cli.Context) error {
 	}
 
 	for _, oi := range ois {
-		ctx = context.WithValue(ctx, "wallet", oi.walletName)
+		ctx = context.WithValue(ctx, "wallet", oi.resourceName)
 
 		r := _import.NewCsvReader(oi.filePath)
 		i := import_account.NewImportAccount(ctx, r, c.PurchaseServiceInstance(), c.AccountServiceInstance())
