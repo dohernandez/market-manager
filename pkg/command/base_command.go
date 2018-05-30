@@ -16,6 +16,9 @@ type (
 		ctx    context.Context
 		config *config.Specification
 	}
+
+	Sorting struct {
+	}
 )
 
 // NewBaseCommand creates a structure with common shared properties of the commands

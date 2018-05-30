@@ -241,8 +241,12 @@ func main() {
 									Usage: "Wallet name",
 								},
 								cli.StringFlag{
-									Name:  "order, o",
-									Usage: "Order (descending, ascending)",
+									Name:  "sort",
+									Usage: "Sort by (stock, invested) Default by stock",
+								},
+								cli.StringFlag{
+									Name:  "order",
+									Usage: "Order (desc, asc) Default by desc",
 								},
 							},
 						},
