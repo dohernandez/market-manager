@@ -8,6 +8,7 @@ type (
 		FindByID(ID uuid.UUID) (*Stock, error)
 		FindBySymbol(symbol string) (*Stock, error)
 		FindByName(name string) (*Stock, error)
+		FindAllByExchanges(exchanges []string) ([]*Stock, error)
 	}
 
 	Persister interface {

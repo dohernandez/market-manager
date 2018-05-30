@@ -88,6 +88,10 @@ func (s *Service) Stocks() ([]*stock.Stock, error) {
 	return s.stockFinder.FindAll()
 }
 
+func (s *Service) StocksByExchanges(exchanges []string) ([]*stock.Stock, error) {
+	return s.stockFinder.FindAllByExchanges(exchanges)
+}
+
 func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 	var (
 		wg   sync.WaitGroup

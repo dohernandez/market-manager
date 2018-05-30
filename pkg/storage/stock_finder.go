@@ -180,3 +180,40 @@ func (f *stockFinder) FindByID(ID uuid.UUID) (*stock.Stock, error) {
 
 	return f.hydrate(&tuple), nil
 }
+
+func (f *stockFinder) FindAllByExchanges(exchanges []string) ([]*stock.Stock, error) {
+	var tuples []stockTuple
+
+	query := `
+		SELECT 
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
+			m.name AS market_name, m.display_name AS market_display_name,
+			e.name AS exchange_name, e.symbol AS exchange_symbol
+		FROM stock s 
+		INNER JOIN market m ON s.market_id = m.id
+		INNER JOIN exchange e ON s.exchange_id = e.id
+		WHERE upper(e.symbol) IN (?)
+	`
+
+	query, args, err := sqlx.In(query, exchanges)
+	if err != nil {
+		return nil, err
+	}
+
+	err = sqlx.Select(f.db, &tuples, sqlx.Rebind(sqlx.DOLLAR, query), args...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, mm.ErrNotFound
+		}
+
+		return nil, errors.Wrap(err, "Select stocks")
+	}
+
+	var ss []*stock.Stock
+
+	for _, s := range tuples {
+		ss = append(ss, f.hydrate(&s))
+	}
+
+	return ss, nil
+}

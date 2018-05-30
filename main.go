@@ -167,6 +167,10 @@ func main() {
 									Name:  "file, f",
 									Usage: "csv file to export",
 								},
+								cli.StringFlag{
+									Name:  "exchange, e",
+									Usage: "filter by exchange",
+								},
 							},
 						},
 					},
@@ -235,6 +239,10 @@ func main() {
 								cli.StringFlag{
 									Name:  "wallet, w",
 									Usage: "Wallet name",
+								},
+								cli.StringFlag{
+									Name:  "order, o",
+									Usage: "Order (descending, ascending)",
 								},
 							},
 						},

@@ -11,6 +11,8 @@ import (
 	"sort"
 	"text/tabwriter"
 
+	"strings"
+
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
@@ -162,7 +164,14 @@ func (cmd *StocksCommand) Stocks(cliCtx *cli.Context) error {
 
 	c := cmd.Container(db)
 
-	stks, err := c.PurchaseServiceInstance().Stocks()
+	var stks []*stock.Stock
+	if cliCtx.String("exchange") == "" {
+		stks, err = c.PurchaseServiceInstance().Stocks()
+	} else {
+		exchanges := strings.Split(cliCtx.String("exchange"), ",")
+
+		stks, err = c.PurchaseServiceInstance().StocksByExchanges(exchanges)
+	}
 	if err != nil {
 		return err
 	}
