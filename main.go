@@ -48,11 +48,13 @@ func main() {
 	// Init command handlers
 	// TODO: Real ctx should be passed here
 	baseCommand := command.NewBaseCommand(context.TODO(), envConfig)
+	exportCommand := &command.ExportCommand{}
+
 	serverCommand := command.NewHTTPCommand(baseCommand)
 	migrateCommand := command.NewMigrateCommand(baseCommand)
 	importCommand := command.NewImportCommand(baseCommand)
 	stocksCommand := command.NewStocksCommand(baseCommand)
-	accountCommand := command.NewAccountCommand(baseCommand)
+	accountCommand := command.NewAccountCommand(baseCommand, exportCommand)
 	apiCommand := command.NewApiCommand(baseCommand)
 
 	app.Commands = []cli.Command{
@@ -160,7 +162,7 @@ func main() {
 						{
 							Name:      "stocks",
 							Aliases:   []string{"s"},
-							Action:    stocksCommand.Stocks,
+							Action:    stocksCommand.ExportStocks,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -229,7 +231,7 @@ func main() {
 						{
 							Name:      "walletItems",
 							Aliases:   []string{"wi"},
-							Action:    accountCommand.WalletItems,
+							Action:    accountCommand.ExportWalletItems,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

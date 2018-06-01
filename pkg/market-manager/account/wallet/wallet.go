@@ -98,6 +98,16 @@ func (i *Item) PercentageBenefits() float64 {
 	return percent - 100
 }
 
+func (i *Item) Change() mm.Value {
+	change := float64(i.Amount) * i.Stock.Change.Amount
+
+	if i.Stock.Exchange.Symbol == "NASDAQ" || i.Stock.Exchange.Symbol == "NYSE" {
+		change = change / i.CapitalRate
+	}
+
+	return mm.Value{Amount: change}
+}
+
 type Wallet struct {
 	ID           uuid.UUID
 	Name         string

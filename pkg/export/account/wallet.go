@@ -58,7 +58,7 @@ func (s WalletItems) Len() int      { return len(s) }
 func (s WalletItems) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
 // WalletItemsByName implements sort.Interface by providing Less and using the Len and
-// Swap methods of the embedded WalletItems value.
+// Swap methods of the embedded ExportWalletItems value.
 type WalletItemsByName struct {
 	WalletItems
 }
@@ -68,7 +68,7 @@ func (s WalletItemsByName) Less(i, j int) bool {
 }
 
 // WalletItemsByInvested implements sort.Interface by providing Less and using the Len and
-// Swap methods of the embedded WalletItems value.
+// Swap methods of the embedded ExportWalletItems value.
 type WalletItemsByInvested struct {
 	WalletItems
 }

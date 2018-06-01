@@ -5,7 +5,6 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/dohernandez/market-manager/pkg/export"
 	exportAccount "github.com/dohernandez/market-manager/pkg/export/account"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
@@ -13,17 +12,19 @@ import (
 // AccountCommand ...
 type AccountCommand struct {
 	*BaseCommand
+	*ExportCommand
 }
 
 // NewAccountCommand constructs AccountCommand
-func NewAccountCommand(baseCommand *BaseCommand) *AccountCommand {
+func NewAccountCommand(baseCommand *BaseCommand, exportCommand *ExportCommand) *AccountCommand {
 	return &AccountCommand{
-		BaseCommand: baseCommand,
+		BaseCommand:   baseCommand,
+		ExportCommand: exportCommand,
 	}
 }
 
-// List in csv format the wallet items from a wallet
-func (cmd *AccountCommand) WalletItems(cliCtx *cli.Context) error {
+// ExportWalletItems List in csv format or print into screen the wallet items from a wallet
+func (cmd *AccountCommand) ExportWalletItems(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -40,21 +41,8 @@ func (cmd *AccountCommand) WalletItems(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Missing wallet name")
 	}
 
-	sortBy := exportAccount.Stock
-	orderBy := export.Descending
-
-	if cliCtx.String("sort") != "" {
-		sortBy = export.SortBy(cliCtx.String("sort"))
-	}
-	if cliCtx.String("order") != "" {
-		orderBy = export.OrderBy(cliCtx.String("order"))
-	}
-
 	ctx = context.WithValue(ctx, "wallet", cliCtx.String("wallet"))
-	sorting := export.Sorting{
-		By:    sortBy,
-		Order: orderBy,
-	}
+	sorting := cmd.sortingFromCliCtx(cliCtx)
 
 	ex := exportAccount.NewExportWallet(ctx, sorting, c.AccountServiceInstance())
 	err = ex.Export()
