@@ -212,3 +212,11 @@ func (w *Wallet) PercentageBenefits() float64 {
 
 	return percent - 100
 }
+
+func (w *Wallet) Dividends() float64 {
+	benefits := w.benefits()
+
+	percent := (benefits.Amount * float64(100)) / w.Invested.Amount
+
+	return percent - 100
+}

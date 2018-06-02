@@ -53,8 +53,8 @@ func main() {
 	serverCommand := command.NewHTTPCommand(baseCommand)
 	migrateCommand := command.NewMigrateCommand(baseCommand)
 	importCommand := command.NewImportCommand(baseCommand)
-	stocksCommand := command.NewStocksCommand(baseCommand)
-	accountCommand := command.NewAccountCommand(baseCommand, exportCommand)
+	stocksCommand := command.NewStocksCommand(baseCommand, importCommand, exportCommand)
+	accountCommand := command.NewAccountCommand(baseCommand, importCommand, exportCommand)
 	apiCommand := command.NewApiCommand(baseCommand)
 
 	app.Commands = []cli.Command{
@@ -113,7 +113,7 @@ func main() {
 							Name:      "dividend",
 							Aliases:   []string{"s"},
 							Usage:     "Import market stock dividend from csv file",
-							Action:    importCommand.Dividend,
+							Action:    stocksCommand.ImportDividend,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -192,7 +192,7 @@ func main() {
 						{
 							Name:      "wallet",
 							Aliases:   []string{"w"},
-							Action:    importCommand.Wallet,
+							Action:    accountCommand.ImportWallet,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -208,7 +208,7 @@ func main() {
 						{
 							Name:      "operation",
 							Aliases:   []string{"o"},
-							Action:    importCommand.Operation,
+							Action:    accountCommand.ImportOperation,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

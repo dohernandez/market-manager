@@ -1,13 +1,12 @@
 package command
 
 import (
-	"context"
-
-	"github.com/urfave/cli"
-
 	"fmt"
+	"os"
+	"text/tabwriter"
 
-	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/fatih/color"
+	"github.com/urfave/cli"
 )
 
 // ApiCommand ...
@@ -24,17 +23,17 @@ func NewApiCommand(baseCommand *BaseCommand) *ApiCommand {
 
 // Run runs the application import data
 func (cmd *ApiCommand) Run(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
-	defer cancelCtx()
-
-	// Database connection
-	logger.FromContext(ctx).Info("Initializing database connection")
-	db, err := cmd.initDatabaseConnection()
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
-	}
-
-	c := cmd.Container(db)
+	//ctx, cancelCtx := context.WithCancel(context.TODO())
+	//defer cancelCtx()
+	//
+	//// Database connection
+	//logger.FromContext(ctx).Info("Initializing database connection")
+	//db, err := cmd.initDatabaseConnection()
+	//if err != nil {
+	//	logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
+	//}
+	//
+	//c := cmd.Container(db)
 	//
 	//stockService := c.PurchaseServiceInstance()
 	//stks, err := stockService.Stocks()
@@ -64,13 +63,26 @@ func (cmd *ApiCommand) Run(cliCtx *cli.Context) error {
 	//	fmt.Printf("%v\n", iban.Code)
 	//}
 
-	clt := c.CurrencyConverterClientInstance()
-	cr, err := clt.Converter.Get()
-	if err != nil {
-		return err
-	}
+	//clt := c.CurrencyConverterClientInstance()
+	//cr, err := clt.Converter.Get()
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//fmt.Printf("%+v\n", cr)
 
-	fmt.Printf("%+v\n", cr)
+	w := new(tabwriter.Writer)
+
+	// Format in tab-separated columns with a tab stop of 8.
+	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+
+	success := color.New(color.Bold, color.FgGreen).FprintlnFunc()
+	fmt.Fprintln(w, "a\tb\tc\td\t.")
+	success(w, "123\t12345\t1234567\t123456789\t.")
+	fmt.Fprintln(w, "123\t12345\t1234567\t123456789\t.")
+	success(w, "123\t12345\t1234567\t123456789\t.")
+	fmt.Fprintln(w)
+	w.Flush()
 
 	return nil
 }

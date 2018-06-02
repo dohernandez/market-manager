@@ -6,20 +6,31 @@ import (
 
 	"github.com/urfave/cli"
 
+	"os"
+	"path/filepath"
+
+	"strings"
+
+	"github.com/dohernandez/market-manager/pkg/container"
 	exportPurchase "github.com/dohernandez/market-manager/pkg/export/purchase"
+	"github.com/dohernandez/market-manager/pkg/import"
+	"github.com/dohernandez/market-manager/pkg/import/purchase"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
 // StocksCommand ...
 type StocksCommand struct {
 	*BaseCommand
+	*ImportCommand
 	*ExportCommand
 }
 
 // NewStocksCommand constructs StocksCommand
-func NewStocksCommand(baseCommand *BaseCommand) *StocksCommand {
+func NewStocksCommand(baseCommand *BaseCommand, importCommand *ImportCommand, exportCommand *ExportCommand) *StocksCommand {
 	return &StocksCommand{
-		BaseCommand: baseCommand,
+		BaseCommand:   baseCommand,
+		ImportCommand: importCommand,
+		ExportCommand: exportCommand,
 	}
 }
 
@@ -87,6 +98,89 @@ func (cmd *StocksCommand) Price(cliCtx *cli.Context) error {
 	logger.FromContext(ctx).Info("Update finished")
 
 	return nil
+}
+
+// ImportDividend runs the application import data
+func (cmd *StocksCommand) ImportDividend(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	// Database connection
+	logger.FromContext(ctx).Info("Initializing database connection")
+	db, err := cmd.initDatabaseConnection()
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
+	}
+
+	c := cmd.Container(db)
+
+	sdis, err := cmd.getStockDividendImport(cliCtx, cmd.config.Import.DividendsPath)
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	err = cmd.runImport(ctx, c, "dividends", sdis, func(ctx context.Context, c *container.Container, ri resourceImport) error {
+		ctx = context.WithValue(ctx, "stock", ri.resourceName)
+
+		r := _import.NewCsvReader(ri.filePath)
+		i := import_purchase.NewImportStockDividend(ctx, r, c.PurchaseServiceInstance())
+
+		err = i.Import()
+		if err != nil {
+			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
+		}
+
+		return nil
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	logger.FromContext(ctx).Info("Import finished")
+
+	return nil
+}
+
+func (cmd *StocksCommand) getStockDividendImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
+	var ris []resourceImport
+
+	stockName := cliCtx.String("stock")
+	if cliCtx.String("file") != "" && cliCtx.String("stock") != "" {
+		filePath := fmt.Sprintf("%s/%s.csv", importPath, cliCtx.String("file"))
+
+		ris = append(ris, resourceImport{
+			filePath:     filePath,
+			resourceName: cmd.sanitizeStockName(stockName),
+		})
+	} else {
+		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			if filepath.Ext(path) == ".csv" {
+				filePath := path
+				stockNameFromFile := cmd.geResourceNameFromFilePath(filePath)
+				if len(stockName) == 0 || stockName == stockNameFromFile {
+					ris = append(ris, resourceImport{
+						filePath:     filePath,
+						resourceName: cmd.sanitizeStockName(stockNameFromFile),
+					})
+				}
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return ris, nil
+}
+
+func (cmd *StocksCommand) sanitizeStockName(stockName string) string {
+	return strings.Replace(stockName, ":", ".", 1)
 }
 
 // Dividend runs the application stock dividend update

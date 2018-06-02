@@ -8,15 +8,12 @@ import (
 
 	"path/filepath"
 
-	"os"
-
 	"regexp"
 
 	"path"
 
 	"github.com/dohernandez/market-manager/pkg/container"
 	"github.com/dohernandez/market-manager/pkg/import"
-	"github.com/dohernandez/market-manager/pkg/import/account"
 	"github.com/dohernandez/market-manager/pkg/import/banking"
 	"github.com/dohernandez/market-manager/pkg/import/purchase"
 	"github.com/dohernandez/market-manager/pkg/logger"
@@ -76,86 +73,7 @@ func (cmd *ImportCommand) Quote(cliCtx *cli.Context) error {
 	return nil
 }
 
-// Dividend runs the application import data
-func (cmd *ImportCommand) Dividend(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
-	defer cancelCtx()
-
-	// Database connection
-	logger.FromContext(ctx).Info("Initializing database connection")
-	db, err := cmd.initDatabaseConnection()
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
-	}
-
-	c := cmd.Container(db)
-
-	sdis, err := cmd.getStockDividendImport(cliCtx, cmd.config.Import.DividendsPath)
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	err = runImport(ctx, c, "dividends", sdis, func(ctx context.Context, c *container.Container, ri resourceImport) error {
-		ctx = context.WithValue(ctx, "stock", ri.resourceName)
-
-		r := _import.NewCsvReader(ri.filePath)
-		i := import_purchase.NewImportStockDividend(ctx, r, c.PurchaseServiceInstance())
-
-		err = i.Import()
-		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
-		}
-
-		return nil
-	})
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	logger.FromContext(ctx).Info("Import finished")
-
-	return nil
-}
-
-func (cmd *ImportCommand) getStockDividendImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
-	var ris []resourceImport
-
-	stockName := cliCtx.String("stock")
-	if cliCtx.String("file") != "" && cliCtx.String("stock") != "" {
-		filePath := fmt.Sprintf("%s/%s.csv", importPath, cliCtx.String("file"))
-
-		ris = append(ris, resourceImport{
-			filePath:     filePath,
-			resourceName: stockName,
-		})
-	} else {
-		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() {
-				return nil
-			}
-
-			if filepath.Ext(path) == ".csv" {
-				filePath := path
-				stockNameFromFile := cmd.geResourceNameFromFilePath(filePath)
-				if len(stockName) == 0 || stockName == stockNameFromFile {
-					ris = append(ris, resourceImport{
-						filePath:     filePath,
-						resourceName: stockNameFromFile,
-					})
-				}
-			}
-
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ris, nil
-}
-
-func runImport(
+func (cmd *ImportCommand) runImport(
 	ctx context.Context,
 	c *container.Container,
 	resourceType string,
@@ -185,6 +103,8 @@ func runImport(
 		}
 
 		if !found {
+			logger.FromContext(ctx).Infof("Importing file %s", fileName)
+
 			if err := fn(ctx, c, ri); err != nil {
 				return err
 			}
@@ -202,87 +122,6 @@ func runImport(
 	return nil
 }
 
-func (cmd *ImportCommand) Wallet(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
-	defer cancelCtx()
-
-	// Database connection
-	logger.FromContext(ctx).Info("Initializing database connection")
-	db, err := cmd.initDatabaseConnection()
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
-	}
-
-	c := cmd.Container(db)
-
-	wis, err := cmd.getWalletImport(cliCtx, cmd.config.Import.WalletsPath)
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	runImport(ctx, c, "wallets", wis, func(ctx context.Context, c *container.Container, ri resourceImport) error {
-		ctx = context.WithValue(ctx, "wallet", ri.resourceName)
-
-		r := _import.NewCsvReader(ri.filePath)
-		i := import_account.NewImportWallet(ctx, r, c.AccountServiceInstance(), c.BankingServiceInstance())
-
-		err = i.Import()
-		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-		}
-
-		return nil
-	})
-
-	logger.FromContext(ctx).Info("Import finished")
-
-	return nil
-}
-
-func (cmd *ImportCommand) getWalletImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
-	var wis []resourceImport
-
-	if cliCtx.String("file") == "" && cliCtx.String("wallet") != "" {
-		walletName := cliCtx.String("wallet")
-		filePath := fmt.Sprintf("%s/%s.csv", importPath, walletName)
-
-		wis = append(wis, resourceImport{
-			filePath:     filePath,
-			resourceName: walletName,
-		})
-	} else if cliCtx.String("wallet") == "" && cliCtx.String("file") != "" {
-		filePath := cliCtx.String("file")
-		walletName := cmd.geResourceNameFromFilePath(filePath)
-
-		wis = append(wis, resourceImport{
-			filePath:     filePath,
-			resourceName: walletName,
-		})
-	} else {
-		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() {
-				return nil
-			}
-
-			if filepath.Ext(path) == ".csv" {
-				filePath := path
-				walletName := cmd.geResourceNameFromFilePath(filePath)
-				wis = append(wis, resourceImport{
-					filePath:     filePath,
-					resourceName: walletName,
-				})
-			}
-
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return wis, nil
-}
-
 func (cmd *ImportCommand) geResourceNameFromFilePath(file string) string {
 	var dir = filepath.Dir(file)
 	var ext = filepath.Ext(file)
@@ -293,41 +132,6 @@ func (cmd *ImportCommand) geResourceNameFromFilePath(file string) string {
 	res := reg.ReplaceAllString(name, "${2}")
 
 	return res
-}
-
-func (cmd *ImportCommand) Operation(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
-	defer cancelCtx()
-
-	// Database connection
-	logger.FromContext(ctx).Info("Initializing database connection")
-	db, err := cmd.initDatabaseConnection()
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
-	}
-
-	c := cmd.Container(db)
-
-	ois, err := cmd.getWalletImport(cliCtx, cmd.config.Import.AccountsPath)
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	for _, oi := range ois {
-		ctx = context.WithValue(ctx, "wallet", oi.resourceName)
-
-		r := _import.NewCsvReader(oi.filePath)
-		i := import_account.NewImportAccount(ctx, r, c.PurchaseServiceInstance(), c.AccountServiceInstance())
-
-		err = i.Import()
-		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-		}
-	}
-
-	logger.FromContext(ctx).Info("Import finished")
-
-	return nil
 }
 
 func (cmd *ImportCommand) Transfer(cliCtx *cli.Context) error {

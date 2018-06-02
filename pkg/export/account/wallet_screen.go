@@ -8,6 +8,8 @@ import (
 
 	"github.com/satori/go.uuid"
 
+	"github.com/fatih/color"
+
 	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 )
@@ -20,8 +22,6 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 	fmt.Fprintln(tw, "")
 	formatWalletToScreen(tw, precision, w)
 
-	fmt.Fprintln(tw, "")
-
 	formatItemsToScreen(tw, precision, w.Items, sorting)
 	fmt.Fprintln(tw, "")
 
@@ -30,9 +30,9 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 
 // formatWalletToScreen - convert wallet structure to screen
 func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet) {
-	fmt.Fprintln(tw, "Invested\t Capital\t Funds\t Benefits\t % Benefits\t")
+	fmt.Fprintln(tw, "Invested\t Capital\t Funds\t Benefits\t % Benefits\t Benefits\t")
 	str := fmt.Sprintf(
-		"%.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t",
+		"%.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t %.*f\t",
 		precision,
 		w.Invested.Amount,
 		precision,
@@ -43,6 +43,7 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 		w.NetBenefits().Amount,
 		precision,
 		w.PercentageBenefits(),
+		precision,
 	)
 	fmt.Fprintln(tw, str)
 }
@@ -62,7 +63,15 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, items map[uuid.UUI
 		sort.Sort(WalletItemsByName{sortItems})
 	}
 
-	fmt.Fprintln(tw, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t Dividend\t Buys\t Sells\t Benefits\t % Benefits\t Change\t")
+	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(tw, "")
+
+	header := color.New(color.Bold, color.FgBlack).FprintlnFunc()
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t Dividend\t Buys\t Sells\t Benefits\t % Benefits\t Change\t")
+
+	inProfits := color.New(color.Bold, color.FgGreen).FprintlnFunc()
+	inLooses := color.New(color.Bold, color.FgRed).FprintlnFunc()
+
 	for i, item := range sortItems {
 		str := fmt.Sprintf(
 			"%d\t %s\t %s\t %s\t %d\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t %.*f\t",
@@ -88,6 +97,11 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, items map[uuid.UUI
 			precision,
 			item.Change().Amount,
 		)
-		fmt.Fprintln(tw, str)
+
+		if item.PercentageBenefits() > 0 {
+			inProfits(tw, str)
+		} else {
+			inLooses(tw, str)
+		}
 	}
 }

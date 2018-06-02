@@ -32,6 +32,12 @@
   revision = "523ebcaf2f005ed0eff7096782c93ba9bfe352aa"
 
 [[projects]]
+  name = "github.com/fatih/color"
+  packages = ["."]
+  revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
+  version = "v1.7.0"
+
+[[projects]]
   name = "github.com/go-chi/chi"
   packages = [
     ".",
@@ -81,6 +87,18 @@
     "source/file"
   ]
   revision = "4768a648fbd9e04389a73a21139d14a4ccb1a61a"
+
+[[projects]]
+  name = "github.com/mattn/go-colorable"
+  packages = ["."]
+  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
+  version = "v0.0.9"
+
+[[projects]]
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
+  version = "v0.0.3"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -151,6 +169,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "097b8d49173aad4210f6780607b1bf60b85343833550ba914c8d87bf9b346caf"
+  inputs-digest = "a8bc6b26b66d6de3dd750da58df357ef0e09a69b6206728ac18cdec56daf754f"
   solver-name = "gps-cdcl"
   solver-version = 1

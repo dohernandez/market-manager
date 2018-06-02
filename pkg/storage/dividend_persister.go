@@ -4,6 +4,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/satori/go.uuid"
 
+	"github.com/pkg/errors"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
@@ -60,7 +62,19 @@ func (p *stockDividendPersister) execInsert(tx *sqlx.Tx, stockID uuid.UUID, d di
 		d.Prior12MonthsYield,
 	)
 	if err != nil {
-		return err
+		return errors.Wrapf(
+			err,
+			"INSERT INTO stock_dividend VALUE (%s, %s, %s, %s, %s, %f, %f, %f, %f)",
+			stockID,
+			d.ExDate,
+			d.PaymentDate,
+			d.RecordDate,
+			d.Status,
+			d.Amount,
+			d.ChangeFromPrev,
+			d.ChangeFromPrevYear,
+			d.Prior12MonthsYield,
+		)
 	}
 
 	return nil
