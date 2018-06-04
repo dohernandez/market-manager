@@ -14,7 +14,6 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/container"
 	"github.com/dohernandez/market-manager/pkg/import"
-	"github.com/dohernandez/market-manager/pkg/import/banking"
 	"github.com/dohernandez/market-manager/pkg/import/purchase"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
@@ -132,35 +131,4 @@ func (cmd *ImportCommand) geResourceNameFromFilePath(file string) string {
 	res := reg.ReplaceAllString(name, "${2}")
 
 	return res
-}
-
-func (cmd *ImportCommand) Transfer(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
-	defer cancelCtx()
-
-	// Database connection
-	logger.FromContext(ctx).Info("Initializing database connection")
-	db, err := cmd.initDatabaseConnection()
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
-	}
-
-	c := cmd.Container(db)
-
-	file := cliCtx.String("file")
-	if cliCtx.String("file") == "" {
-		file = fmt.Sprintf("%s/transfers.csv", cmd.config.Import.TransfersPath)
-	}
-
-	r := _import.NewCsvReader(file)
-	i := import_banking.NewImportTransfer(ctx, r, c.BankingServiceInstance())
-
-	err = i.Import()
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	logger.FromContext(ctx).Info("Import finished")
-
-	return nil
 }

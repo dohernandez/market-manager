@@ -54,6 +54,7 @@ func main() {
 	migrateCommand := command.NewMigrateCommand(baseCommand)
 	importCommand := command.NewImportCommand(baseCommand)
 	stocksCommand := command.NewStocksCommand(baseCommand, importCommand, exportCommand)
+	bankingCommand := command.NewBankingCommand(baseCommand, importCommand)
 	accountCommand := command.NewAccountCommand(baseCommand, importCommand, exportCommand)
 	apiCommand := command.NewApiCommand(baseCommand)
 
@@ -297,7 +298,7 @@ func main() {
 						{
 							Name:      "transfer",
 							Aliases:   []string{"t"},
-							Action:    importCommand.Transfer,
+							Action:    bankingCommand.ImportTransfer,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
