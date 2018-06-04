@@ -32,12 +32,19 @@ func (s *Service) SaveAllWallets(ws []*wallet.Wallet) error {
 }
 
 func (s *Service) SaveAllOperations(w *wallet.Wallet) error {
-	err := s.walletPersister.PersistOperations(w)
+	cEURUSD, err := s.ccClient.Converter.Get()
 	if err != nil {
 		return err
 	}
 
-	return s.walletPersister.UpdateAccounting(w)
+	for _, wItem := range w.Items {
+		wItem.CapitalRate = cEURUSD.EURUSD
+
+		capital := wItem.Capital()
+		w.Capital = capital
+	}
+
+	return s.walletPersister.PersistOperations(w)
 }
 
 func (s *Service) FindWalletByName(name string) (*wallet.Wallet, error) {
