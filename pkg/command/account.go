@@ -5,7 +5,6 @@ import (
 
 	"github.com/urfave/cli"
 
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -75,12 +74,30 @@ func (cmd *AccountCommand) getWalletImport(cliCtx *cli.Context, importPath strin
 
 	if cliCtx.String("file") == "" && cliCtx.String("wallet") != "" {
 		walletName := cliCtx.String("wallet")
-		filePath := fmt.Sprintf("%s/%s.csv", importPath, walletName)
 
-		wis = append(wis, resourceImport{
-			filePath:     filePath,
-			resourceName: walletName,
+		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			if filepath.Ext(path) == ".csv" {
+				filePath := path
+				wName := cmd.geResourceNameFromFilePath(filePath)
+
+				if wName == walletName {
+					wis = append(wis, resourceImport{
+						filePath:     filePath,
+						resourceName: wName,
+					})
+				}
+			}
+
+			return nil
 		})
+		if err != nil {
+			return nil, err
+		}
+
 	} else if cliCtx.String("wallet") == "" && cliCtx.String("file") != "" {
 		filePath := cliCtx.String("file")
 		walletName := cmd.geResourceNameFromFilePath(filePath)
@@ -132,16 +149,21 @@ func (cmd *AccountCommand) ImportOperation(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
-	for _, oi := range ois {
-		ctx = context.WithValue(ctx, "wallet", oi.resourceName)
+	err = cmd.runImport(ctx, c, "accounts", ois, func(ctx context.Context, c *container.Container, ri resourceImport) error {
+		ctx = context.WithValue(ctx, "wallet", ri.resourceName)
 
-		r := _import.NewCsvReader(oi.filePath)
+		r := _import.NewCsvReader(ri.filePath)
 		i := import_account.NewImportAccount(ctx, r, c.PurchaseServiceInstance(), c.AccountServiceInstance())
 
 		err = i.Import()
 		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
 		}
+
+		return nil
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
 	logger.FromContext(ctx).Info("Import finished")

@@ -171,6 +171,7 @@ func (w *Wallet) AddOperation(o *operation.Operation) {
 	case operation.Dividend:
 		wi.increaseDividend(o.Value)
 
+		w.Dividend = w.Dividend.Increase(o.Value)
 		w.Funds = w.Funds.Increase(o.Value)
 
 	case operation.Interest:

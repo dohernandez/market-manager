@@ -37,7 +37,7 @@ func (e *exportWallet) Export() error {
 		return errors.New("missing wallet name")
 	}
 
-	w, err := e.accountService.GetWalletWithAllItems(name)
+	w, err := e.accountService.FindWalletWithAllActiveItems(name)
 	if err != nil {
 		return err
 	}

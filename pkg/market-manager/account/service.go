@@ -97,7 +97,7 @@ func (s *Service) UpdateWalletsCapitalByStocks(stks []*stock.Stock) error {
 	}
 
 	for _, stk := range stks {
-		ws, err := s.walletFinder.FindWalletsWithItemByStock(stk)
+		ws, err := s.walletFinder.FindWithItemByStock(stk)
 		if err != nil {
 			if err != mm.ErrNotFound {
 				return err
@@ -128,7 +128,7 @@ func (s *Service) UpdateWalletsCapitalByStock(stk *stock.Stock) error {
 		return err
 	}
 
-	ws, err := s.walletFinder.FindWalletsWithItemByStock(stk)
+	ws, err := s.walletFinder.FindWithItemByStock(stk)
 	if err != nil {
 		if err != mm.ErrNotFound {
 			return err
@@ -152,13 +152,13 @@ func (s *Service) UpdateWalletsCapitalByStock(stk *stock.Stock) error {
 	return nil
 }
 
-func (s *Service) GetWalletWithAllItems(wName string) (*wallet.Wallet, error) {
-	w, err := s.FindWalletByName(wName)
+func (s *Service) FindWalletWithAllActiveItems(wName string) (*wallet.Wallet, error) {
+	w, err := s.walletFinder.FindByName(wName)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.walletFinder.LoadActiveWalletItems(w)
+	err = s.walletFinder.LoadActiveItems(w)
 	if err != nil {
 		return nil, err
 	}

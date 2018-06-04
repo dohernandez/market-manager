@@ -56,7 +56,7 @@ func (i *ImportAccount) Import() error {
 		return errors.New("missing wallet name")
 	}
 
-	w, err := i.accountService.FindWalletByName(name)
+	w, err := i.accountService.FindWalletWithAllActiveItems(name)
 	if err != nil {
 		return err
 	}

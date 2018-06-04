@@ -110,7 +110,7 @@ func (f *walletFinder) FindByBankAccount(ba *bank.Account) (*wallet.Wallet, erro
 	return w, nil
 }
 
-func (f *walletFinder) FindWalletsWithItemByStock(stk *stock.Stock) ([]*wallet.Wallet, error) {
+func (f *walletFinder) FindWithItemByStock(stk *stock.Stock) ([]*wallet.Wallet, error) {
 	type walletWithWalletItemTuple struct {
 		walletTuple
 		ID     uuid.UUID `db:"wallet_item_id"`
@@ -150,7 +150,7 @@ func (f *walletFinder) FindWalletsWithItemByStock(stk *stock.Stock) ([]*wallet.W
 	return ws, nil
 }
 
-func (f *walletFinder) LoadActiveWalletItems(w *wallet.Wallet) error {
+func (f *walletFinder) LoadActiveItems(w *wallet.Wallet) error {
 	var tuples []walletItemTuple
 
 	query := `SELECT * FROM wallet_item WHERE wallet_id = $1 AND amount > 0`
