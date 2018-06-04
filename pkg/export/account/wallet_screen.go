@@ -30,15 +30,17 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 
 // formatWalletToScreen - convert wallet structure to screen
 func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet) {
-	fmt.Fprintln(tw, "Invested\t Capital\t Funds\t Benefits\t % Benefits\t Dividends\t")
+	fmt.Fprintln(tw, "Invested\t Capital\t Funds\t Net Capital\t Net Benefits\t % Benefits\t Dividends\t")
 	str := fmt.Sprintf(
-		"%.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t %.*f\t",
+		"%.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t %.*f\t",
 		precision,
 		w.Invested.Amount,
 		precision,
 		w.Capital.Amount,
 		precision,
 		w.Funds.Amount,
+		precision,
+		w.NetCapital().Amount,
 		precision,
 		w.NetBenefits().Amount,
 		precision,

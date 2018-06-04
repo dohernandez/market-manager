@@ -197,18 +197,20 @@ func (w *Wallet) UpdateCapital(v mm.Value) {
 }
 
 func (w *Wallet) NetBenefits() mm.Value {
-	benefits := w.benefits()
+	benefits := w.NetCapital()
 	benefits = benefits.Decrease(w.Invested)
 
 	return benefits
 }
 
-func (w *Wallet) benefits() mm.Value {
-	return w.Capital.Increase(w.Funds)
+func (w *Wallet) NetCapital() mm.Value {
+	netCapital := w.Capital.Increase(w.Funds)
+
+	return netCapital
 }
 
 func (w *Wallet) PercentageBenefits() float64 {
-	benefits := w.benefits()
+	benefits := w.NetCapital()
 
 	percent := (benefits.Amount * float64(100)) / w.Invested.Amount
 
