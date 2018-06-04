@@ -68,3 +68,7 @@ func (o *Operation) Capital() mm.Value {
 
 	return mm.Value{Amount: capital}
 }
+
+func (o *Operation) FinalCommission() mm.Value {
+	return o.Commission.Increase(o.PriceChangeCommission)
+}

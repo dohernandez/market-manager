@@ -162,9 +162,18 @@ func (p *walletPersister) UpdateAllAccounting(ws []*wallet.Wallet) error {
 }
 
 func (p *walletPersister) execUpdateAccounting(tx *sqlx.Tx, w *wallet.Wallet) error {
-	query := `UPDATE wallet SET funds = $1, invested = $2, dividend = $3 WHERE id = $4`
+	query := `UPDATE wallet SET funds = $1, invested = $2, dividend = $3, commission = $4, connection = $5, interest = $6 WHERE id = $7`
 
-	_, err := tx.Exec(query, w.Funds.Amount, w.Invested.Amount, w.Dividend.Amount, w.ID)
+	_, err := tx.Exec(
+		query,
+		w.Funds.Amount,
+		w.Invested.Amount,
+		w.Dividend.Amount,
+		w.Commission.Amount,
+		w.Connection.Amount,
+		w.Interest.Amount,
+		w.ID,
+	)
 
 	return err
 }

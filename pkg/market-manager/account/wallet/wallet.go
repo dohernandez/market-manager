@@ -122,6 +122,9 @@ type Wallet struct {
 	Funds      mm.Value
 	Operations []*operation.Operation
 	Dividend   mm.Value
+	Commission mm.Value
+	Connection mm.Value
+	Interest   mm.Value
 }
 
 func NewWallet(name, url string) *Wallet {
@@ -161,12 +164,14 @@ func (w *Wallet) AddOperation(o *operation.Operation) {
 
 		w.Funds = w.Funds.Decrease(invested)
 		w.Capital = w.Capital.Increase(o.Capital())
+		w.Commission = w.Commission.Increase(o.FinalCommission())
 
 	case operation.Sell:
 		buyout := wi.decreaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
 
 		w.Funds = w.Funds.Increase(buyout)
 		w.Capital = w.Capital.Decrease(o.Capital())
+		w.Commission = w.Commission.Increase(o.FinalCommission())
 
 	case operation.Dividend:
 		wi.increaseDividend(o.Value)
@@ -176,9 +181,11 @@ func (w *Wallet) AddOperation(o *operation.Operation) {
 
 	case operation.Interest:
 		w.Funds = w.Funds.Decrease(o.Value)
+		w.Interest = w.Interest.Increase(o.Value)
 
 	case operation.Connectivity:
 		w.Funds = w.Funds.Decrease(o.Value)
+		w.Connection = w.Connection.Increase(o.Value)
 	}
 }
 

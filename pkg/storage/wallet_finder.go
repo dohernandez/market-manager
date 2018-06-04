@@ -20,13 +20,16 @@ type (
 	}
 
 	walletTuple struct {
-		ID       uuid.UUID `db:"id"`
-		Name     string    `db:"name"`
-		URL      string    `db:"url"`
-		Invested string    `db:"invested"`
-		Capital  string    `db:"capital"`
-		Funds    string    `db:"funds"`
-		Dividend string    `db:"dividend"`
+		ID         uuid.UUID `db:"id"`
+		Name       string    `db:"name"`
+		URL        string    `db:"url"`
+		Invested   string    `db:"invested"`
+		Capital    string    `db:"capital"`
+		Funds      string    `db:"funds"`
+		Dividend   string    `db:"dividend"`
+		Commission string    `db:"commission"`
+		Connection string    `db:"connection"`
+		Interest   string    `db:"interest"`
 	}
 
 	walletItemTuple struct {
@@ -80,6 +83,9 @@ func (f *walletFinder) hydrateWallet(tuple *walletTuple) *wallet.Wallet {
 		BankAccounts: map[uuid.UUID]*bank.Account{},
 		Items:        map[uuid.UUID]*wallet.Item{},
 		Dividend:     mm.ValueFromString(tuple.Dividend),
+		Commission:   mm.ValueFromString(tuple.Commission),
+		Connection:   mm.ValueFromString(tuple.Connection),
+		Interest:     mm.ValueFromString(tuple.Interest),
 	}
 }
 
