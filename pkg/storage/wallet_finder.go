@@ -26,6 +26,7 @@ type (
 		Invested string    `db:"invested"`
 		Capital  string    `db:"capital"`
 		Funds    string    `db:"funds"`
+		Dividend string    `db:"dividend"`
 	}
 
 	walletItemTuple struct {
@@ -78,6 +79,7 @@ func (f *walletFinder) hydrateWallet(tuple *walletTuple) *wallet.Wallet {
 		Funds:        mm.ValueFromString(tuple.Funds),
 		BankAccounts: map[uuid.UUID]*bank.Account{},
 		Items:        map[uuid.UUID]*wallet.Item{},
+		Dividend:     mm.ValueFromString(tuple.Dividend),
 	}
 }
 

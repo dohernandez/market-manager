@@ -121,6 +121,7 @@ type Wallet struct {
 	Capital    mm.Value
 	Funds      mm.Value
 	Operations []*operation.Operation
+	Dividend   mm.Value
 }
 
 func NewWallet(name, url string) *Wallet {
@@ -206,14 +207,6 @@ func (w *Wallet) benefits() mm.Value {
 }
 
 func (w *Wallet) PercentageBenefits() float64 {
-	benefits := w.benefits()
-
-	percent := (benefits.Amount * float64(100)) / w.Invested.Amount
-
-	return percent - 100
-}
-
-func (w *Wallet) Dividends() float64 {
 	benefits := w.benefits()
 
 	percent := (benefits.Amount * float64(100)) / w.Invested.Amount
