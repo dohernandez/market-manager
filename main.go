@@ -101,7 +101,7 @@ func main() {
 							Name:      "quote",
 							Aliases:   []string{"q"},
 							Usage:     "Import market stock from csv file",
-							Action:    importCommand.Quote,
+							Action:    stocksCommand.ImportStock,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

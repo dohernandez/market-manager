@@ -34,9 +34,79 @@ func NewStocksCommand(baseCommand *BaseCommand, importCommand *ImportCommand, ex
 	}
 }
 
-// Run runs the application stock update
-func (cmd *StocksCommand) Run(cliCtx *cli.Context) error {
-	return cmd.Price(cliCtx)
+// Quote runs the application import data
+func (cmd *StocksCommand) ImportStock(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	// Database connection
+	logger.FromContext(ctx).Info("Initializing database connection")
+	db, err := cmd.initDatabaseConnection()
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
+	}
+
+	c := cmd.Container(db)
+
+	sis, err := cmd.getStockImport(cliCtx, cmd.config.Import.StocksPath)
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	err = cmd.runImport(ctx, c, "stocks", sis, func(ctx context.Context, c *container.Container, ri resourceImport) error {
+		ctx = context.WithValue(ctx, "stock", ri.resourceName)
+
+		r := _import.NewCsvReader(ri.filePath)
+		i := import_purchase.NewImportStock(ctx, r, c.PurchaseServiceInstance())
+
+		err = i.Import()
+		if err != nil {
+			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
+		}
+
+		return nil
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	logger.FromContext(ctx).Info("Import finished")
+
+	return nil
+}
+
+func (cmd *StocksCommand) getStockImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
+	var ris []resourceImport
+
+	if cliCtx.String("file") != "" {
+		filePath := fmt.Sprintf("%s/%s.csv", importPath, cliCtx.String("file"))
+
+		ris = append(ris, resourceImport{
+			filePath:     filePath,
+			resourceName: "",
+		})
+	} else {
+		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			if filepath.Ext(path) == ".csv" {
+				filePath := path
+				ris = append(ris, resourceImport{
+					filePath:     filePath,
+					resourceName: "",
+				})
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return ris, nil
 }
 
 // Price runs the application stock price update

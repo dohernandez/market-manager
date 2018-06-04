@@ -150,7 +150,7 @@ func (f *stockFinder) FindByName(name string) (*stock.Stock, error) {
 			return nil, mm.ErrNotFound
 		}
 
-		return nil, errors.Wrapf(err, "Select stock by name %q", name)
+		return nil, errors.Wrapf(err, "FindByName %q", name)
 	}
 
 	return f.hydrate(&tuple), nil

@@ -2,9 +2,6 @@ package command
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/urfave/cli"
 
 	"path/filepath"
 
@@ -14,7 +11,6 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/container"
 	"github.com/dohernandez/market-manager/pkg/import"
-	"github.com/dohernandez/market-manager/pkg/import/purchase"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 )
@@ -36,40 +32,6 @@ func NewImportCommand(baseCommand *BaseCommand) *ImportCommand {
 	return &ImportCommand{
 		BaseCommand: baseCommand,
 	}
-}
-
-// Quote runs the application import data
-func (cmd *ImportCommand) Quote(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
-	defer cancelCtx()
-
-	// Database connection
-	logger.FromContext(ctx).Info("Initializing database connection")
-	db, err := cmd.initDatabaseConnection()
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
-	}
-
-	c := cmd.Container(db)
-
-	file := cliCtx.String("file")
-	if cliCtx.String("file") == "" {
-		file = fmt.Sprintf("%s/stocks.csv", cmd.config.Import.StocksPath)
-	}
-
-	r := _import.NewCsvReader(file)
-	i := import_purchase.NewImportStock(ctx, r, c.PurchaseServiceInstance())
-
-	err = i.Import()
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Error("Failed importing")
-
-		return err
-	}
-
-	logger.FromContext(ctx).Info("Import finished")
-
-	return nil
 }
 
 func (cmd *ImportCommand) runImport(

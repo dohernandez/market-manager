@@ -34,9 +34,9 @@ func (p *stockPersister) PersistAll(ss []*stock.Stock) error {
 }
 
 func (p *stockPersister) execInsert(tx *sqlx.Tx, s *stock.Stock) error {
-	query := `INSERT INTO stock(id, market_id, exchange_id, name, symbol) VALUES ($1, $2, $3, $4, upper($5))`
+	query := `INSERT INTO stock(id, market_id, exchange_id, name, symbol, last_price_update) VALUES ($1, $2, $3, $4, upper($5), $6)`
 
-	_, err := tx.Exec(query, s.ID, s.Market.ID, s.Exchange.ID, s.Name, s.Symbol)
+	_, err := tx.Exec(query, s.ID, s.Market.ID, s.Exchange.ID, s.Name, s.Symbol, s.LastPriceUpdate)
 	if err != nil {
 		return err
 	}
