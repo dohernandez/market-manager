@@ -75,17 +75,16 @@ func (f *stockDividendFinder) FindNextFromStock(stockID uuid.UUID, dt time.Time)
 		return dividend.StockDividend{}, errors.Wrap(err, "Select stock by symbol")
 	}
 
-	a, _ := strconv.ParseFloat(tuple.Amount, 64)
 	cfp, _ := strconv.ParseFloat(tuple.ChangeFromPrev, 64)
 	cfpy, _ := strconv.ParseFloat(tuple.ChangeFromPrevYear, 64)
 	p12my, _ := strconv.ParseFloat(tuple.Prior12MonthsYield, 64)
 
 	return dividend.StockDividend{
 		ExDate:             parseDateString(tuple.ExDate),
-		PaymentDate:        parseDateString(tuple.ExDate),
-		RecordDate:         parseDateString(tuple.ExDate),
+		PaymentDate:        parseDateString(tuple.PaymentDate),
+		RecordDate:         parseDateString(tuple.RecordDate),
 		Status:             dividend.Status(tuple.Status),
-		Amount:             a,
+		Amount:             mm.ValueFromString(tuple.Amount),
 		ChangeFromPrev:     cfp,
 		ChangeFromPrevYear: cfpy,
 		Prior12MonthsYield: p12my,

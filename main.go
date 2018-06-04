@@ -175,6 +175,34 @@ func main() {
 								},
 							},
 						},
+						{
+							Name:      "stocksDividends",
+							Aliases:   []string{"sd"},
+							Action:    stocksCommand.ExportStocksWithDividend,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to export",
+								},
+								cli.StringFlag{
+									Name:  "year, y",
+									Usage: "filter by year. Default current year",
+								},
+								cli.StringFlag{
+									Name:  "month, m",
+									Usage: "filter by month. Default current month",
+								},
+								cli.StringFlag{
+									Name:  "sort",
+									Usage: "Sort by (stock, invested) Default by stock",
+								},
+								cli.StringFlag{
+									Name:  "order",
+									Usage: "Order (desc, asc) Default by desc",
+								},
+							},
+						},
 					},
 				},
 			},

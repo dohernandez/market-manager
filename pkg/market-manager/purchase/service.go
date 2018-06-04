@@ -10,6 +10,8 @@ import (
 	"github.com/dohernandez/go-quote"
 	gf "github.com/dohernandez/googlefinance-client-go"
 
+	"strconv"
+
 	"github.com/dohernandez/market-manager/pkg/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
@@ -305,7 +307,14 @@ func (s *Service) updateStockDividendYield(stk *stock.Stock) error {
 		return errors.New("stock value is 0 or less that 0")
 	}
 
-	stk.DividendYield = d.Amount * 4 / stk.Value.Amount * 100
+	stk.DividendYield = d.Amount.Amount * 4 / stk.Value.Amount * 100
 
 	return s.stockPersister.UpdateDividendYield(stk)
+}
+
+func (s *Service) StocksByDividendAnnounceProjectYearAndMonth(year, month string) ([]*stock.Stock, error) {
+	y, _ := strconv.Atoi(year)
+	m, _ := strconv.Atoi(month)
+
+	return s.stockFinder.FindAllByDividendAnnounceProjectYearAndMonth(y, m)
 }

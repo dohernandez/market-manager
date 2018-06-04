@@ -9,6 +9,7 @@ type (
 		FindBySymbol(symbol string) (*Stock, error)
 		FindByName(name string) (*Stock, error)
 		FindAllByExchanges(exchanges []string) ([]*Stock, error)
+		FindAllByDividendAnnounceProjectYearAndMonth(year, month int) ([]*Stock, error)
 	}
 
 	Persister interface {

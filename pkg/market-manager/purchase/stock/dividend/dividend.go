@@ -1,6 +1,10 @@
 package dividend
 
-import "time"
+import (
+	"time"
+
+	"github.com/dohernandez/market-manager/pkg/market-manager"
+)
 
 type (
 	Status string
@@ -12,7 +16,7 @@ type (
 
 		Status Status
 
-		Amount float64
+		Amount mm.Value
 
 		ChangeFromPrev     float64
 		ChangeFromPrevYear float64

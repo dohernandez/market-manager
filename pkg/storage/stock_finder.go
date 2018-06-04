@@ -14,6 +14,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type (
@@ -213,6 +214,62 @@ func (f *stockFinder) FindAllByExchanges(exchanges []string) ([]*stock.Stock, er
 
 	for _, s := range tuples {
 		ss = append(ss, f.hydrate(&s))
+	}
+
+	return ss, nil
+}
+
+func (f *stockFinder) FindAllByDividendAnnounceProjectYearAndMonth(year, month int) ([]*stock.Stock, error) {
+	type stockWithDividendsTuple struct {
+		stockTuple
+		DividendExDate     time.Time       `db:"dividend_ex_date"`
+		DividendStatus     dividend.Status `db:"dividend_status"`
+		DividendAmount     string          `db:"dividend_amount"`
+		DividendRecordDate time.Time       `db:"dividend_record_date"`
+	}
+
+	var tuples []stockWithDividendsTuple
+
+	query := `
+		SELECT 
+			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
+			m.name AS market_name, m.display_name AS market_display_name,
+			e.name AS exchange_name, e.symbol AS exchange_symbol,
+           	sd.ex_date AS dividend_ex_date, sd.status AS dividend_status, sd.amount AS dividend_amount, sd.record_date AS dividend_record_date
+		FROM stock s 
+		INNER JOIN market m ON s.market_id = m.id
+		INNER JOIN exchange e ON s.exchange_id = e.id
+		INNER JOIN stock_dividend sd ON sd.stock_id = s.id
+		WHERE sd.status IN ('announced', 'projected')
+       	AND EXTRACT(YEAR FROM sd.ex_date) = $1
+		AND EXTRACT(MONTH FROM sd.ex_date) = $2
+	`
+	err := sqlx.Select(f.db, &tuples, query, year, month)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, mm.ErrNotFound
+		}
+
+		return nil, errors.Wrapf(
+			err,
+			"FindAllByDividendAnnounceProjectThisMonth with year: %q, month: %q",
+			strconv.Itoa(year),
+			strconv.Itoa(month),
+		)
+	}
+
+	var ss []*stock.Stock
+
+	for _, t := range tuples {
+		s := f.hydrate(&t.stockTuple)
+		s.Dividends = append(s.Dividends, dividend.StockDividend{
+			ExDate:     t.DividendExDate,
+			RecordDate: t.DividendRecordDate,
+			Status:     t.DividendStatus,
+			Amount:     mm.ValueFromString(t.DividendAmount),
+		})
+
+		ss = append(ss, s)
 	}
 
 	return ss, nil

@@ -241,3 +241,29 @@ func (cmd *StocksCommand) ExportStocks(cliCtx *cli.Context) error {
 
 	return nil
 }
+
+func (cmd *StocksCommand) ExportStocksWithDividend(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	// Database connection
+	logger.FromContext(ctx).Info("Initializing database connection")
+	db, err := cmd.initDatabaseConnection()
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
+	}
+
+	c := cmd.Container(db)
+
+	ctx = context.WithValue(ctx, "year", cliCtx.String("year"))
+	ctx = context.WithValue(ctx, "month", cliCtx.String("month"))
+	sorting := cmd.sortingFromCliCtx(cliCtx)
+
+	ex := exportPurchase.NewExportStockWithDividends(ctx, sorting, c.PurchaseServiceInstance())
+	err = ex.Export()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

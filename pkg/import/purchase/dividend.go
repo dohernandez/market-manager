@@ -12,6 +12,7 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
@@ -90,8 +91,7 @@ func (i *ImportStockDividend) Import() error {
 		}
 
 		if len(line[3]) > 0 {
-			a, _ := strconv.ParseFloat(line[4], 64)
-			d.Amount = a
+			d.Amount = mm.ValueFromString(line[3])
 		}
 
 		if len(line[5]) > 0 {
