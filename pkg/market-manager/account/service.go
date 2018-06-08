@@ -14,15 +14,17 @@ type (
 	Service struct {
 		walletFinder    wallet.Finder
 		walletPersister wallet.Persister
+		stockFinder     stock.Finder
 
 		ccClient *cc.Client
 	}
 )
 
-func NewService(walletFinder wallet.Finder, walletPersister wallet.Persister, ccClient *cc.Client) *Service {
+func NewService(walletFinder wallet.Finder, walletPersister wallet.Persister, stockFinder stock.Finder, ccClient *cc.Client) *Service {
 	return &Service{
 		walletFinder:    walletFinder,
 		walletPersister: walletPersister,
+		stockFinder:     stockFinder,
 		ccClient:        ccClient,
 	}
 }
@@ -168,6 +170,15 @@ func (s *Service) FindWalletWithAllActiveItems(wName string) (*wallet.Wallet, er
 	err = s.walletFinder.LoadActiveItems(w)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, i := range w.Items {
+		stk, err := s.stockFinder.FindByID(i.Stock.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		i.Stock = stk
 	}
 
 	return w, nil

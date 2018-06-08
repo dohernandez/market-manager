@@ -15,8 +15,7 @@ import (
 
 type (
 	walletFinder struct {
-		db          sqlx.Queryer
-		stockFinder stock.Finder
+		db sqlx.Queryer
 	}
 
 	walletTuple struct {
@@ -48,10 +47,9 @@ type (
 
 var _ wallet.Finder = &walletFinder{}
 
-func NewWalletFinder(db sqlx.Queryer, stockFinder stock.Finder) *walletFinder {
+func NewWalletFinder(db sqlx.Queryer) *walletFinder {
 	return &walletFinder{
-		db:          db,
-		stockFinder: stockFinder,
+		db: db,
 	}
 }
 
@@ -183,14 +181,11 @@ func (f *walletFinder) LoadActiveItems(w *wallet.Wallet) error {
 }
 
 func (f *walletFinder) hydrateWalletItem(tuple *walletItemTuple) (*wallet.Item, error) {
-	stk, err := f.stockFinder.FindByID(tuple.StockID)
-	if err != nil {
-		return nil, err
-	}
-
 	return &wallet.Item{
-		ID:          tuple.ID,
-		Stock:       stk,
+		ID: tuple.ID,
+		Stock: &stock.Stock{
+			ID: tuple.StockID,
+		},
 		Amount:      tuple.Amount,
 		Invested:    mm.ValueFromString(tuple.Invested),
 		Dividend:    mm.ValueFromString(tuple.Dividend),
