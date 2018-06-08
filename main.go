@@ -174,6 +174,10 @@ func main() {
 									Name:  "exchange, e",
 									Usage: "filter by exchange",
 								},
+								cli.StringFlag{
+									Name:  "stock, s",
+									Usage: "filter by stock",
+								},
 							},
 						},
 						{

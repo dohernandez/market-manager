@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/dohernandez/market-manager/pkg/export"
+	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
@@ -40,7 +41,7 @@ func (e *exportStock) Export() error {
 	)
 
 	if exchange == "" {
-		stks, err = e.purchaseService.Stocks()
+		stks, err = e.retrieveStocks()
 	} else {
 		exchanges := strings.Split(exchange, ",")
 
@@ -54,6 +55,27 @@ func (e *exportStock) Export() error {
 	tabw.Flush()
 
 	return nil
+}
+
+func (e *exportStock) retrieveStocks() ([]*stock.Stock, error) {
+	var stks []*stock.Stock
+	symbol := e.ctx.Value("symbol").(string)
+
+	if symbol != "" {
+		stk, err := e.purchaseService.FindStockBySymbol(symbol)
+		if err != nil {
+			if err == mm.ErrNotFound {
+				return stks, nil
+			}
+
+			return nil, err
+		}
+
+		stks = append(stks, stk)
+		return stks, nil
+	}
+
+	return e.purchaseService.Stocks()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

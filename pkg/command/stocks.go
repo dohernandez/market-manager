@@ -301,6 +301,7 @@ func (cmd *StocksCommand) ExportStocks(cliCtx *cli.Context) error {
 	c := cmd.Container(db)
 
 	ctx = context.WithValue(ctx, "exchange", cliCtx.String("exchange"))
+	ctx = context.WithValue(ctx, "symbol", cliCtx.String("stock"))
 	sorting := cmd.sortingFromCliCtx(cliCtx)
 
 	ex := exportPurchase.NewExportStock(ctx, sorting, c.PurchaseServiceInstance())

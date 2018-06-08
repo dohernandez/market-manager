@@ -94,6 +94,7 @@ func (s *Service) StocksByExchanges(exchanges []string) ([]*stock.Stock, error) 
 	return s.stockFinder.FindAllByExchanges(exchanges)
 }
 
+// UpdateLastClosedPriceStocks update the stocks with the last close date price
 func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 	var (
 		wg   sync.WaitGroup

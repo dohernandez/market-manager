@@ -106,7 +106,7 @@ func (c *Container) stockDividendFinderInstance() dividend.Finder {
 
 func (c *Container) walletFinderInstance() wallet.Finder {
 	if c.walletFinder == nil {
-		c.walletFinder = storage.NewWalletFinder(c.db, c.stockFinderInstance())
+		c.walletFinder = storage.NewWalletFinder(c.db)
 	}
 
 	return c.walletFinder
@@ -243,6 +243,7 @@ func (c *Container) AccountServiceInstance() *account.Service {
 		c.accountService = account.NewService(
 			c.walletFinderInstance(),
 			c.walletPersisterInstance(),
+			c.stockFinderInstance(),
 			c.CurrencyConverterClientInstance(),
 		)
 	}
