@@ -46,16 +46,13 @@ func (f *stockDividendFinder) FindAllFormStock(stockID uuid.UUID) ([]dividend.St
 
 	err := sqlx.Get(f.db, &ds, query, stockID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, mm.ErrNotFound
-		}
-
 		return nil, errors.Wrap(err, fmt.Sprintf("Select dividend form stock id %s", stockID))
 	}
 
 	return ds, nil
 }
 
+// FindNextFromStock Find the next dividend announce or projected for the stock
 func (f *stockDividendFinder) FindNextFromStock(stockID uuid.UUID, dt time.Time) (dividend.StockDividend, error) {
 	var tuple dividendTuple
 
