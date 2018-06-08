@@ -90,8 +90,8 @@ func (i *ImportStockDividend) Import() error {
 			d.RecordDate = i.parseDateString(line[2])
 		}
 
-		if len(line[3]) > 0 {
-			d.Amount = mm.ValueFromString(line[3])
+		if len(line[4]) > 0 {
+			d.Amount = mm.ValueFromString(line[4])
 		}
 
 		if len(line[5]) > 0 {
