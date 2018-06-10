@@ -7,6 +7,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/fatih/color"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
@@ -56,10 +58,16 @@ func formatStocksDividendsToScreen(stks []*stock.Stock) *tabwriter.Writer {
 
 	sort.Sort(StocksByDividendYield{sortStks})
 
+	emptyTime := time.Time{}
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
 
-	emptyTime := time.Time{}
-	fmt.Fprintln(w, "#\t Stock\t Market\t Symbol\t Value\t D. Yield\t Ex Date\t Record Date\t Status\t Amount\t Change\t Last Price Update\t")
+	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(w, "")
+
+	header := color.New(color.Bold, color.FgBlack).FprintlnFunc()
+	header(w, "#\t Stock\t Market\t Symbol\t Value\t D. Yield\t Ex Date\t Record Date\t Status\t Amount\t Change\t Last Price Update\t")
+
+	pColor := color.New(color.Bold, color.FgWhite).FprintlnFunc()
 	for i, stk := range sortStks {
 		for _, d := range stk.Dividends {
 			record := d.RecordDate.Format("Mon Jan 2 06")
@@ -86,9 +94,11 @@ func formatStocksDividendsToScreen(stks []*stock.Stock) *tabwriter.Writer {
 				stk.Change.Amount,
 				stk.LastPriceUpdate.Format("02 Jan 06 15:04"),
 			)
-			fmt.Fprintln(w, str)
+			pColor(w, str)
 		}
 	}
+
+	noColor(w, "")
 
 	return w
 }

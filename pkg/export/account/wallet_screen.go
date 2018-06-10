@@ -19,10 +19,10 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 	precision := 2
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
 
-	fmt.Fprintln(tw, "")
 	formatWalletToScreen(tw, precision, w)
 
 	formatItemsToScreen(tw, precision, w.Items, sorting)
+
 	fmt.Fprintln(tw, "")
 
 	return tw
@@ -30,7 +30,17 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 
 // formatWalletToScreen - convert wallet structure to screen
 func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet) {
-	fmt.Fprintln(tw, "Invested\t Capital\t Funds\t Net Capital\t Net Benefits\t % Benefits\t Dividends\t Connection\t Interest\t Commisions\t")
+	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(tw, "")
+
+	header := color.New(color.Bold, color.FgBlack).FprintlnFunc()
+	header(tw, "Invested\t Capital\t Funds\t Net Capital\t Net Benefits\t % Benefits\t Dividends\t Connection\t Interest\t Commisions\t")
+
+	pColor := color.New(color.Bold, color.FgGreen).FprintlnFunc()
+	if w.PercentageBenefits() < 0 {
+		pColor = color.New(color.Bold, color.FgRed).FprintlnFunc()
+	}
+
 	str := fmt.Sprintf(
 		"%.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t %.*f\t %.*f\t %.*f\t %.*f\t",
 		precision,
@@ -54,7 +64,7 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 		precision,
 		w.Commission.Amount,
 	)
-	fmt.Fprintln(tw, str)
+	pColor(tw, str)
 }
 
 // formatItemsToScreen - convert Items structure to screen
