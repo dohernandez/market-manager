@@ -9,6 +9,7 @@ import (
 
 	"github.com/fatih/color"
 
+	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
@@ -48,7 +49,7 @@ func formatStocksToScreen(stks []*stock.Stock) *tabwriter.Writer {
 }
 
 // formatStocksToScreen - convert Items structure to csv string
-func formatStocksDividendsToScreen(stks []*stock.Stock) *tabwriter.Writer {
+func formatStocksDividendsToScreen(stks []*stock.Stock, sorting export.Sorting) *tabwriter.Writer {
 	precision := 2
 	sortStks := make([]*stock.Stock, 0, len(stks))
 
@@ -56,7 +57,12 @@ func formatStocksDividendsToScreen(stks []*stock.Stock) *tabwriter.Writer {
 		sortStks = append(sortStks, stk)
 	}
 
-	sort.Sort(StocksByDividendYield{sortStks})
+	switch sorting.By {
+	case Exdate:
+		sort.Sort(StocksByExDate{sortStks})
+	default:
+		sort.Sort(StocksByDividendYield{sortStks})
+	}
 
 	emptyTime := time.Time{}
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)

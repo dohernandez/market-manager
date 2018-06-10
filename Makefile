@@ -44,8 +44,9 @@ usage:
 	@echo "  install 						 - Install app using go install"
 	@echo "  test 							 - Run all tests"
 	@echo "  test-unit 						 - Run only unit tests"
-	@echo "  test-integration 				 - Run integration unit tests"
+	@echo "  test-integration 				 	 - Run integration unit tests"
 	@echo "  dev-run-http 						 - Run REST API"
+	@echo "  dev-run-scheduler 					 - Run scheduler"
 	@echo "  dev-migrate 						 - Run migrations"
 	@echo " "
 	@echo " Working with docker containers"
@@ -54,7 +55,7 @@ usage:
 	@echo "  dev-docker-deps 					 - Install dependencies using docker container"
 	@echo "  dev-docker-migration 					 - Run migration using docker container"
 	@echo "  dev-docker-test-unit 					 - Run all unit tests using docker container"
-	@echo "  dev-docker-test-integration 			 - Run all integration tests using docker container"
+	@echo "  dev-docker-test-integration 			 	 - Run all integration tests using docker container"
 	@echo "  dev-docker-logs [<CONTAINER>] 			 - Print container logs"
 	@echo " "
 	@exit 0
@@ -115,6 +116,9 @@ test-integration:
 # Dev
 dev-run-http:
 	@CompileDaemon -build="make install" -graceful-kill -command="market-manager http"
+
+dev-run-scheduler:
+	@CompileDaemon -build="make install" -graceful-kill -command="market-manager scheduler"
 
 dev-migrate:
 	@docker-compose run --rm --name app-migrations base market-manager migrate up

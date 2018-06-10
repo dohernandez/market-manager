@@ -24,6 +24,11 @@ type (
 	}
 )
 
+const (
+	Dyield export.SortBy = "dyield"
+	Exdate export.SortBy = "exdate"
+)
+
 func NewExportStock(ctx context.Context, sorting export.Sorting, purchaseService *purchase.Service) *exportStock {
 	return &exportStock{
 		ctx:             ctx,
@@ -106,6 +111,16 @@ func (s StocksByDividendYield) Less(i, j int) bool {
 	return s.Stocks[i].DividendYield < s.Stocks[j].DividendYield
 }
 
+// StocksByDividendYield implements sort.Interface by providing Less and using the Len and
+// Swap methods of the embedded wallet items value.
+type StocksByExDate struct {
+	Stocks
+}
+
+func (s StocksByExDate) Less(i, j int) bool {
+	return s.Stocks[i].Dividends[len(s.Stocks[i].Dividends)-1].ExDate.Before(s.Stocks[j].Dividends[len(s.Stocks[j].Dividends)-1].ExDate)
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // END Stocks Sort
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +160,7 @@ func (e *exportStockWithDividends) Export() error {
 		return err
 	}
 
-	tabw := formatStocksDividendsToScreen(stks)
+	tabw := formatStocksDividendsToScreen(stks, e.sorting)
 	tabw.Flush()
 
 	return nil

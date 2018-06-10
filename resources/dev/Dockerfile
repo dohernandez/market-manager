@@ -8,5 +8,4 @@ WORKDIR ${APP_DIR}
 ARG GITHUB_TOKEN=${GITHUB_TOKEN}
 
 RUN make deps-dev
-
 RUN make run

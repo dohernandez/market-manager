@@ -49,20 +49,27 @@ func main() {
 	// TODO: Real ctx should be passed here
 	baseCommand := command.NewBaseCommand(context.TODO(), envConfig)
 	exportCommand := &command.ExportCommand{}
+	importCommand := command.NewImportCommand(baseCommand)
 
 	serverCommand := command.NewHTTPCommand(baseCommand)
 	migrateCommand := command.NewMigrateCommand(baseCommand)
-	importCommand := command.NewImportCommand(baseCommand)
 	stocksCommand := command.NewStocksCommand(baseCommand, importCommand, exportCommand)
 	bankingCommand := command.NewBankingCommand(baseCommand, importCommand)
 	accountCommand := command.NewAccountCommand(baseCommand, importCommand, exportCommand)
 	apiCommand := command.NewApiCommand(baseCommand)
+
+	schedulerCommand := command.NewSchedulerCommand(stocksCommand)
 
 	app.Commands = []cli.Command{
 		{
 			Name:   "http",
 			Usage:  "Start REST API service",
 			Action: serverCommand.Run,
+		},
+		{
+			Name:   "scheduler",
+			Usage:  "Start Scheduler service",
+			Action: schedulerCommand.Run,
 		},
 		{
 			Name:      "migrate",
@@ -200,7 +207,7 @@ func main() {
 								},
 								cli.StringFlag{
 									Name:  "sort",
-									Usage: "Sort by (stock, invested) Default by stock",
+									Usage: "Sort by (dyield, exdate) Default by dyield",
 								},
 								cli.StringFlag{
 									Name:  "order",

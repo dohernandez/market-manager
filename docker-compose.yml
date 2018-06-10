@@ -18,6 +18,12 @@ services:
       - '9081:8081'
     command: "make dev-run-http"
 
+  scheduler:
+    extends: base
+    depends_on:
+      - postgres
+    command: "make dev-run-scheduler"
+
   postgres:
     image: postgres:10.1
     ports:
