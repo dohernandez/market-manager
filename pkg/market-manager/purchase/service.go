@@ -115,29 +115,26 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 			if err != nil {
 				errs = append(errs, errors.Wrapf(err, "symbol : %s", st.Symbol))
 
+				concurrency++
 				return
 			}
 
 			if err := s.updateLastClosedPriceOfStock(st, p); err != nil {
 				errs = append(errs, errors.Wrapf(err, "symbol : %s", st.Symbol))
 
+				concurrency++
 				return
 			}
 
 			ustk = append(ustk, st)
-
+			concurrency++
 		}()
 
-		if concurrency == 0 {
-			wg.Wait()
-
-			concurrency = UpdatePriceConcurrency
-			err := s.accountService.UpdateWalletsCapitalByStocks(ustk)
-			if err != nil {
-				errs = append(errs, err)
+		for {
+			if concurrency != 0 {
+				break
 			}
-
-			ustk = make([]*stock.Stock, 0)
+			time.Sleep(3 * time.Second)
 		}
 	}
 

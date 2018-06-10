@@ -19,6 +19,7 @@ type Item struct {
 	Buys        mm.Value
 	Sells       mm.Value
 	CapitalRate float64
+	Operations  []operation.Operation
 }
 
 func NewItem(stock *stock.Stock) *Item {
@@ -106,6 +107,20 @@ func (i *Item) Change() mm.Value {
 	}
 
 	return mm.Value{Amount: change}
+}
+
+func (i *Item) WeightedAveragePrice() mm.Value {
+	var sPrice float64
+
+	for _, o := range i.Operations {
+		pPrice := o.Value.Increase(o.PriceChangeCommission)
+		pPrice = pPrice.Increase(o.Commission)
+
+		sPrice = sPrice + pPrice.Amount
+	}
+
+	wAveragePrice := sPrice / float64(i.Amount)
+	return mm.Value{Amount: wAveragePrice}
 }
 
 type Wallet struct {

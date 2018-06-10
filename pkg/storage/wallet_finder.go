@@ -5,9 +5,10 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -161,10 +162,6 @@ func (f *walletFinder) LoadActiveItems(w *wallet.Wallet) error {
 
 	err := sqlx.Select(f.db, &tuples, query, w.ID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return mm.ErrNotFound
-		}
-
 		return errors.Wrapf(err, "Select wallet items from wallet %q", w.ID)
 	}
 
@@ -181,7 +178,7 @@ func (f *walletFinder) LoadActiveItems(w *wallet.Wallet) error {
 }
 
 func (f *walletFinder) hydrateWalletItem(tuple *walletItemTuple) (*wallet.Item, error) {
-	return &wallet.Item{
+	i := wallet.Item{
 		ID: tuple.ID,
 		Stock: &stock.Stock{
 			ID: tuple.StockID,
@@ -192,5 +189,41 @@ func (f *walletFinder) hydrateWalletItem(tuple *walletItemTuple) (*wallet.Item, 
 		Buys:        mm.ValueFromString(tuple.Buys),
 		Sells:       mm.ValueFromString(tuple.Sells),
 		CapitalRate: tuple.CapitalRate,
-	}, nil
+	}
+	err := f.loadItemOperations(&i)
+	if err != nil {
+		return nil, err
+	}
+
+	return &i, nil
+}
+
+func (f *walletFinder) loadItemOperations(i *wallet.Item) error {
+	type operationTuple struct {
+		ID                    uuid.UUID `db:"id"`
+		PriceChangeCommission string    `db:"price_change_commission"`
+		Value                 string    `db:"value"`
+		Commission            string    `db:"commission"`
+	}
+
+	var tuples []operationTuple
+
+	query := `
+		SELECT id, price_change_commission, value, commission
+		FROM operation WHERE stock_id = $1 AND action = $2`
+	err := sqlx.Select(f.db, &tuples, query, i.Stock.ID, operation.Buy)
+	if err != nil {
+		return errors.Wrapf(err, "Select wallet item operations for stock %q with action %q", i.Stock.ID, operation.Buy)
+	}
+
+	for _, tuple := range tuples {
+		i.Operations = append(i.Operations, operation.Operation{
+			ID: tuple.ID,
+			PriceChangeCommission: mm.ValueFromString(tuple.PriceChangeCommission),
+			Value:      mm.ValueFromString(tuple.Value),
+			Commission: mm.ValueFromString(tuple.Commission),
+		})
+	}
+
+	return nil
 }

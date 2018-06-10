@@ -76,14 +76,14 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, items map[uuid.UUI
 	noColor(tw, "")
 
 	header := color.New(color.Bold, color.FgBlack).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t Dividend\t Buys\t Sells\t Benefits\t % Benefits\t Change\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t Dividend\t Buys\t WA Price\t Sells\t Benefits\t % Benefits\t Change\t")
 
 	inProfits := color.New(color.Bold, color.FgGreen).FprintlnFunc()
 	inLooses := color.New(color.Bold, color.FgRed).FprintlnFunc()
 
 	for i, item := range sortItems {
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t %.*f\t",
+			"%d\t %s\t %s\t %s\t %d\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t %.*f\t",
 			i+1,
 			item.Stock.Name,
 			item.Stock.Exchange.Symbol,
@@ -97,6 +97,8 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, items map[uuid.UUI
 			item.Dividend.Amount,
 			precision,
 			item.Buys.Amount,
+			precision,
+			item.WeightedAveragePrice().Amount,
 			precision,
 			item.Sells.Amount,
 			precision,
