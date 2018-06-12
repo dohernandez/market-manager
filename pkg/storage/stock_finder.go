@@ -97,9 +97,9 @@ func (f *stockFinder) hydrate(s *stockTuple) *stock.Stock {
 		},
 		Name:            s.Name,
 		Symbol:          s.Symbol,
-		Value:           mm.ValueFromString(s.Value),
+		Value:           mm.ValueDollarFromString(s.Value),
 		DividendYield:   dy,
-		Change:          mm.ValueFromString(s.Change),
+		Change:          mm.ValueDollarFromString(s.Change),
 		LastPriceUpdate: s.LastPriceUpdate,
 	}
 }
@@ -266,7 +266,7 @@ func (f *stockFinder) FindAllByDividendAnnounceProjectYearAndMonth(year, month i
 			ExDate:     t.DividendExDate,
 			RecordDate: t.DividendRecordDate,
 			Status:     t.DividendStatus,
-			Amount:     mm.ValueFromString(t.DividendAmount),
+			Amount:     mm.ValueDollarFromString(t.DividendAmount),
 		})
 
 		ss = append(ss, s)

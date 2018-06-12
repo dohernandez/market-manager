@@ -91,7 +91,7 @@ func (i *ImportStockDividend) Import() error {
 		}
 
 		if len(line[4]) > 0 {
-			d.Amount = mm.ValueFromString(line[4])
+			d.Amount = mm.ValueDollarFromString(line[4])
 		}
 
 		if len(line[5]) > 0 {

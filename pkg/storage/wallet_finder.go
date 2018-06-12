@@ -76,15 +76,15 @@ func (f *walletFinder) hydrateWallet(tuple *walletTuple) *wallet.Wallet {
 		ID:           tuple.ID,
 		Name:         tuple.Name,
 		URL:          tuple.URL,
-		Invested:     mm.ValueFromString(tuple.Invested),
-		Capital:      mm.ValueFromString(tuple.Capital),
-		Funds:        mm.ValueFromString(tuple.Funds),
+		Invested:     mm.ValueEuroFromString(tuple.Invested),
+		Capital:      mm.ValueEuroFromString(tuple.Capital),
+		Funds:        mm.ValueEuroFromString(tuple.Funds),
 		BankAccounts: map[uuid.UUID]*bank.Account{},
 		Items:        map[uuid.UUID]*wallet.Item{},
-		Dividend:     mm.ValueFromString(tuple.Dividend),
-		Commission:   mm.ValueFromString(tuple.Commission),
-		Connection:   mm.ValueFromString(tuple.Connection),
-		Interest:     mm.ValueFromString(tuple.Interest),
+		Dividend:     mm.ValueEuroFromString(tuple.Dividend),
+		Commission:   mm.ValueEuroFromString(tuple.Commission),
+		Connection:   mm.ValueEuroFromString(tuple.Connection),
+		Interest:     mm.ValueEuroFromString(tuple.Interest),
 	}
 }
 
@@ -184,10 +184,10 @@ func (f *walletFinder) hydrateWalletItem(tuple *walletItemTuple) (*wallet.Item, 
 			ID: tuple.StockID,
 		},
 		Amount:      tuple.Amount,
-		Invested:    mm.ValueFromString(tuple.Invested),
-		Dividend:    mm.ValueFromString(tuple.Dividend),
-		Buys:        mm.ValueFromString(tuple.Buys),
-		Sells:       mm.ValueFromString(tuple.Sells),
+		Invested:    mm.ValueEuroFromString(tuple.Invested),
+		Dividend:    mm.ValueEuroFromString(tuple.Dividend),
+		Buys:        mm.ValueEuroFromString(tuple.Buys),
+		Sells:       mm.ValueEuroFromString(tuple.Sells),
 		CapitalRate: tuple.CapitalRate,
 	}
 	err := f.loadItemOperations(&i)
@@ -219,9 +219,9 @@ func (f *walletFinder) loadItemOperations(i *wallet.Item) error {
 	for _, tuple := range tuples {
 		i.Operations = append(i.Operations, operation.Operation{
 			ID: tuple.ID,
-			PriceChangeCommission: mm.ValueFromString(tuple.PriceChangeCommission),
-			Value:      mm.ValueFromString(tuple.Value),
-			Commission: mm.ValueFromString(tuple.Commission),
+			PriceChangeCommission: mm.ValueEuroFromString(tuple.PriceChangeCommission),
+			Value:      mm.ValueEuroFromString(tuple.Value),
+			Commission: mm.ValueEuroFromString(tuple.Commission),
 		})
 	}
 

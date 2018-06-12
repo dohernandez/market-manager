@@ -81,7 +81,7 @@ func (f *stockDividendFinder) FindNextFromStock(stockID uuid.UUID, dt time.Time)
 		PaymentDate:        parseDateString(tuple.PaymentDate),
 		RecordDate:         parseDateString(tuple.RecordDate),
 		Status:             dividend.Status(tuple.Status),
-		Amount:             mm.ValueFromString(tuple.Amount),
+		Amount:             mm.ValueDollarFromString(tuple.Amount),
 		ChangeFromPrev:     cfp,
 		ChangeFromPrevYear: cfpy,
 		Prior12MonthsYield: p12my,

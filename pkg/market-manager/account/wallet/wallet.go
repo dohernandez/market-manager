@@ -73,7 +73,10 @@ func (i *Item) Capital() mm.Value {
 		capital = capital / i.CapitalRate
 	}
 
-	return mm.Value{Amount: capital}
+	return mm.Value{
+		Amount:   capital,
+		Currency: mm.Euro,
+	}
 }
 
 func (i *Item) NetBenefits() mm.Value {
@@ -106,7 +109,10 @@ func (i *Item) Change() mm.Value {
 		change = change / i.CapitalRate
 	}
 
-	return mm.Value{Amount: change}
+	return mm.Value{
+		Amount:   change,
+		Currency: mm.Euro,
+	}
 }
 
 func (i *Item) WeightedAveragePrice() mm.Value {

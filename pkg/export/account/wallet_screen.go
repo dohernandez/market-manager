@@ -33,36 +33,27 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "")
 
-	header := color.New(color.Bold, color.FgBlack).FprintlnFunc()
+	header := color.New(color.FgWhite).FprintlnFunc()
 	header(tw, "Invested\t Capital\t Funds\t Net Capital\t Net Benefits\t % Benefits\t Dividends\t Connection\t Interest\t Commisions\t")
 
-	pColor := color.New(color.Bold, color.FgGreen).FprintlnFunc()
+	pColor := color.New(color.FgGreen).FprintlnFunc()
 	if w.PercentageBenefits() < 0 {
-		pColor = color.New(color.Bold, color.FgRed).FprintlnFunc()
+		pColor = color.New(color.FgRed).FprintlnFunc()
 	}
 
 	str := fmt.Sprintf(
-		"%.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t %.*f\t %.*f\t %.*f\t %.*f\t",
-		precision,
-		w.Invested.Amount,
-		precision,
-		w.Capital.Amount,
-		precision,
-		w.Funds.Amount,
-		precision,
-		w.NetCapital().Amount,
-		precision,
-		w.NetBenefits().Amount,
+		"%s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t %s\t %s\t %s\t",
+		export.PrintValue(w.Invested, precision),
+		export.PrintValue(w.Capital, precision),
+		export.PrintValue(w.Funds, precision),
+		export.PrintValue(w.NetCapital(), precision),
+		export.PrintValue(w.NetBenefits(), precision),
 		precision,
 		w.PercentageBenefits(),
-		precision,
-		w.Dividend.Amount,
-		precision,
-		w.Connection.Amount,
-		precision,
-		w.Interest.Amount,
-		precision,
-		w.Commission.Amount,
+		export.PrintValue(w.Dividend, precision),
+		export.PrintValue(w.Connection, precision),
+		export.PrintValue(w.Interest, precision),
+		export.PrintValue(w.Commission, precision),
 	)
 	pColor(tw, str)
 }
@@ -85,38 +76,29 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, items map[uuid.UUI
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "")
 
-	header := color.New(color.Bold, color.FgBlack).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t Dividend\t Buys\t WA Price\t Sells\t Benefits\t % Benefits\t Change\t")
+	header := color.New(color.FgWhite).FprintlnFunc()
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t Dividend\t Buys\t Sells\t Benefits\t % Benefits\t Change\t")
 
-	inProfits := color.New(color.Bold, color.FgGreen).FprintlnFunc()
-	inLooses := color.New(color.Bold, color.FgRed).FprintlnFunc()
+	inProfits := color.New(color.FgGreen).FprintlnFunc()
+	inLooses := color.New(color.FgRed).FprintlnFunc()
 
 	for i, item := range sortItems {
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f\t %.*f%%\t %.*f\t",
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t",
 			i+1,
 			item.Stock.Name,
 			item.Stock.Exchange.Symbol,
 			item.Stock.Symbol,
 			item.Amount,
-			precision,
-			item.Capital().Amount,
-			precision,
-			item.Invested.Amount,
-			precision,
-			item.Dividend.Amount,
-			precision,
-			item.Buys.Amount,
-			precision,
-			item.WeightedAveragePrice().Amount,
-			precision,
-			item.Sells.Amount,
-			precision,
-			item.NetBenefits().Amount,
+			export.PrintValue(item.Capital(), precision),
+			export.PrintValue(item.Invested, precision),
+			export.PrintValue(item.Dividend, precision),
+			export.PrintValue(item.Buys, precision),
+			export.PrintValue(item.Sells, precision),
+			export.PrintValue(item.NetBenefits(), precision),
 			precision,
 			item.PercentageBenefits(),
-			precision,
-			item.Change().Amount,
+			export.PrintValue(item.Change(), precision),
 		)
 
 		if item.PercentageBenefits() > 0 {
