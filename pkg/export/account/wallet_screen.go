@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dohernandez/market-manager/pkg/export"
+	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
@@ -34,7 +35,7 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 		sort.Sort(WalletItemsByName{sortItems})
 	}
 
-	formatItemsToScreen(tw, precision, sortItems)
+	formatItemsToScreen(tw, precision, w, sortItems)
 	formatWalletDividendProjected(tw, precision, w)
 	formatStockItemsToScreen(tw, precision, sortItems)
 
@@ -74,19 +75,19 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 }
 
 // formatItemsToScreen - convert Items structure to screen
-func formatItemsToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
+func formatItemsToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet, items []*wallet.Item) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t Dividend\t Buys\t Sells\t Benefits\t % Benefits\t Change\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t % \t Dividend\t Buys\t Sells\t Benefits\t % \t Change\t")
 
 	inProfits := color.New(color.FgGreen).FprintlnFunc()
 	inLooses := color.New(color.FgRed).FprintlnFunc()
 
 	for i, item := range items {
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t",
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %.*f%%\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t",
 			i+1,
 			item.Stock.Name,
 			item.Stock.Exchange.Symbol,
@@ -94,6 +95,8 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, items []*wallet.It
 			item.Amount,
 			export.PrintValue(item.Capital(), precision),
 			export.PrintValue(item.Invested, precision),
+			precision,
+			item.PercentageInvestedRepresented(w.Invested.Amount),
 			export.PrintValue(item.Dividend, precision),
 			export.PrintValue(item.Buys, precision),
 			export.PrintValue(item.Sells, precision),
@@ -117,10 +120,21 @@ func formatWalletDividendProjected(tw *tabwriter.Writer, precision int, w *walle
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "Dividend Projected\t")
+	header(tw, "Dividend Projected\t Retention\t Final\t")
+
+	dProjected := w.DividendProjectedNextMonth()
+
+	var retention mm.Value
+	retention.Amount = 15 * dProjected.Amount / 100
+	retention.Currency = dProjected.Currency
 
 	inNormal := color.New(color.FgWhite).FprintlnFunc()
-	inNormal(tw, fmt.Sprintf("%s\t", export.PrintValue(w.DividendProjectedNextMonth(), precision)))
+	inNormal(tw, fmt.Sprintf(
+		"%s\t %s\t %s\t",
+		export.PrintValue(dProjected, precision),
+		export.PrintValue(retention, precision),
+		export.PrintValue(dProjected.Decrease(retention), precision),
+	))
 }
 
 // formatStockItemsToScreen ...

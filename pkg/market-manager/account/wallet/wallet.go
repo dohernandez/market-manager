@@ -71,8 +71,10 @@ func (i *Item) increaseDividend(dividend mm.Value) {
 func (i *Item) Capital() mm.Value {
 	capital := float64(i.Amount) * i.Stock.Value.Amount
 
-	if i.Stock.Exchange.Symbol == "NASDAQ" || i.Stock.Exchange.Symbol == "NYSE" {
-		capital = capital / i.CapitalRate
+	if i.CapitalRate > 0 {
+		if i.Stock.Exchange.Symbol == "NASDAQ" || i.Stock.Exchange.Symbol == "NYSE" {
+			capital = capital / i.CapitalRate
+		}
 	}
 
 	return mm.Value{
@@ -117,6 +119,10 @@ func (i *Item) Change() mm.Value {
 	}
 }
 
+func (i *Item) PercentageInvestedRepresented(invested float64) float64 {
+	return i.Invested.Amount * 100 / invested
+}
+
 type Wallet struct {
 	ID           uuid.UUID
 	Name         string
@@ -134,6 +140,8 @@ type Wallet struct {
 	Commission mm.Value
 	Connection mm.Value
 	Interest   mm.Value
+
+	capitalRate float64
 }
 
 func NewWallet(name, url string) *Wallet {
@@ -233,6 +241,14 @@ func (w *Wallet) PercentageBenefits() float64 {
 	return percent - 100
 }
 
+func (w *Wallet) SetCapitalRate(capitalRate float64) {
+	w.capitalRate = capitalRate
+
+	for _, item := range w.Items {
+		item.CapitalRate = capitalRate
+	}
+}
+
 func (w *Wallet) DividendProjectedNextMonth() mm.Value {
 	var dividends float64
 
@@ -248,8 +264,12 @@ func (w *Wallet) DividendProjectedNextMonth() mm.Value {
 		}
 	}
 
+	if w.capitalRate > 0 {
+		dividends = dividends / w.capitalRate
+	}
+
 	return mm.Value{
 		Amount:   dividends,
-		Currency: mm.Dollar,
+		Currency: mm.Euro,
 	}
 }

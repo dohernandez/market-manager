@@ -192,7 +192,7 @@ func (cmd *AccountCommand) ExportWalletItems(cliCtx *cli.Context) error {
 	ctx = context.WithValue(ctx, "wallet", cliCtx.String("wallet"))
 	sorting := cmd.sortingFromCliCtx(cliCtx)
 
-	ex := exportAccount.NewExportWallet(ctx, sorting, c.AccountServiceInstance())
+	ex := exportAccount.NewExportWallet(ctx, sorting, c.AccountServiceInstance(), c.CurrencyConverterClientInstance())
 	err = ex.Export()
 	if err != nil {
 		return err

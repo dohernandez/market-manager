@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
@@ -53,14 +54,17 @@ type (
 		sorting export.Sorting
 
 		accountService *account.Service
+
+		ccClient *cc.Client
 	}
 )
 
-func NewExportWallet(ctx context.Context, sorting export.Sorting, accountService *account.Service) *exportWallet {
+func NewExportWallet(ctx context.Context, sorting export.Sorting, accountService *account.Service, ccClient *cc.Client) *exportWallet {
 	return &exportWallet{
 		ctx:            ctx,
 		sorting:        sorting,
 		accountService: accountService,
+		ccClient:       ccClient,
 	}
 }
 
@@ -74,6 +78,12 @@ func (e *exportWallet) Export() error {
 	if err != nil {
 		return err
 	}
+
+	cEURUSD, err := e.ccClient.Converter.Get()
+	if err != nil {
+		return err
+	}
+	w.SetCapitalRate(cEURUSD.EURUSD)
 
 	tabw := formatWalletItemsToScreen(w, e.sorting)
 	tabw.Flush()
