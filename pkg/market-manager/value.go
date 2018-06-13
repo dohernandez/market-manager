@@ -18,6 +18,20 @@ const (
 	Dollar          = "$"
 )
 
+var (
+	exchangeCurrency map[string]Currency
+)
+
+func init() {
+	exchangeCurrency = map[string]Currency{
+		"NASDAQ": Dollar,
+		"NYSE":   Dollar,
+		"BME":    Euro,
+		"FRA":    Euro,
+		"BIT":    Euro,
+	}
+}
+
 func (v *Value) Increase(a Value) Value {
 	nv := Value{
 		Currency: v.Currency,
@@ -52,6 +66,18 @@ func ValueEuroFromString(s string) Value {
 func ValueDollarFromString(s string) Value {
 	a := valueFromString(s)
 	a.Currency = Dollar
+
+	return a
+}
+
+func ValueFromStringAndExchange(s, e string) Value {
+	ec, ok := exchangeCurrency[e]
+	if !ok {
+		ec = Euro
+	}
+
+	a := valueFromString(s)
+	a.Currency = ec
 
 	return a
 }

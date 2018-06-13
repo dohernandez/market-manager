@@ -80,27 +80,27 @@ func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 	return ss, nil
 }
 
-func (f *stockFinder) hydrate(s *stockTuple) *stock.Stock {
-	dy, _ := strconv.ParseFloat(s.DividendYield, 64)
+func (f *stockFinder) hydrate(tuple *stockTuple) *stock.Stock {
+	dy, _ := strconv.ParseFloat(tuple.DividendYield, 64)
 
 	return &stock.Stock{
-		ID: s.ID,
+		ID: tuple.ID,
 		Market: &market.Market{
-			ID:          s.MarketID,
-			Name:        s.MarketName,
-			DisplayName: s.MarketDisplayName,
+			ID:          tuple.MarketID,
+			Name:        tuple.MarketName,
+			DisplayName: tuple.MarketDisplayName,
 		},
 		Exchange: &exchange.Exchange{
-			ID:     s.ExchangeID,
-			Name:   s.ExchangeName,
-			Symbol: s.ExchangeSymbol,
+			ID:     tuple.ExchangeID,
+			Name:   tuple.ExchangeName,
+			Symbol: tuple.ExchangeSymbol,
 		},
-		Name:            s.Name,
-		Symbol:          s.Symbol,
-		Value:           mm.ValueDollarFromString(s.Value),
+		Name:            tuple.Name,
+		Symbol:          tuple.Symbol,
+		Value:           mm.ValueFromStringAndExchange(tuple.Value, tuple.ExchangeSymbol),
 		DividendYield:   dy,
-		Change:          mm.ValueDollarFromString(s.Change),
-		LastPriceUpdate: s.LastPriceUpdate,
+		Change:          mm.ValueDollarFromString(tuple.Change),
+		LastPriceUpdate: tuple.LastPriceUpdate,
 	}
 }
 
