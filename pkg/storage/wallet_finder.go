@@ -7,6 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
+	"strconv"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
@@ -201,6 +203,9 @@ func (f *walletFinder) hydrateWalletItem(tuple *walletItemTuple) (*wallet.Item, 
 func (f *walletFinder) loadItemOperations(i *wallet.Item) error {
 	type operationTuple struct {
 		ID                    uuid.UUID `db:"id"`
+		Amount                string    `db:"amount"`
+		Price                 string    `db:"price"`
+		PriceChange           string    `db:"price_change"`
 		PriceChangeCommission string    `db:"price_change_commission"`
 		Value                 string    `db:"value"`
 		Commission            string    `db:"commission"`
@@ -209,7 +214,7 @@ func (f *walletFinder) loadItemOperations(i *wallet.Item) error {
 	var tuples []operationTuple
 
 	query := `
-		SELECT id, price_change_commission, value, commission
+		SELECT id, price_change_commission, value, commission, price_change, amount, price
 		FROM operation WHERE stock_id = $1 AND action = $2`
 	err := sqlx.Select(f.db, &tuples, query, i.Stock.ID, operation.Buy)
 	if err != nil {
@@ -217,8 +222,12 @@ func (f *walletFinder) loadItemOperations(i *wallet.Item) error {
 	}
 
 	for _, tuple := range tuples {
+		a, _ := strconv.Atoi(tuple.Amount)
 		i.Operations = append(i.Operations, operation.Operation{
-			ID: tuple.ID,
+			ID:                    tuple.ID,
+			Amount:                a,
+			Price:                 mm.ValueDollarFromString(tuple.Price),
+			PriceChange:           mm.ValueDollarFromString(tuple.PriceChange),
 			PriceChangeCommission: mm.ValueEuroFromString(tuple.PriceChangeCommission),
 			Value:      mm.ValueEuroFromString(tuple.Value),
 			Commission: mm.ValueEuroFromString(tuple.Commission),

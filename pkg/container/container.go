@@ -245,6 +245,7 @@ func (c *Container) AccountServiceInstance() *account.Service {
 			c.walletPersisterInstance(),
 			c.stockFinderInstance(),
 			c.CurrencyConverterClientInstance(),
+			c.stockDividendFinderInstance(),
 		)
 	}
 

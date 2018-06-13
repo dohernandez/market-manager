@@ -15,6 +15,53 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
+const (
+	Dyield export.SortBy = "dyield"
+	Exdate export.SortBy = "exdate"
+)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// START Stocks Sort
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+type Stocks []*stock.Stock
+
+func (s Stocks) Len() int      { return len(s) }
+func (s Stocks) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+// StocksByName implements sort.Interface by providing Less and using the Len and
+// Swap methods of the embedded wallet items value.
+type StocksByName struct {
+	Stocks
+}
+
+func (s StocksByName) Less(i, j int) bool {
+	return s.Stocks[i].Name < s.Stocks[j].Name
+}
+
+// StocksByDividendYield implements sort.Interface by providing Less and using the Len and
+// Swap methods of the embedded wallet items value.
+type StocksByDividendYield struct {
+	Stocks
+}
+
+func (s StocksByDividendYield) Less(i, j int) bool {
+	return s.Stocks[i].DividendYield < s.Stocks[j].DividendYield
+}
+
+// StocksByDividendYield implements sort.Interface by providing Less and using the Len and
+// Swap methods of the embedded wallet items value.
+type StocksByExDate struct {
+	Stocks
+}
+
+func (s StocksByExDate) Less(i, j int) bool {
+	return s.Stocks[i].Dividends[len(s.Stocks[i].Dividends)-1].ExDate.Before(s.Stocks[j].Dividends[len(s.Stocks[j].Dividends)-1].ExDate)
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// END Stocks Sort
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 type (
 	exportStock struct {
 		ctx     context.Context
@@ -22,11 +69,6 @@ type (
 
 		purchaseService *purchase.Service
 	}
-)
-
-const (
-	Dyield export.SortBy = "dyield"
-	Exdate export.SortBy = "exdate"
 )
 
 func NewExportStock(ctx context.Context, sorting export.Sorting, purchaseService *purchase.Service) *exportStock {
@@ -82,48 +124,6 @@ func (e *exportStock) retrieveStocks() ([]*stock.Stock, error) {
 
 	return e.purchaseService.Stocks()
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// START Stocks Sort
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-type Stocks []*stock.Stock
-
-func (s Stocks) Len() int      { return len(s) }
-func (s Stocks) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-
-// StocksByName implements sort.Interface by providing Less and using the Len and
-// Swap methods of the embedded wallet items value.
-type StocksByName struct {
-	Stocks
-}
-
-func (s StocksByName) Less(i, j int) bool {
-	return s.Stocks[i].Name < s.Stocks[j].Name
-}
-
-// StocksByDividendYield implements sort.Interface by providing Less and using the Len and
-// Swap methods of the embedded wallet items value.
-type StocksByDividendYield struct {
-	Stocks
-}
-
-func (s StocksByDividendYield) Less(i, j int) bool {
-	return s.Stocks[i].DividendYield < s.Stocks[j].DividendYield
-}
-
-// StocksByDividendYield implements sort.Interface by providing Less and using the Len and
-// Swap methods of the embedded wallet items value.
-type StocksByExDate struct {
-	Stocks
-}
-
-func (s StocksByExDate) Less(i, j int) bool {
-	return s.Stocks[i].Dividends[len(s.Stocks[i].Dividends)-1].ExDate.Before(s.Stocks[j].Dividends[len(s.Stocks[j].Dividends)-1].ExDate)
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// END Stocks Sort
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 type (
 	exportStockWithDividends struct {

@@ -6,12 +6,13 @@ import (
 	"sort"
 	"text/tabwriter"
 
-	"github.com/satori/go.uuid"
-
 	"github.com/fatih/color"
+
+	"time"
 
 	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 // formatWalletItemsToScreen - convert Items structure to screen
@@ -21,7 +22,20 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 
 	formatWalletToScreen(tw, precision, w)
 
-	formatItemsToScreen(tw, precision, w.Items, sorting)
+	sortItems := make([]*wallet.Item, 0, len(w.Items))
+	for _, item := range w.Items {
+		sortItems = append(sortItems, item)
+	}
+
+	switch sorting.By {
+	case Invested:
+		sort.Sort(WalletItemsByInvested{sortItems})
+	default:
+		sort.Sort(WalletItemsByName{sortItems})
+	}
+
+	formatItemsToScreen(tw, precision, sortItems)
+	formatStockItemsToScreen(tw, precision, sortItems)
 
 	fmt.Fprintln(tw, "")
 
@@ -59,20 +73,7 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 }
 
 // formatItemsToScreen - convert Items structure to screen
-func formatItemsToScreen(tw *tabwriter.Writer, precision int, items map[uuid.UUID]*wallet.Item, sorting export.Sorting) {
-	sortItems := make([]*wallet.Item, 0, len(items))
-
-	for _, item := range items {
-		sortItems = append(sortItems, item)
-	}
-
-	switch sorting.By {
-	case Invested:
-		sort.Sort(WalletItemsByInvested{sortItems})
-	default:
-		sort.Sort(WalletItemsByName{sortItems})
-	}
-
+func formatItemsToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "")
 
@@ -82,7 +83,7 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, items map[uuid.UUI
 	inProfits := color.New(color.FgGreen).FprintlnFunc()
 	inLooses := color.New(color.FgRed).FprintlnFunc()
 
-	for i, item := range sortItems {
+	for i, item := range items {
 		str := fmt.Sprintf(
 			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t",
 			i+1,
@@ -105,6 +106,62 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, items map[uuid.UUI
 			inProfits(tw, str)
 		} else {
 			inLooses(tw, str)
+		}
+	}
+}
+
+// formatStockItemsToScreen - convert stock Items structure to screen
+func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
+	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(tw, "")
+
+	header := color.New(color.FgWhite).FprintlnFunc()
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t Ex Date\t Status\t Dividend\t D. Yield\t")
+
+	inNormal := color.New(color.FgWhite).FprintlnFunc()
+	inHeightLight := color.New(color.FgYellow).FprintlnFunc()
+
+	now := time.Now()
+	month := now.Month()
+
+	for i, item := range items {
+		var (
+			strExDate  string
+			tExDate    time.Time
+			strAamount string
+			status     dividend.Status
+			strDYield  string
+		)
+
+		if len(item.Stock.Dividends) > 0 {
+			tExDate = item.Stock.Dividends[0].ExDate
+			strExDate = export.PrintDate(tExDate)
+			status = item.Stock.Dividends[0].Status
+
+			if item.Stock.Dividends[0].Amount.Amount > 0 {
+				strAamount = fmt.Sprintf("%.*f", precision, item.Stock.Dividends[0].Amount.Amount)
+				strDYield = fmt.Sprintf("%.*f%%", precision, item.Stock.DividendYield)
+			}
+		}
+
+		str := fmt.Sprintf(
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t",
+			i+1,
+			item.Stock.Name,
+			item.Stock.Exchange.Symbol,
+			item.Stock.Symbol,
+			item.Amount,
+			export.PrintValue(item.Stock.Value, precision),
+			strExDate,
+			status,
+			strAamount,
+			strDYield,
+		)
+
+		if len(strExDate) > 0 && tExDate.Month() == month {
+			inHeightLight(tw, str)
+		} else {
+			inNormal(tw, str)
 		}
 	}
 }

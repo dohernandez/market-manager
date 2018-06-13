@@ -9,44 +9,10 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 )
 
-type (
-	exportWallet struct {
-		ctx     context.Context
-		sorting export.Sorting
-
-		accountService *account.Service
-	}
-)
-
 const (
 	Stock    export.SortBy = "stock"
 	Invested export.SortBy = "invested"
 )
-
-func NewExportWallet(ctx context.Context, sorting export.Sorting, accountService *account.Service) *exportWallet {
-	return &exportWallet{
-		ctx:            ctx,
-		sorting:        sorting,
-		accountService: accountService,
-	}
-}
-
-func (e *exportWallet) Export() error {
-	name := e.ctx.Value("wallet").(string)
-	if name == "" {
-		return errors.New("missing wallet name")
-	}
-
-	w, err := e.accountService.FindWalletWithAllActiveItems(name)
-	if err != nil {
-		return err
-	}
-
-	tabw := formatWalletItemsToScreen(w, e.sorting)
-	tabw.Flush()
-
-	return nil
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // START Wallet Items Sort
@@ -80,3 +46,37 @@ func (s WalletItemsByInvested) Less(i, j int) bool {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // END Wallet Items Sort
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+type (
+	exportWallet struct {
+		ctx     context.Context
+		sorting export.Sorting
+
+		accountService *account.Service
+	}
+)
+
+func NewExportWallet(ctx context.Context, sorting export.Sorting, accountService *account.Service) *exportWallet {
+	return &exportWallet{
+		ctx:            ctx,
+		sorting:        sorting,
+		accountService: accountService,
+	}
+}
+
+func (e *exportWallet) Export() error {
+	name := e.ctx.Value("wallet").(string)
+	if name == "" {
+		return errors.New("missing wallet name")
+	}
+
+	w, err := e.accountService.FindWalletWithAllActiveItems(name)
+	if err != nil {
+		return err
+	}
+
+	tabw := formatWalletItemsToScreen(w, e.sorting)
+	tabw.Flush()
+
+	return nil
+}

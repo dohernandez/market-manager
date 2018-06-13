@@ -40,7 +40,7 @@ func formatStocksToScreen(stks []*stock.Stock) *tabwriter.Writer {
 			stk.DividendYield,
 			precision,
 			stk.Change.Amount,
-			stk.LastPriceUpdate.Format(time.RFC822),
+			export.PrintDate(stk.LastPriceUpdate),
 		)
 		fmt.Fprintln(w, str)
 	}
@@ -98,7 +98,7 @@ func formatStocksDividendsToScreen(stks []*stock.Stock, sorting export.Sorting) 
 				d.Amount.Amount,
 				precision,
 				stk.Change.Amount,
-				stk.LastPriceUpdate.Format("02 Jan 06 15:04"),
+				export.PrintDate(stk.LastPriceUpdate),
 			)
 			pColor(w, str)
 		}

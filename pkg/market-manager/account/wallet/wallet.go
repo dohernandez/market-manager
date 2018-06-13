@@ -115,20 +115,6 @@ func (i *Item) Change() mm.Value {
 	}
 }
 
-func (i *Item) WeightedAveragePrice() mm.Value {
-	var sPrice float64
-
-	for _, o := range i.Operations {
-		pPrice := o.Value.Increase(o.PriceChangeCommission)
-		pPrice = pPrice.Increase(o.Commission)
-
-		sPrice = sPrice + pPrice.Amount
-	}
-
-	wAveragePrice := sPrice / float64(i.Amount)
-	return mm.Value{Amount: wAveragePrice}
-}
-
 type Wallet struct {
 	ID           uuid.UUID
 	Name         string

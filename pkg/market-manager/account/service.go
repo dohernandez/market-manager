@@ -3,29 +3,40 @@ package account
 import (
 	"github.com/satori/go.uuid"
 
+	"time"
+
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type (
 	Service struct {
-		walletFinder    wallet.Finder
-		walletPersister wallet.Persister
-		stockFinder     stock.Finder
+		walletFinder        wallet.Finder
+		walletPersister     wallet.Persister
+		stockFinder         stock.Finder
+		stockDividendFinder dividend.Finder
 
 		ccClient *cc.Client
 	}
 )
 
-func NewService(walletFinder wallet.Finder, walletPersister wallet.Persister, stockFinder stock.Finder, ccClient *cc.Client) *Service {
+func NewService(
+	walletFinder wallet.Finder,
+	walletPersister wallet.Persister,
+	stockFinder stock.Finder,
+	ccClient *cc.Client,
+	stockDividendFinder dividend.Finder,
+) *Service {
 	return &Service{
-		walletFinder:    walletFinder,
-		walletPersister: walletPersister,
-		stockFinder:     stockFinder,
-		ccClient:        ccClient,
+		walletFinder:        walletFinder,
+		walletPersister:     walletPersister,
+		stockFinder:         stockFinder,
+		stockDividendFinder: stockDividendFinder,
+		ccClient:            ccClient,
 	}
 }
 
@@ -172,6 +183,10 @@ func (s *Service) FindWalletWithAllActiveItems(wName string) (*wallet.Wallet, er
 		return nil, err
 	}
 
+	now := time.Now()
+	year := now.Year()
+	month := int(now.Month())
+
 	for _, i := range w.Items {
 		stk, err := s.stockFinder.FindByID(i.Stock.ID)
 		if err != nil {
@@ -179,6 +194,17 @@ func (s *Service) FindWalletWithAllActiveItems(wName string) (*wallet.Wallet, er
 		}
 
 		i.Stock = stk
+
+		d, err := s.stockDividendFinder.FindDividendNextAnnounceProjectFromYearAndMonth(i.Stock.ID, year, month)
+		if err != nil {
+			if err != mm.ErrNotFound {
+				return nil, err
+			}
+
+			continue
+		}
+
+		stk.Dividends = append(stk.Dividends, d)
 	}
 
 	return w, nil

@@ -3,6 +3,8 @@ package export
 import (
 	"fmt"
 
+	"time"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 )
 
@@ -31,4 +33,8 @@ func PrintValue(value mm.Value, precision int) string {
 	}
 
 	return fmt.Sprintf("%.*f %s", precision, value.Amount, value.Currency)
+}
+
+func PrintDate(time time.Time) string {
+	return time.Format("02 Jan 06 15:04")
 }

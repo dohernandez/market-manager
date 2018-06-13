@@ -13,11 +13,12 @@ type (
 	Action string
 
 	Operation struct {
-		ID                    uuid.UUID
-		Date                  time.Time
-		Stock                 *stock.Stock
-		Action                Action
-		Amount                int
+		ID     uuid.UUID
+		Date   time.Time
+		Stock  *stock.Stock
+		Action Action
+		Amount int
+		// Price in dollar
 		Price                 mm.Value
 		PriceChange           mm.Value
 		PriceChangeCommission mm.Value
