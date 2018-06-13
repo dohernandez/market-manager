@@ -79,12 +79,11 @@ func (e *exportWallet) Export() error {
 		return err
 	}
 
-	//cEURUSD, err := e.ccClient.Converter.Get()
-	//if err != nil {
-	//	return err
-	//}
-	//w.SetCapitalRate(cEURUSD.EURUSD)
-	w.SetCapitalRate(1.1755)
+	cEURUSD, err := e.ccClient.Converter.Get()
+	if err != nil {
+		return err
+	}
+	w.SetCapitalRate(cEURUSD.EURUSD)
 
 	tabw := formatWalletItemsToScreen(w, e.sorting)
 	tabw.Flush()

@@ -211,7 +211,7 @@ func (c *Container) CurrencyConverterClientInstance() *cc.Client {
 	if c.ccClient == nil {
 		timeout := time.Second * time.Duration(c.config.CurrencyConverter.Timeout)
 
-		c.ccClient = cc.NewClient(c.newHTTPClient("CURRENCY-CONVERTER", timeout))
+		c.ccClient = cc.NewClient(c.newHTTPClient("CURRENCY-CONVERTER", timeout), 2*time.Hour)
 	}
 
 	return c.ccClient
