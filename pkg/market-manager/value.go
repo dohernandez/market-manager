@@ -71,13 +71,17 @@ func ValueDollarFromString(s string) Value {
 }
 
 func ValueFromStringAndExchange(s, e string) Value {
+	a := valueFromString(s)
+	a.Currency = ExchangeCurrency(e)
+
+	return a
+}
+
+func ExchangeCurrency(e string) Currency {
 	ec, ok := exchangeCurrency[e]
 	if !ok {
 		ec = Euro
 	}
 
-	a := valueFromString(s)
-	a.Currency = ec
-
-	return a
+	return ec
 }

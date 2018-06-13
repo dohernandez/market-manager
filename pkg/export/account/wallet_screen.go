@@ -13,7 +13,6 @@ import (
 	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
-	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 // formatWalletItemsToScreen - convert Items structure to screen
@@ -143,7 +142,7 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t Ex Date\t Status\t Dividend\t D. Yield\t Last Price Update\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Last Price Update\t")
 
 	inNormal := color.New(color.FgWhite).FprintlnFunc()
 	inHeightLight := color.New(color.FgYellow).FprintlnFunc()
@@ -153,36 +152,43 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 
 	for i, item := range items {
 		var (
-			strExDate string
-			tExDate   time.Time
-			strAmount string
-			status    dividend.Status
-			strDYield string
+			strExDate   string
+			tExDate     time.Time
+			strAmount   string
+			strDYield   string
+			strWADYield string
 		)
 
+		waPrice := item.WeightedAveragePrice()
+
 		if len(item.Stock.Dividends) > 0 {
-			tExDate = item.Stock.Dividends[0].ExDate
+			d := item.Stock.Dividends[0]
+
+			tExDate = d.ExDate
 			strExDate = export.PrintDate(tExDate)
-			status = item.Stock.Dividends[0].Status
 
 			if item.Stock.Dividends[0].Amount.Amount > 0 {
-				strAmount = fmt.Sprintf("%.*f", precision, item.Stock.Dividends[0].Amount.Amount)
+				wADYield := d.Amount.Amount * 4 / waPrice.Amount * 100
+
+				strAmount = fmt.Sprintf("%.*f", precision, d.Amount.Amount)
 				strDYield = fmt.Sprintf("%.*f%%", precision, item.Stock.DividendYield)
+				strWADYield = fmt.Sprintf("%.*f%%", precision, wADYield)
 			}
 		}
 
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t",
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t",
 			i+1,
 			item.Stock.Name,
 			item.Stock.Exchange.Symbol,
 			item.Stock.Symbol,
 			item.Amount,
 			export.PrintValue(item.Stock.Value, precision),
+			export.PrintValue(waPrice, precision),
 			strExDate,
-			status,
 			strAmount,
 			strDYield,
+			strWADYield,
 			export.PrintDate(item.Stock.LastPriceUpdate),
 		)
 

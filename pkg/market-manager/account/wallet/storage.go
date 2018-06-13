@@ -11,6 +11,7 @@ type (
 		FindByBankAccount(ba *bank.Account) (*Wallet, error)
 		FindWithItemByStock(stk *stock.Stock) ([]*Wallet, error)
 		LoadActiveItems(w *Wallet) error
+		LoadItemOperations(i *Item) error
 	}
 
 	Persister interface {

@@ -192,17 +192,14 @@ func (f *walletFinder) hydrateWalletItem(tuple *walletItemTuple) (*wallet.Item, 
 		Sells:       mm.ValueEuroFromString(tuple.Sells),
 		CapitalRate: tuple.CapitalRate,
 	}
-	err := f.loadItemOperations(&i)
-	if err != nil {
-		return nil, err
-	}
 
 	return &i, nil
 }
 
-func (f *walletFinder) loadItemOperations(i *wallet.Item) error {
+func (f *walletFinder) LoadItemOperations(i *wallet.Item) error {
 	type operationTuple struct {
 		ID                    uuid.UUID `db:"id"`
+		Action                string    `db:"action"`
 		Amount                string    `db:"amount"`
 		Price                 string    `db:"price"`
 		PriceChange           string    `db:"price_change"`
@@ -214,9 +211,9 @@ func (f *walletFinder) loadItemOperations(i *wallet.Item) error {
 	var tuples []operationTuple
 
 	query := `
-		SELECT id, price_change_commission, value, commission, price_change, amount, price
-		FROM operation WHERE stock_id = $1 AND action = $2`
-	err := sqlx.Select(f.db, &tuples, query, i.Stock.ID, operation.Buy)
+		SELECT id, price_change_commission, value, commission, price_change, amount, price, action
+		FROM operation WHERE stock_id = $1`
+	err := sqlx.Select(f.db, &tuples, query, i.Stock.ID)
 	if err != nil {
 		return errors.Wrapf(err, "Select wallet item operations for stock %q with action %q", i.Stock.ID, operation.Buy)
 	}
@@ -225,6 +222,8 @@ func (f *walletFinder) loadItemOperations(i *wallet.Item) error {
 		a, _ := strconv.Atoi(tuple.Amount)
 		i.Operations = append(i.Operations, operation.Operation{
 			ID:                    tuple.ID,
+			Stock:                 i.Stock,
+			Action:                operation.Action(tuple.Action),
 			Amount:                a,
 			Price:                 mm.ValueDollarFromString(tuple.Price),
 			PriceChange:           mm.ValueDollarFromString(tuple.PriceChange),

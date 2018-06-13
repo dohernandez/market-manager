@@ -119,6 +119,45 @@ func (i *Item) Change() mm.Value {
 	}
 }
 
+func (i *Item) WeightedAveragePrice() mm.Value {
+	var asPrice float64
+
+	eSymbol := i.Stock.Exchange.Symbol
+
+	for _, o := range i.Operations {
+		if o.Action != operation.Buy && o.Action != operation.Sell {
+			continue
+		}
+		commissions := o.Commission.Increase(o.PriceChangeCommission)
+
+		sPrice := o.Price.Amount * float64(o.Amount)
+
+		if o.Action == operation.Buy {
+			if mm.ExchangeCurrency(eSymbol) == mm.Dollar {
+				sPrice = sPrice + commissions.Amount*o.PriceChange.Amount
+			} else {
+				sPrice = sPrice + commissions.Amount
+			}
+
+			asPrice = asPrice + sPrice
+		} else {
+			if mm.ExchangeCurrency(eSymbol) == mm.Dollar {
+				sPrice = sPrice - commissions.Amount*o.PriceChange.Amount
+			} else {
+				sPrice = sPrice - commissions.Amount
+			}
+
+			asPrice = asPrice - sPrice
+		}
+	}
+
+	wAveragePrice := asPrice / float64(i.Amount)
+	return mm.Value{
+		Amount:   wAveragePrice,
+		Currency: mm.ExchangeCurrency(eSymbol),
+	}
+}
+
 func (i *Item) PercentageInvestedRepresented(invested float64) float64 {
 	return i.Invested.Amount * 100 / invested
 }

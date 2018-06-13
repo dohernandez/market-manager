@@ -188,12 +188,19 @@ func (s *Service) FindWalletWithAllActiveItems(wName string) (*wallet.Wallet, er
 	month := int(now.Month())
 
 	for _, i := range w.Items {
+		// Add this into go routing. Use the example explain in the page
+		// https://medium.com/@trevor4e/learning-gos-concurrency-through-illustrations-8c4aff603b3
 		stk, err := s.stockFinder.FindByID(i.Stock.ID)
 		if err != nil {
 			return nil, err
 		}
 
 		i.Stock = stk
+
+		err = s.walletFinder.LoadItemOperations(i)
+		if err != nil {
+			return nil, err
+		}
 
 		d, err := s.stockDividendFinder.FindDividendNextAnnounceProjectFromYearAndMonth(i.Stock.ID, year, month)
 		if err != nil {
