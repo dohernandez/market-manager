@@ -1,6 +1,8 @@
 package wallet
 
 import (
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
@@ -229,4 +231,25 @@ func (w *Wallet) PercentageBenefits() float64 {
 	percent := (benefits.Amount * float64(100)) / w.Invested.Amount
 
 	return percent - 100
+}
+
+func (w *Wallet) DividendProjectedNextMonth() mm.Value {
+	var dividends float64
+
+	now := time.Now()
+	month := now.Month()
+
+	for _, item := range w.Items {
+		if len(item.Stock.Dividends) > 0 {
+			d := item.Stock.Dividends[0]
+			if d.ExDate.Month() == month {
+				dividends = dividends + d.Amount.Amount*float64(item.Amount)
+			}
+		}
+	}
+
+	return mm.Value{
+		Amount:   dividends,
+		Currency: mm.Dollar,
+	}
 }

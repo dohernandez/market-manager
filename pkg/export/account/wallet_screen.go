@@ -35,6 +35,7 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 	}
 
 	formatItemsToScreen(tw, precision, sortItems)
+	formatWalletDividendProjected(tw, precision, w)
 	formatStockItemsToScreen(tw, precision, sortItems)
 
 	fmt.Fprintln(tw, "")
@@ -110,13 +111,25 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, items []*wallet.It
 	}
 }
 
-// formatStockItemsToScreen - convert stock Items structure to screen
+// formatWalletDividendProjected ...
+func formatWalletDividendProjected(tw *tabwriter.Writer, precision int, w *wallet.Wallet) {
+	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(tw, "")
+
+	header := color.New(color.FgWhite).FprintlnFunc()
+	header(tw, "Dividend Projected\t")
+
+	inNormal := color.New(color.FgWhite).FprintlnFunc()
+	inNormal(tw, fmt.Sprintf("%s\t", export.PrintValue(w.DividendProjectedNextMonth(), precision)))
+}
+
+// formatStockItemsToScreen ...
 func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t Ex Date\t Status\t Dividend\t D. Yield\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t Ex Date\t Status\t Dividend\t D. Yield\t Last Price Update\t")
 
 	inNormal := color.New(color.FgWhite).FprintlnFunc()
 	inHeightLight := color.New(color.FgYellow).FprintlnFunc()
@@ -126,11 +139,11 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 
 	for i, item := range items {
 		var (
-			strExDate  string
-			tExDate    time.Time
-			strAamount string
-			status     dividend.Status
-			strDYield  string
+			strExDate string
+			tExDate   time.Time
+			strAmount string
+			status    dividend.Status
+			strDYield string
 		)
 
 		if len(item.Stock.Dividends) > 0 {
@@ -139,13 +152,13 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 			status = item.Stock.Dividends[0].Status
 
 			if item.Stock.Dividends[0].Amount.Amount > 0 {
-				strAamount = fmt.Sprintf("%.*f", precision, item.Stock.Dividends[0].Amount.Amount)
+				strAmount = fmt.Sprintf("%.*f", precision, item.Stock.Dividends[0].Amount.Amount)
 				strDYield = fmt.Sprintf("%.*f%%", precision, item.Stock.DividendYield)
 			}
 		}
 
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t",
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t",
 			i+1,
 			item.Stock.Name,
 			item.Stock.Exchange.Symbol,
@@ -154,8 +167,9 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 			export.PrintValue(item.Stock.Value, precision),
 			strExDate,
 			status,
-			strAamount,
+			strAmount,
 			strDYield,
+			export.PrintDate(item.Stock.LastPriceUpdate),
 		)
 
 		if len(strExDate) > 0 && tExDate.Month() == month {
