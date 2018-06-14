@@ -50,6 +50,22 @@ func (v *Value) Decrease(a Value) Value {
 	return nv
 }
 
+// Compare to values
+// 1 - gt than
+// 0 - eq
+// -1 - lt than
+func (v *Value) Compare(a Value) int {
+	if v.Amount > a.Amount {
+		return 1
+	}
+
+	if v.Amount < a.Amount {
+		return -1
+	}
+
+	return 0
+}
+
 func valueFromString(s string) Value {
 	v, _ := strconv.ParseFloat(s, 64)
 

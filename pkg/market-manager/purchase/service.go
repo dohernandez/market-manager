@@ -261,6 +261,20 @@ func (s *Service) updateLastClosedPriceOfStock(stk *stock.Stock, p stock.Price) 
 		return err
 	}
 
+	if stk.High52week.Amount < p.High {
+		stk.High52week = mm.Value{
+			Amount:   p.High,
+			Currency: stk.High52week.Currency,
+		}
+	}
+
+	if stk.Low52week.Amount > p.Low {
+		stk.Low52week = mm.Value{
+			Amount:   p.High,
+			Currency: stk.Low52week.Currency,
+		}
+	}
+
 	return s.stockPersister.UpdatePrice(stk)
 }
 

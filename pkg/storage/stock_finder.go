@@ -117,6 +117,7 @@ func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
 	query := `
 		SELECT 
 			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
+			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -143,6 +144,7 @@ func (f *stockFinder) FindByName(name string) (*stock.Stock, error) {
 	query := `
 		SELECT 
 			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
+			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -196,6 +198,7 @@ func (f *stockFinder) FindAllByExchanges(exchanges []string) ([]*stock.Stock, er
 	query := `
 		SELECT 
 			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
+			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -241,6 +244,7 @@ func (f *stockFinder) FindAllByDividendAnnounceProjectYearAndMonth(year, month i
 	query := `
 		SELECT 
 			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
+			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol,
            	sd.ex_date AS dividend_ex_date, sd.status AS dividend_status, sd.amount AS dividend_amount, sd.record_date AS dividend_record_date
