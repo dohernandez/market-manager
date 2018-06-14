@@ -134,7 +134,7 @@ func (s *Service) UpdateLastClosedPriceStocks(stks []*stock.Stock) []error {
 			if concurrency != 0 {
 				break
 			}
-			time.Sleep(3 * time.Second)
+			time.Sleep(2 * time.Second)
 		}
 	}
 
@@ -276,6 +276,133 @@ func (s *Service) UpdateLastClosedPriceStock(stk *stock.Stock) error {
 
 	err = s.accountService.UpdateWalletsCapitalByStock(stk)
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Update52WeekClosedPriceStocks update the stocks 52 week with the high - low price
+func (s *Service) Update52WeekHighLowPriceStocks(stks []*stock.Stock) []error {
+	var (
+		wg   sync.WaitGroup
+		errs []error
+	)
+
+	concurrency := UpdatePriceConcurrency
+	for _, stk := range stks {
+		wg.Add(1)
+		concurrency--
+
+		st := stk
+		go func() {
+			defer wg.Done()
+
+			p, err := s.get52WeekHighLowPriceOfStock(st)
+			if err != nil {
+				errs = append(errs, errors.Wrapf(err, "symbol : %s", st.Symbol))
+
+				concurrency++
+				return
+			}
+
+			if err := s.update52WeekHighLowPriceOfStock(st, p); err != nil {
+				errs = append(errs, errors.Wrapf(err, "symbol : %s", st.Symbol))
+
+				concurrency++
+				return
+			}
+
+			concurrency++
+		}()
+
+		for {
+			if concurrency != 0 {
+				break
+			}
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	wg.Wait()
+
+	return errs
+}
+
+func (s *Service) get52WeekHighLowPriceOfStock(stk *stock.Stock) (stock.Price52WeekHighLow, error) {
+	method := "get52WeekHighLowPriceFromYahoo"
+
+	p, err := s.get52WeekHighLowPriceFromYahoo(stk)
+	if err != nil {
+		logger.FromContext(s.ctx).WithError(err).Debugf("failed %s for stock %q", method, stk.Symbol)
+		//time.Sleep(5 * time.Second)
+		//method = "get52WeekHighLowPriceFromGoogle"
+
+		//p, err = s.get52WeekHighLowPriceFromGoogle(stk)
+		//if err != nil {
+		if err == mm.ErrNotFound {
+			return stock.Price52WeekHighLow{}, err
+		}
+
+		return stock.Price52WeekHighLow{}, errors.WithStack(err)
+		//}
+	}
+	logger.FromContext(s.ctx).Debugf("got 52 wk %+v from stock %s with method %s", p, stk.Symbol, method)
+
+	return p, nil
+}
+
+func (s *Service) get52WeekHighLowPriceFromYahoo(stk *stock.Stock) (stock.Price52WeekHighLow, error) {
+	endDate := time.Now()
+	// startDate 52 week backward
+	startDate := endDate.Add(-52 * 7 * 24 * time.Hour)
+
+	q, err := quote.NewQuoteFromYahoo(stk.Symbol, startDate.Format("2006-01-02"), endDate.Format("2006-01-02"), quote.Daily, true)
+	if err != nil {
+		return stock.Price52WeekHighLow{}, err
+	}
+
+	high52wk := q.High[0]
+	low52wk := q.Low[0]
+	for k := range q.Date[1:] {
+		if high52wk < q.High[k] {
+			high52wk = q.High[k]
+		}
+
+		if low52wk > q.Low[k] {
+			low52wk = q.Low[k]
+		}
+	}
+
+	return stock.Price52WeekHighLow{
+		High: high52wk,
+		Low:  low52wk,
+	}, nil
+}
+
+func (s *Service) update52WeekHighLowPriceOfStock(stk *stock.Stock, p stock.Price52WeekHighLow) error {
+	c := mm.ExchangeCurrency(stk.Exchange.Symbol)
+
+	stk.High52week = mm.Value{
+		Amount:   p.High,
+		Currency: c,
+	}
+
+	stk.Low52week = mm.Value{
+		Amount:   p.Low,
+		Currency: c,
+	}
+
+	return s.stockPersister.UpdateHighLow52WeekPrice(stk)
+}
+
+func (s *Service) Update52WeekHighLowPriceStock(stk *stock.Stock) error {
+	p, err := s.get52WeekHighLowPriceOfStock(stk)
+	if err != nil {
+		return err
+	}
+
+	if err := s.update52WeekHighLowPriceOfStock(stk, p); err != nil {
 		return err
 	}
 

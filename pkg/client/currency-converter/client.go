@@ -2,7 +2,6 @@ package cc
 
 import (
 	"net/http"
-	"time"
 
 	cache "github.com/patrickmn/go-cache"
 )
@@ -16,13 +15,13 @@ type Client struct {
 	Converter *converterEndpoint
 }
 
-func NewClient(client *http.Client, expiration time.Duration) *Client {
+func NewClient(client *http.Client, ch *cache.Cache) *Client {
 	c := Client{}
 	c.client = client
 
 	c.Converter = &converterEndpoint{
 		base:  &c,
-		store: cache.New(expiration, time.Second*10),
+		cache: ch,
 	}
 
 	return &c

@@ -52,6 +52,7 @@ func main() {
 	importCommand := command.NewImportCommand(baseCommand)
 
 	serverCommand := command.NewHTTPCommand(baseCommand)
+
 	migrateCommand := command.NewMigrateCommand(baseCommand)
 	stocksCommand := command.NewStocksCommand(baseCommand, importCommand, exportCommand)
 	bankingCommand := command.NewBankingCommand(baseCommand, importCommand)
@@ -137,28 +138,47 @@ func main() {
 					},
 				},
 				{
-					Name:      "price",
-					Aliases:   []string{"p"},
-					Usage:     "Update stock price value based on the yahoo/google api",
-					Action:    stocksCommand.Price,
-					ArgsUsage: "",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "stock, s",
-							Usage: "Stock symbol(tricker) to update price",
+					Name:    "update",
+					Aliases: []string{"u"},
+					Usage:   "Update data",
+					Subcommands: []cli.Command{
+						{
+							Name:      "price",
+							Aliases:   []string{"p"},
+							Usage:     "Update stock price value based on the yahoo/google api",
+							Action:    stocksCommand.UpdatePrice,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "stock, s",
+									Usage: "Stock symbol(tricker) to update price",
+								},
+							},
+						}, {
+							Name:      "highLow52week",
+							Aliases:   []string{"phl52w"},
+							Usage:     "Update high - Low 52 week stock price value based on the yahoo/google api",
+							Action:    stocksCommand.UpdatePrice52week,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "stock, s",
+									Usage: "Stock symbol(tricker) to update price",
+								},
+							},
 						},
-					},
-				},
-				{
-					Name:      "dividend",
-					Aliases:   []string{"d"},
-					Usage:     "Update stock dividend value based on the yahoo/iextrading api",
-					Action:    stocksCommand.Dividend,
-					ArgsUsage: "",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "stock, s",
-							Usage: "Stock symbol(tricker) to update price",
+						{
+							Name:      "dividend",
+							Aliases:   []string{"d"},
+							Usage:     "Update stock dividend value based on the yahoo/iextrading api",
+							Action:    stocksCommand.Dividend,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "stock, s",
+									Usage: "Stock symbol(tricker) to update price",
+								},
+							},
 						},
 					},
 				},

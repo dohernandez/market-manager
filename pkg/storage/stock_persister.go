@@ -85,3 +85,24 @@ func (p *stockPersister) execUpdateDividendYield(tx *sqlx.Tx, s *stock.Stock) er
 
 	return nil
 }
+
+func (p *stockPersister) UpdateHighLow52WeekPrice(s *stock.Stock) error {
+	return transaction(p.db, func(tx *sqlx.Tx) error {
+		if err := p.execUpdateHighLow52WeekPrice(tx, s); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (p *stockPersister) execUpdateHighLow52WeekPrice(tx *sqlx.Tx, s *stock.Stock) error {
+	query := `UPDATE stock SET high_52_week = $1, low_52_week = $2, high_low_52_Week_update = $3 WHERE id = $4`
+
+	_, err := tx.Exec(query, s.High52week.Amount, s.Low52week.Amount, time.Now(), s.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

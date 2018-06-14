@@ -14,7 +14,7 @@ const converterUrl = "%s/convert?q=EUR_USD&compact=ultra"
 type (
 	converterEndpoint struct {
 		base  *Client
-		store *cache.Cache
+		cache *cache.Cache
 	}
 
 	Converter struct {
@@ -26,7 +26,7 @@ func (e *converterEndpoint) Get() (Converter, error) {
 	c := Converter{}
 	key := "Converter.EUR_USD"
 
-	val, found := e.store.Get(key)
+	val, found := e.cache.Get(key)
 	if found {
 		c, ok := val.(Converter)
 		if !ok {
@@ -50,7 +50,7 @@ func (e *converterEndpoint) Get() (Converter, error) {
 
 	c.EURUSD, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", c.EURUSD), 64)
 
-	e.store.Set(key, c, cache.DefaultExpiration)
+	e.cache.Set(key, c, cache.DefaultExpiration)
 
 	return c, nil
 }

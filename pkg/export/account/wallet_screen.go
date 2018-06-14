@@ -142,7 +142,7 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Last Price Update\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA UpdateLastDatePrice\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Last UpdateLastDatePrice Update\t")
 
 	inNormal := color.New(color.FgWhite).FprintlnFunc()
 	inHeightLight := color.New(color.FgYellow).FprintlnFunc()

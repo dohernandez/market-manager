@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/go-chi/chi"
 	chiMiddleware "github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/urfave/cli"
+
+	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
 // HTTPCommand holds the necessary data for its execution

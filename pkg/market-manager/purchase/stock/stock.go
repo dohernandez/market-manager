@@ -14,16 +14,19 @@ import (
 type (
 	// Stock represents stock struct
 	Stock struct {
-		ID              uuid.UUID
-		Market          *market.Market
-		Exchange        *exchange.Exchange
-		Name            string
-		Symbol          string
-		Value           mm.Value
-		Dividends       []dividend.StockDividend
-		DividendYield   float64
-		Change          mm.Value
-		LastPriceUpdate time.Time
+		ID                  uuid.UUID
+		Market              *market.Market
+		Exchange            *exchange.Exchange
+		Name                string
+		Symbol              string
+		Value               mm.Value
+		Dividends           []dividend.StockDividend
+		DividendYield       float64
+		Change              mm.Value
+		LastPriceUpdate     time.Time
+		High52week          mm.Value
+		Low52week           mm.Value
+		HighLow52WeekUpdate time.Time
 	}
 
 	// Price represents stock's price struct
@@ -35,6 +38,12 @@ type (
 		Open   float64
 		Change float64
 		Volume int64
+	}
+
+	// Price52WeekHighLow represents 52 week high -low stock's price struct
+	Price52WeekHighLow struct {
+		High float64
+		Low  float64
 	}
 )
 

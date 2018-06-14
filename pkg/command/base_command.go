@@ -6,6 +6,10 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
+	"time"
+
+	"github.com/patrickmn/go-cache"
+
 	"github.com/dohernandez/market-manager/pkg/config"
 	"github.com/dohernandez/market-manager/pkg/container"
 )
@@ -15,6 +19,7 @@ type (
 	BaseCommand struct {
 		ctx    context.Context
 		config *config.Specification
+		cache  *cache.Cache
 	}
 )
 
@@ -23,6 +28,7 @@ func NewBaseCommand(ctx context.Context, config *config.Specification) *BaseComm
 	return &BaseCommand{
 		ctx:    ctx,
 		config: config,
+		cache:  cache.New(time.Hour*2, time.Hour*10),
 	}
 }
 
@@ -36,5 +42,5 @@ func (cmd *BaseCommand) initDatabaseConnection() (*sqlx.DB, error) {
 }
 
 func (cmd *BaseCommand) Container(db *sqlx.DB) *container.Container {
-	return container.NewContainer(cmd.ctx, db, cmd.config)
+	return container.NewContainer(cmd.ctx, db, cmd.config, cmd.cache)
 }

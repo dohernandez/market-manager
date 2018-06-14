@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	cache "github.com/patrickmn/go-cache"
 
 	"fmt"
 
@@ -58,13 +59,16 @@ type Container struct {
 	purchaseService *purchase.Service
 	accountService  *account.Service
 	bankingService  *banking.Service
+
+	cache *cache.Cache
 }
 
-func NewContainer(ctx context.Context, db *sqlx.DB, config *config.Specification) *Container {
+func NewContainer(ctx context.Context, db *sqlx.DB, config *config.Specification, ch *cache.Cache) *Container {
 	return &Container{
 		ctx:    ctx,
 		db:     db,
 		config: config,
+		cache:  ch,
 	}
 }
 
@@ -211,7 +215,7 @@ func (c *Container) CurrencyConverterClientInstance() *cc.Client {
 	if c.ccClient == nil {
 		timeout := time.Second * time.Duration(c.config.CurrencyConverter.Timeout)
 
-		c.ccClient = cc.NewClient(c.newHTTPClient("CURRENCY-CONVERTER", timeout), 2*time.Hour)
+		c.ccClient = cc.NewClient(c.newHTTPClient("CURRENCY-CONVERTER", timeout), c.cache)
 	}
 
 	return c.ccClient

@@ -30,7 +30,7 @@ func (cmd *SchedulerCommand) Run(cliCtx *cli.Context) error {
 	logger.FromContext(ctx).Info("Starting schedulers")
 
 	s := gocron.NewScheduler()
-	s.Every(1).Day().At("8:20").Do(func() { cmd.stockCommand.Price(cliCtx) })
+	s.Every(1).Day().At("8:20").Do(func() { cmd.stockCommand.UpdatePrice(cliCtx) })
 	<-s.Start()
 
 	return nil

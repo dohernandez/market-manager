@@ -109,8 +109,8 @@ func (cmd *StocksCommand) getStockImport(cliCtx *cli.Context, importPath string)
 	return ris, nil
 }
 
-// Price runs the application stock price update
-func (cmd *StocksCommand) Price(cliCtx *cli.Context) error {
+// UpdatePrice runs the application stock last price update
+func (cmd *StocksCommand) UpdatePrice(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -157,6 +157,67 @@ func (cmd *StocksCommand) Price(cliCtx *cli.Context) error {
 		}
 
 		err = stockService.UpdateLastClosedPriceStock(stock)
+		if err != nil {
+			logger.FromContext(ctx).Debug("some errs happen while updating stocks price:")
+			logger.FromContext(ctx).Debugf("err: %v\n", err)
+
+			return err
+		}
+	}
+
+	logger.FromContext(ctx).Info("Update finished")
+
+	return nil
+}
+
+// UpdatePrice52week runs the application stock last price update
+func (cmd *StocksCommand) UpdatePrice52week(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	// Database connection
+	logger.FromContext(ctx).Info("Initializing database connection")
+	db, err := cmd.initDatabaseConnection()
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
+	}
+
+	c := cmd.Container(db)
+
+	stockService := c.PurchaseServiceInstance()
+
+	if cliCtx.String("stock") == "" {
+		stocks, err := stockService.Stocks()
+		if err != nil {
+			logger.FromContext(ctx).Debugf("err: %v\n", err)
+
+			return err
+		}
+
+		errs := stockService.Update52WeekHighLowPriceStocks(stocks)
+		if len(errs) > 0 {
+			if stocks == nil {
+				for _, err := range errs {
+					logger.FromContext(ctx).Debugf("err: %v\n", err)
+				}
+
+				return errs[0]
+			} else {
+				logger.FromContext(ctx).Debug("some errs happen while updating stocks price:")
+				for _, err := range errs {
+					logger.FromContext(ctx).Debugf("err: %v\n", err)
+				}
+			}
+		}
+	} else {
+		stock, err := stockService.FindStockBySymbol(cliCtx.String("stock"))
+		if err != nil {
+			logger.FromContext(ctx).Debugf("err: %v\n", err)
+
+			return err
+		}
+
+		err = stockService.Update52WeekHighLowPriceStock(stock)
 		if err != nil {
 			logger.FromContext(ctx).Debug("some errs happen while updating stocks price:")
 			logger.FromContext(ctx).Debugf("err: %v\n", err)
