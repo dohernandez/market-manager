@@ -335,17 +335,17 @@ func (s *Service) get52WeekHighLowPriceOfStock(stk *stock.Stock) (stock.Price52W
 	p, err := s.get52WeekHighLowPriceFromYahoo(stk)
 	if err != nil {
 		logger.FromContext(s.ctx).WithError(err).Debugf("failed %s for stock %q", method, stk.Symbol)
-		//time.Sleep(5 * time.Second)
-		//method = "get52WeekHighLowPriceFromGoogle"
+		time.Sleep(5 * time.Second)
+		method = "get52WeekHighLowPriceFromGoogle"
 
-		//p, err = s.get52WeekHighLowPriceFromGoogle(stk)
-		//if err != nil {
-		if err == mm.ErrNotFound {
-			return stock.Price52WeekHighLow{}, err
+		p, err = s.get52WeekHighLowPriceFromGoogle(stk)
+		if err != nil {
+			if err == mm.ErrNotFound {
+				return stock.Price52WeekHighLow{}, err
+			}
+
+			return stock.Price52WeekHighLow{}, errors.WithStack(err)
 		}
-
-		return stock.Price52WeekHighLow{}, errors.WithStack(err)
-		//}
 	}
 	logger.FromContext(s.ctx).Debugf("got 52 wk %+v from stock %s with method %s", p, stk.Symbol, method)
 
@@ -377,6 +377,49 @@ func (s *Service) get52WeekHighLowPriceFromYahoo(stk *stock.Stock) (stock.Price5
 	return stock.Price52WeekHighLow{
 		High: high52wk,
 		Low:  low52wk,
+	}, nil
+}
+
+func (s *Service) get52WeekHighLowPriceFromGoogle(stk *stock.Stock) (stock.Price52WeekHighLow, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	gps, err := gf.GetPrices(ctx, &gf.Query{
+		P: "1Y",
+		I: "86400",
+		X: stk.Exchange.Symbol,
+		Q: stk.Symbol,
+	})
+	if err != nil {
+		return stock.Price52WeekHighLow{}, err
+	}
+
+	if len(gps) == 0 {
+		return stock.Price52WeekHighLow{}, errors.Errorf("symbol '%s' not found\n", stk.Symbol)
+	}
+
+	high52wk := gps[0].High
+	low52wk := gps[0].Low
+	for _, gp := range gps[1:] {
+		if high52wk < gp.High {
+			high52wk = gp.High
+		}
+
+		if low52wk > gp.Low {
+			low52wk = gp.Low
+		}
+	}
+
+	return stock.Price52WeekHighLow{
+		High: high52wk,
+		Low:  low52wk,
+	}, nil
+
+	p := gps[len(gps)-1]
+
+	return stock.Price52WeekHighLow{
+		High: p.High,
+		Low:  p.Low,
 	}, nil
 }
 

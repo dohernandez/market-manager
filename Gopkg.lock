@@ -22,8 +22,8 @@
 [[projects]]
   name = "github.com/dohernandez/googlefinance-client-go"
   packages = ["."]
-  revision = "57dbdf3b7fc014b4765b6f43d030dbcac5dae39a"
-  version = "1.0.3"
+  revision = "e0745d2dc13027bc8ed36eb93d60f2da14436377"
+  version = "1.0.4"
 
 [[projects]]
   branch = "master"
@@ -181,6 +181,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b50c67236b9a533806451d4233bf6574953e649959346d9c096e5137615816a5"
+  inputs-digest = "9257e60b610ca6ef107eb752feb759a7a1f3acc24c62d9640705d8db48762b32"
   solver-name = "gps-cdcl"
   solver-version = 1
