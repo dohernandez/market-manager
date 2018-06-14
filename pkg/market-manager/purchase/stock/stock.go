@@ -57,3 +57,32 @@ func NewStock(market *market.Market, exchange *exchange.Exchange, name, symbol s
 		Symbol:   symbol,
 	}
 }
+
+// ComparePriceWithHighLow Compare price with stock high - low price and returns
+// 1 - Price between 71% - 100%
+// 0 - Price between 31% - 70%
+// -1 - Price between 0% - 30%
+func (s *Stock) ComparePriceWithHighLow() int {
+	r52wk := s.High52week.Decrease(s.Low52week)
+	p := s.Value
+
+	if p.Amount > s.High52week.Amount-r52wk.Amount/3 {
+		return 1
+	}
+
+	if p.Amount > s.Low52week.Amount+r52wk.Amount/3 {
+		return 0
+	}
+
+	return -1
+}
+
+// BuyUnder Price proposal when is appropriate to buy the stock
+func (s *Stock) BuyUnder() mm.Value {
+	r52wk := s.High52week.Decrease(s.Low52week)
+
+	return mm.Value{
+		Amount:   s.High52week.Amount - r52wk.Amount/3*2,
+		Currency: r52wk.Currency,
+	}
+}

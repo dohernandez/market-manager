@@ -36,6 +36,7 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 
 	formatItemsToScreen(tw, precision, w, sortItems)
 	formatWalletDividendProjected(tw, precision, w)
+	formatStockItemsDividendToScreen(tw, precision, sortItems)
 	formatStockItemsToScreen(tw, precision, sortItems)
 
 	fmt.Fprintln(tw, "")
@@ -46,6 +47,8 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 // formatWalletToScreen - convert wallet structure to screen
 func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet) {
 	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(tw, "")
+	noColor(tw, "# General")
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
@@ -117,6 +120,8 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet, 
 func formatWalletDividendProjected(tw *tabwriter.Writer, precision int, w *wallet.Wallet) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "")
+	noColor(tw, "# Dividend")
+	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
 	header(tw, "Dividend Projected\t Retention\t Final\t")
@@ -136,8 +141,8 @@ func formatWalletDividendProjected(tw *tabwriter.Writer, precision int, w *walle
 	))
 }
 
-// formatStockItemsToScreen ...
-func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
+// formatStockItemsDividendToScreen ...
+func formatStockItemsDividendToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "")
 
@@ -196,6 +201,49 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 			inHeightLight(tw, str)
 		} else {
 			inNormal(tw, str)
+		}
+	}
+}
+
+// formatStockItemsToScreen ...
+func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
+	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(tw, "")
+	noColor(tw, "# Price")
+	noColor(tw, "")
+
+	header := color.New(color.FgWhite).FprintlnFunc()
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t High 52wk\t Low 52wk\t Buy Under\t Last Price Update\t")
+
+	normal := color.New(color.FgWhite).FprintlnFunc()
+	overSell := color.New(color.FgGreen).FprintlnFunc()
+	overBuy := color.New(color.FgRed).FprintlnFunc()
+
+	for i, item := range items {
+		waPrice := item.WeightedAveragePrice()
+
+		str := fmt.Sprintf(
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t",
+			i+1,
+			item.Stock.Name,
+			item.Stock.Exchange.Symbol,
+			item.Stock.Symbol,
+			item.Amount,
+			export.PrintValue(item.Stock.Value, precision),
+			export.PrintValue(waPrice, precision),
+			export.PrintValue(item.Stock.High52week, precision),
+			export.PrintValue(item.Stock.Low52week, precision),
+			export.PrintValue(item.Stock.BuyUnder(), precision),
+			export.PrintDate(item.Stock.LastPriceUpdate),
+		)
+
+		switch item.Stock.ComparePriceWithHighLow() {
+		case 1:
+			overBuy(tw, str)
+		case -1:
+			overSell(tw, str)
+		default:
+			normal(tw, str)
 		}
 	}
 }

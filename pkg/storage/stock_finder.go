@@ -19,13 +19,16 @@ import (
 
 type (
 	stockTuple struct {
-		ID              uuid.UUID
-		Name            string
-		Symbol          string
-		Value           string
-		DividendYield   string    `db:"dividend_yield"`
-		Change          string    `db:"change"`
-		LastPriceUpdate time.Time `db:"last_price_update"`
+		ID                  uuid.UUID
+		Name                string
+		Symbol              string
+		Value               string
+		DividendYield       string    `db:"dividend_yield"`
+		Change              string    `db:"change"`
+		LastPriceUpdate     time.Time `db:"last_price_update"`
+		High52week          string    `db:"high_52_week"`
+		Low52week           string    `db:"low_52_week"`
+		HighLow52WeekUpdate time.Time `db:"high_low_52_week_update"`
 
 		MarketID          uuid.UUID `db:"market_id"`
 		MarketName        string    `db:"market_name"`
@@ -55,6 +58,7 @@ func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 	query := `
 		SELECT 
 			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
+			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
@@ -95,12 +99,15 @@ func (f *stockFinder) hydrate(tuple *stockTuple) *stock.Stock {
 			Name:   tuple.ExchangeName,
 			Symbol: tuple.ExchangeSymbol,
 		},
-		Name:            tuple.Name,
-		Symbol:          tuple.Symbol,
-		Value:           mm.ValueFromStringAndExchange(tuple.Value, tuple.ExchangeSymbol),
-		DividendYield:   dy,
-		Change:          mm.ValueDollarFromString(tuple.Change),
-		LastPriceUpdate: tuple.LastPriceUpdate,
+		Name:                tuple.Name,
+		Symbol:              tuple.Symbol,
+		Value:               mm.ValueFromStringAndExchange(tuple.Value, tuple.ExchangeSymbol),
+		DividendYield:       dy,
+		Change:              mm.ValueDollarFromString(tuple.Change),
+		LastPriceUpdate:     tuple.LastPriceUpdate,
+		High52week:          mm.ValueFromStringAndExchange(tuple.High52week, tuple.ExchangeSymbol),
+		Low52week:           mm.ValueFromStringAndExchange(tuple.Low52week, tuple.ExchangeSymbol),
+		HighLow52WeekUpdate: tuple.HighLow52WeekUpdate,
 	}
 }
 
@@ -162,6 +169,7 @@ func (f *stockFinder) FindByID(ID uuid.UUID) (*stock.Stock, error) {
 	query := `
 		SELECT 
 			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
+			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
 			m.name AS market_name, m.display_name AS market_display_name,
 			e.name AS exchange_name, e.symbol AS exchange_symbol
 		FROM stock s 
