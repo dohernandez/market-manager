@@ -87,7 +87,29 @@ func (s *Service) FindStockByName(name string) (*stock.Stock, error) {
 }
 
 func (s *Service) Stocks() ([]*stock.Stock, error) {
-	return s.stockFinder.FindAll()
+	stks, err := s.stockFinder.FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	year := now.Year()
+	month := int(now.Month())
+
+	for _, stk := range stks {
+		d, err := s.stockDividendFinder.FindDividendNextAnnounceProjectFromYearAndMonth(stk.ID, year, month)
+		if err != nil {
+			if err != mm.ErrNotFound {
+				return nil, err
+			}
+
+			continue
+		}
+
+		stk.Dividends = append(stk.Dividends, d)
+	}
+
+	return stks, nil
 }
 
 func (s *Service) StocksByExchanges(exchanges []string) ([]*stock.Stock, error) {

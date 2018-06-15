@@ -52,15 +52,17 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "Invested\t Capital\t Funds\t Net Capital\t Net Benefits\t % Benefits\t Dividends\t Connection\t Interest\t Commisions\t")
+	header(tw, "Invested\t Capital\t Funds\t Net Capital\t Net Benefits\t % Benefits\t Dividends\t D. Yield\t Connection\t Interest\t Commisions\t")
 
 	pColor := color.New(color.FgGreen).FprintlnFunc()
 	if w.PercentageBenefits() < 0 {
 		pColor = color.New(color.FgRed).FprintlnFunc()
 	}
 
+	wDYield := w.Dividend.Amount * 4 / w.Invested.Amount * 100
+
 	str := fmt.Sprintf(
-		"%s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t %s\t %s\t %s\t",
+		"%s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t %.*f%%\t %s\t %s\t %s\t",
 		export.PrintValue(w.Invested, precision),
 		export.PrintValue(w.Capital, precision),
 		export.PrintValue(w.Funds, precision),
@@ -69,6 +71,8 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 		precision,
 		w.PercentageBenefits(),
 		export.PrintValue(w.Dividend, precision),
+		precision,
+		wDYield,
 		export.PrintValue(w.Connection, precision),
 		export.PrintValue(w.Interest, precision),
 		export.PrintValue(w.Commission, precision),

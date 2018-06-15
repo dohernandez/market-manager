@@ -29,12 +29,20 @@ const (
 
 func PrintValue(value mm.Value, precision int) string {
 	if value.Currency == mm.Dollar {
-		return fmt.Sprintf(" %s%.*f", value.Currency, precision, value.Amount)
+		if value.Amount > 0 {
+			return fmt.Sprintf("%s%.*f", value.Currency, precision, value.Amount)
+		}
+
+		return fmt.Sprintf("-%s%.*f", value.Currency, precision, value.Amount*-1)
 	}
 
 	return fmt.Sprintf("%.*f %s", precision, value.Amount, value.Currency)
 }
 
-func PrintDate(time time.Time) string {
-	return time.Format("02 Jan 06 15:04")
+func PrintDate(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
+	return t.Format("02 Jan 06 15:04")
 }

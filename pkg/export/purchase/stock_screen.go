@@ -24,28 +24,59 @@ func formatStocksToScreen(stks []*stock.Stock) *tabwriter.Writer {
 
 	sort.Sort(StocksByName{sortStks})
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
 
-	fmt.Fprintln(w, "#\t Stock\t Market\t Symbol\t Value\t Dividend Yield\t Change\t Last Price Update\t")
+	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(tw, "")
+
+	header := color.New(color.FgWhite).FprintlnFunc()
+	header(tw, "#\t Stock\t Market\t Symbol\t Value\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t Ex Date\t Change\t Last Price Update\t")
+
+	normal := color.New(color.FgWhite).FprintlnFunc()
+	overSell := color.New(color.FgGreen).FprintlnFunc()
+	overBuy := color.New(color.FgRed).FprintlnFunc()
+
 	for i, stk := range sortStks {
+		var (
+			strDYield string
+			strExDate time.Time
+		)
+
+		if stk.DividendYield > 0 {
+			strDYield = fmt.Sprintf("%.*f%%", precision, stk.DividendYield)
+		}
+
+		if len(stk.Dividends) > 0 {
+			strExDate = stk.Dividends[0].ExDate
+		}
+
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %.*f\t %.*f%%\t %.*f\t %s\t",
+			"%d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t",
 			i+1,
 			stk.Name,
 			stk.Exchange.Symbol,
 			stk.Symbol,
-			precision,
-			stk.Value.Amount,
-			precision,
-			stk.DividendYield,
-			precision,
-			stk.Change.Amount,
+			export.PrintValue(stk.Value, precision),
+			export.PrintValue(stk.High52week, precision),
+			export.PrintValue(stk.Low52week, precision),
+			export.PrintValue(stk.BuyUnder(), precision),
+			strDYield,
+			export.PrintDate(strExDate),
+			export.PrintValue(stk.Change, precision),
 			export.PrintDate(stk.LastPriceUpdate),
 		)
-		fmt.Fprintln(w, str)
+
+		switch stk.ComparePriceWithHighLow() {
+		case 1:
+			overBuy(tw, str)
+		case -1:
+			overSell(tw, str)
+		default:
+			normal(tw, str)
+		}
 	}
 
-	return w
+	return tw
 }
 
 // formatStocksToScreen - convert Items structure to csv string
