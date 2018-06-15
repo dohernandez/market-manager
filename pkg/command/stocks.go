@@ -363,6 +363,7 @@ func (cmd *StocksCommand) ExportStocks(cliCtx *cli.Context) error {
 
 	ctx = context.WithValue(ctx, "exchange", cliCtx.String("exchange"))
 	ctx = context.WithValue(ctx, "symbol", cliCtx.String("stock"))
+	ctx = context.WithValue(ctx, "groupBy", cliCtx.String("group"))
 	sorting := cmd.sortingFromCliCtx(cliCtx)
 
 	ex := exportPurchase.NewExportStock(ctx, sorting, c.PurchaseServiceInstance())

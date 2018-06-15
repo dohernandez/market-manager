@@ -205,6 +205,18 @@ func main() {
 									Name:  "stock, s",
 									Usage: "filter by stock",
 								},
+								cli.StringFlag{
+									Name:  "sort",
+									Usage: "Sort by (name, dyield, exdate) Default by name",
+								},
+								cli.StringFlag{
+									Name:  "order",
+									Usage: "Order (desc, asc) Default by desc",
+								},
+								cli.StringFlag{
+									Name:  "group",
+									Usage: "Group by (exdate) None by default",
+								},
 							},
 						},
 						{

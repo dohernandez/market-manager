@@ -14,29 +14,90 @@ import (
 )
 
 // formatStocksToScreen - convert Items structure to csv string
-func formatStocksToScreen(stks []*stock.Stock) *tabwriter.Writer {
+func formatStocksToScreen(stks []*stock.Stock, sorting export.Sorting, gby export.GroupBy) *tabwriter.Writer {
 	precision := 2
-	sortStks := make([]*stock.Stock, 0, len(stks))
 
+	sortStks := make([]*stock.Stock, 0, len(stks))
 	for _, stk := range stks {
 		sortStks = append(sortStks, stk)
 	}
 
-	sort.Sort(StocksByName{sortStks})
+	switch sorting.By {
+	case Name:
+		sort.Sort(StocksByName{sortStks})
+	case Exdate:
+		sort.Sort(StocksByExDate{sortStks})
+	case Dyield:
+		sort.Sort(StocksByDividendYield{sortStks})
+	}
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
 
 	noColor := color.New(color.Reset).FprintlnFunc()
-	noColor(tw, "")
-
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Value\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t Ex Date\t Change\t Last Price Update\t")
 
+	if gby != ExDateMonth {
+		noColor(tw, "")
+		header(tw, "#\t Stock\t Market\t Symbol\t Value\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t Ex Date\t Change\t Last Price Update\t")
+		addStocksToTabWriter(tw, sortStks, precision)
+	} else {
+		mSortStks := map[string][]*stock.Stock{}
+
+		for _, stk := range sortStks {
+			var key string
+
+			if len(stk.Dividends) == 0 {
+				key = ""
+			} else {
+				exDate := stk.Dividends[0].ExDate
+				key = fmt.Sprintf("%s %d", exDate.Month(), exDate.Year())
+			}
+
+			mSortStks[key] = append(mSortStks[key], stk)
+		}
+
+		var keys []string
+		for key := range mSortStks {
+			keys = append(keys, key)
+		}
+
+		sort.Slice(keys, func(i, j int) bool {
+			if keys[i] == "" {
+				return false
+			}
+
+			if keys[j] == "" {
+				return true
+			}
+
+			iDate, _ := time.Parse("January 2006", keys[i])
+			jDate, _ := time.Parse("January 2006", keys[j])
+
+			return iDate.Before(jDate)
+		})
+
+		for _, key := range keys {
+			if key != "" {
+				noColor(tw, "")
+				header(tw, "# ", key)
+			}
+
+			noColor(tw, "")
+
+			header(tw, "#\t Stock\t Market\t Symbol\t Value\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t Ex Date\t Change\t Last Price Update\t")
+			addStocksToTabWriter(tw, mSortStks[key], precision)
+		}
+	}
+
+	return tw
+}
+
+func addStocksToTabWriter(tw *tabwriter.Writer, stks []*stock.Stock, precision int) {
 	normal := color.New(color.FgWhite).FprintlnFunc()
 	overSell := color.New(color.FgGreen).FprintlnFunc()
 	overBuy := color.New(color.FgRed).FprintlnFunc()
 
-	for i, stk := range sortStks {
+	for i, stk := range stks {
 		var (
 			strDYield string
 			strExDate time.Time
@@ -75,8 +136,6 @@ func formatStocksToScreen(stks []*stock.Stock) *tabwriter.Writer {
 			normal(tw, str)
 		}
 	}
-
-	return tw
 }
 
 // formatStocksToScreen - convert Items structure to csv string

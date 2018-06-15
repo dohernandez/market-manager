@@ -15,6 +15,7 @@ type (
 
 	OrderBy string
 	SortBy  string
+	GroupBy string
 
 	Sorting struct {
 		By    SortBy

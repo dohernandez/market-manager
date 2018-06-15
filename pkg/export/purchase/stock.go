@@ -16,8 +16,11 @@ import (
 )
 
 const (
+	Name   export.SortBy = "name"
 	Dyield export.SortBy = "dyield"
 	Exdate export.SortBy = "exdate"
+
+	ExDateMonth export.GroupBy = "exdate"
 )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,6 +58,14 @@ type StocksByExDate struct {
 }
 
 func (s StocksByExDate) Less(i, j int) bool {
+	if len(s.Stocks[i].Dividends) == 0 {
+		return false
+	}
+
+	if len(s.Stocks[j].Dividends) == 0 {
+		return true
+	}
+
 	return s.Stocks[i].Dividends[len(s.Stocks[i].Dividends)-1].ExDate.Before(s.Stocks[j].Dividends[len(s.Stocks[j].Dividends)-1].ExDate)
 }
 
@@ -81,6 +92,7 @@ func NewExportStock(ctx context.Context, sorting export.Sorting, purchaseService
 
 func (e *exportStock) Export() error {
 	exchange := e.ctx.Value("exchange").(string)
+	groupBy := e.ctx.Value("groupBy").(string)
 
 	var (
 		stks []*stock.Stock
@@ -98,7 +110,7 @@ func (e *exportStock) Export() error {
 		return err
 	}
 
-	tabw := formatStocksToScreen(stks)
+	tabw := formatStocksToScreen(stks, e.sorting, export.GroupBy(groupBy))
 	tabw.Flush()
 
 	return nil
