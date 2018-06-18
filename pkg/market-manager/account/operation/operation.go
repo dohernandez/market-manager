@@ -73,3 +73,17 @@ func (o *Operation) Capital() mm.Value {
 func (o *Operation) FinalCommission() mm.Value {
 	return o.Commission.Increase(o.PriceChangeCommission)
 }
+
+func (o *Operation) FinalPricePaid() mm.Value {
+	fc := o.FinalCommission()
+
+	p := o.Price
+	if o.Price.Currency == mm.Dollar {
+		p = mm.Value{
+			Amount:   o.Price.Amount * o.PriceChange.Amount,
+			Currency: mm.Euro,
+		}
+	}
+
+	return fc.Increase(p)
+}

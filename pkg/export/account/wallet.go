@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"text/tabwriter"
+
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
@@ -74,18 +76,36 @@ func (e *exportWallet) Export() error {
 		return errors.New("missing wallet name")
 	}
 
-	w, err := e.accountService.FindWalletWithAllActiveItems(name)
+	cEURUSD, err := e.ccClient.Converter.Get()
 	if err != nil {
 		return err
 	}
 
-	cEURUSD, err := e.ccClient.Converter.Get()
+	w, err := e.accountService.FindWalletByName(name)
 	if err != nil {
 		return err
 	}
 	w.SetCapitalRate(cEURUSD.EURUSD)
 
-	tabw := formatWalletItemsToScreen(w, e.sorting)
+	tabw := new(tabwriter.Writer)
+	stkSymbol := e.ctx.Value("stock").(string)
+
+	if stkSymbol == "" {
+		err := e.accountService.LoadActiveWalletItems(w)
+		if err != nil {
+			return err
+		}
+
+		tabw = formatWalletItemsToScreen(w, e.sorting)
+	} else {
+		err := e.accountService.LoadWalletItem(w, stkSymbol)
+		if err != nil {
+			return err
+		}
+
+		tabw = formatWalletItemToScreen(w)
+	}
+
 	tabw.Flush()
 
 	return nil

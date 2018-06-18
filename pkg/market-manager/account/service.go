@@ -172,15 +172,10 @@ func (s *Service) UpdateWalletsCapitalByStock(stk *stock.Stock) error {
 	return nil
 }
 
-func (s *Service) FindWalletWithAllActiveItems(wName string) (*wallet.Wallet, error) {
-	w, err := s.walletFinder.FindByName(wName)
+func (s *Service) LoadActiveWalletItems(w *wallet.Wallet) error {
+	err := s.walletFinder.LoadActiveItems(w)
 	if err != nil {
-		return nil, err
-	}
-
-	err = s.walletFinder.LoadActiveItems(w)
-	if err != nil {
-		return nil, err
+		return err
 	}
 
 	now := time.Now()
@@ -192,20 +187,20 @@ func (s *Service) FindWalletWithAllActiveItems(wName string) (*wallet.Wallet, er
 		// https://medium.com/@trevor4e/learning-gos-concurrency-through-illustrations-8c4aff603b3
 		stk, err := s.stockFinder.FindByID(i.Stock.ID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		i.Stock = stk
 
 		err = s.walletFinder.LoadItemOperations(i)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		d, err := s.stockDividendFinder.FindDividendNextAnnounceProjectFromYearAndMonth(i.Stock.ID, year, month)
 		if err != nil {
 			if err != mm.ErrNotFound {
-				return nil, err
+				return err
 			}
 
 			continue
@@ -214,5 +209,38 @@ func (s *Service) FindWalletWithAllActiveItems(wName string) (*wallet.Wallet, er
 		stk.Dividends = append(stk.Dividends, d)
 	}
 
-	return w, nil
+	return nil
+}
+
+func (s *Service) LoadWalletItem(w *wallet.Wallet, stkSymbol string) error {
+	stk, err := s.stockFinder.FindBySymbol(stkSymbol)
+	if err != nil {
+		return err
+	}
+
+	err = s.walletFinder.LoadItemByStock(w, stk)
+	if err != nil {
+		return err
+	}
+
+	i, _ := w.Items[stk.ID]
+	err = s.walletFinder.LoadItemOperations(i)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+	year := now.Year()
+	month := int(now.Month())
+
+	d, err := s.stockDividendFinder.FindDividendNextAnnounceProjectFromYearAndMonth(i.Stock.ID, year, month)
+	if err != nil {
+		if err != mm.ErrNotFound {
+			return err
+		}
+	}
+
+	stk.Dividends = append(stk.Dividends, d)
+
+	return nil
 }

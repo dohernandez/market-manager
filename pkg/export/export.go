@@ -29,6 +29,10 @@ const (
 )
 
 func PrintValue(value mm.Value, precision int) string {
+	if value.Amount == 0 {
+		return ""
+	}
+
 	if value.Currency == mm.Dollar {
 		if value.Amount > 0 {
 			return fmt.Sprintf("%s%.*f", value.Currency, precision, value.Amount)

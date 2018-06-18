@@ -12,6 +12,7 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 )
 
@@ -249,6 +250,67 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 			overSell(tw, str)
 		default:
 			normal(tw, str)
+		}
+	}
+}
+
+// formatWalletItemToScreen - convert an Item structure to screen
+func formatWalletItemToScreen(w *wallet.Wallet) *tabwriter.Writer {
+	precision := 2
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
+
+	sortItems := make([]*wallet.Item, 0, len(w.Items))
+	for _, item := range w.Items {
+		sortItems = append(sortItems, item)
+	}
+
+	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(tw, "")
+	noColor(tw, "# General")
+	formatItemsToScreen(tw, precision, w, sortItems)
+
+	noColor(tw, "")
+	noColor(tw, "# Dividend")
+	formatStockItemsDividendToScreen(tw, precision, sortItems)
+	formatStockItemsToScreen(tw, precision, sortItems)
+	formatStockItemsOperationToScreen(tw, precision, sortItems)
+
+	fmt.Fprintln(tw, "")
+
+	return tw
+}
+
+// formatStockItemsOperationToScreen ...
+func formatStockItemsOperationToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
+	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(tw, "")
+	noColor(tw, "# Operation")
+	noColor(tw, "")
+
+	header := color.New(color.FgWhite).FprintlnFunc()
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Type\t Price\t Exchange\t Commission\t O. Price\t")
+
+	inNormal := color.New(color.FgWhite).FprintlnFunc()
+
+	for _, item := range items {
+		for i, o := range item.Operations {
+			if o.Action == operation.Buy || o.Action == operation.Sell {
+				str := fmt.Sprintf(
+					"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t",
+					i+1,
+					item.Stock.Name,
+					item.Stock.Exchange.Symbol,
+					item.Stock.Symbol,
+					o.Amount,
+					o.Action,
+					export.PrintValue(o.Price, precision),
+					export.PrintValue(o.PriceChange, 4),
+					export.PrintValue(o.FinalCommission(), precision),
+					export.PrintValue(o.FinalPricePaid(), precision),
+				)
+
+				inNormal(tw, str)
+			}
 		}
 	}
 }

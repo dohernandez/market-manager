@@ -315,6 +315,10 @@ func main() {
 									Usage: "Wallet name",
 								},
 								cli.StringFlag{
+									Name:  "stock, s",
+									Usage: "stock symbol",
+								},
+								cli.StringFlag{
 									Name:  "sort",
 									Usage: "Sort by (stock, invested) Default by stock",
 								},

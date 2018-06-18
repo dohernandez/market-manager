@@ -235,3 +235,26 @@ func (f *walletFinder) LoadItemOperations(i *wallet.Item) error {
 
 	return nil
 }
+
+func (f *walletFinder) LoadItemByStock(w *wallet.Wallet, stk *stock.Stock) error {
+	var tuples []walletItemTuple
+
+	query := `SELECT * FROM wallet_item WHERE wallet_id = $1 AND stock_id = $2`
+
+	err := sqlx.Select(f.db, &tuples, query, w.ID, stk.ID)
+	if err != nil {
+		return errors.Wrapf(err, "Select wallet items %q from wallet %q", stk.ID, w.ID)
+	}
+
+	for _, tuple := range tuples {
+		item, err := f.hydrateWalletItem(&tuple)
+		if err != nil {
+			return errors.Wrapf(err, "Hydrate wallet item %q from wallet %q", stk.ID, w.ID)
+		}
+
+		item.Stock = stk
+		w.Items[item.Stock.ID] = item
+	}
+
+	return nil
+}
