@@ -40,13 +40,18 @@ func NewStockDividendFinder(db sqlx.Queryer) *stockDividendFinder {
 }
 
 func (f *stockDividendFinder) FindAllFormStock(stockID uuid.UUID) ([]dividend.StockDividend, error) {
-	var ds []dividend.StockDividend
+	var tuples []dividendTuple
 
-	query := "SELECT * FROM stock_dividend WHERE stock_id=$1"
+	query := "SELECT * FROM stock_dividend WHERE stock_id=$1 ORDER BY ex_date"
 
-	err := sqlx.Get(f.db, &ds, query, stockID)
+	err := sqlx.Select(f.db, &tuples, query, stockID)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("Select dividend form stock id %s", stockID))
+	}
+
+	var ds []dividend.StockDividend
+	for _, tuple := range tuples {
+		ds = append(ds, f.hydrate(tuple))
 	}
 
 	return ds, nil

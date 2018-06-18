@@ -153,12 +153,6 @@ func formatStockItemsDividendToScreen(tw *tabwriter.Writer, precision int, items
 	header := color.New(color.FgWhite).FprintlnFunc()
 	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Last Price Update\t")
 
-	inNormal := color.New(color.FgWhite).FprintlnFunc()
-	inHeightLight := color.New(color.FgYellow).FprintlnFunc()
-
-	now := time.Now()
-	month := now.Month()
-
 	for i, item := range items {
 		var (
 			strExDate   string
@@ -170,42 +164,77 @@ func formatStockItemsDividendToScreen(tw *tabwriter.Writer, precision int, items
 
 		waPrice := item.WeightedAveragePrice()
 
+		dsLen := len(item.Stock.Dividends)
 		if len(item.Stock.Dividends) > 0 {
-			d := item.Stock.Dividends[0]
+			now := time.Now()
 
-			tExDate = d.ExDate
-			strExDate = export.PrintDate(tExDate)
-
-			if item.Stock.Dividends[0].Amount.Amount > 0 {
-				wADYield := d.Amount.Amount * 4 / waPrice.Amount * 100
-
-				strAmount = fmt.Sprintf("%.*f", precision, d.Amount.Amount)
-				strDYield = fmt.Sprintf("%.*f%%", precision, item.Stock.DividendYield)
-				strWADYield = fmt.Sprintf("%.*f%%", precision, wADYield)
+			var j int
+			if dsLen == 1 {
+				j = i
 			}
-		}
 
-		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t",
-			i+1,
-			item.Stock.Name,
-			item.Stock.Exchange.Symbol,
-			item.Stock.Symbol,
-			item.Amount,
-			export.PrintValue(item.Stock.Value, precision),
-			export.PrintValue(waPrice, precision),
-			strExDate,
-			strAmount,
-			strDYield,
-			strWADYield,
-			export.PrintDateTime(item.Stock.LastPriceUpdate),
-		)
+			for _, d := range item.Stock.Dividends {
+				if dsLen > 1 && now.After(d.ExDate) {
+					continue
+				}
 
-		if len(strExDate) > 0 && tExDate.Month() == month {
-			inHeightLight(tw, str)
+				tExDate = d.ExDate
+				strExDate = export.PrintDate(tExDate)
+
+				if item.Stock.Dividends[0].Amount.Amount > 0 {
+					wADYield := d.Amount.Amount * 4 / waPrice.Amount * 100
+
+					strAmount = fmt.Sprintf("%.*f", precision, d.Amount.Amount)
+					strDYield = fmt.Sprintf("%.*f%%", precision, item.Stock.DividendYield)
+					strWADYield = fmt.Sprintf("%.*f%%", precision, wADYield)
+				}
+
+				sprintfStockDividend(tw, j, item, precision, waPrice, tExDate, strExDate, strAmount, strDYield, strWADYield)
+
+				j++
+			}
 		} else {
-			inNormal(tw, str)
+			sprintfStockDividend(tw, i, item, precision, waPrice, tExDate, strExDate, strAmount, strDYield, strWADYield)
 		}
+	}
+}
+
+func sprintfStockDividend(
+	tw *tabwriter.Writer,
+	i int,
+	item *wallet.Item,
+	precision int,
+	waPrice mm.Value,
+	tExDate time.Time,
+	strExDate,
+	strAmount,
+	strDYield,
+	strWADYield string,
+) {
+	inNormal := color.New(color.FgWhite).FprintlnFunc()
+	inHeightLight := color.New(color.FgYellow).FprintlnFunc()
+
+	str := fmt.Sprintf(
+		"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t",
+		i+1,
+		item.Stock.Name,
+		item.Stock.Exchange.Symbol,
+		item.Stock.Symbol,
+		item.Amount,
+		export.PrintValue(item.Stock.Value, precision),
+		export.PrintValue(waPrice, precision),
+		strExDate,
+		strAmount,
+		strDYield,
+		strWADYield,
+		export.PrintDateTime(item.Stock.LastPriceUpdate),
+	)
+
+	now := time.Now()
+	if len(strExDate) > 0 && tExDate.Month() == now.Month() && tExDate.Year() == now.Year() {
+		inHeightLight(tw, str)
+	} else {
+		inNormal(tw, str)
 	}
 }
 

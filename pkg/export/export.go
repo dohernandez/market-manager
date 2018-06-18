@@ -49,5 +49,13 @@ func PrintDate(t time.Time) string {
 		return ""
 	}
 
+	return t.Format("02 Jan 2006")
+}
+
+func PrintDateTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
 	return t.Format("02 Jan 06 15:04")
 }

@@ -229,18 +229,16 @@ func (s *Service) LoadWalletItem(w *wallet.Wallet, stkSymbol string) error {
 		return err
 	}
 
-	now := time.Now()
-	year := now.Year()
-	month := int(now.Month())
-
-	d, err := s.stockDividendFinder.FindDividendNextAnnounceProjectFromYearAndMonth(i.Stock.ID, year, month)
+	ds, err := s.stockDividendFinder.FindAllFormStock(i.Stock.ID)
 	if err != nil {
 		if err != mm.ErrNotFound {
 			return err
 		}
 	}
 
-	stk.Dividends = append(stk.Dividends, d)
+	for _, d := range ds {
+		stk.Dividends = append(stk.Dividends, d)
+	}
 
 	return nil
 }
