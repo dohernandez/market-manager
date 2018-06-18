@@ -52,7 +52,7 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "Invested\t Capital\t Funds\t Net Capital\t Net Benefits\t % Benefits\t Dividends\t D. Yield\t Connection\t Interest\t Commisions\t")
+	header(tw, "Invested\t Capital\t Funds\t Free Margin\t Net Capital\t Net Benefits\t % Benefits\t Dividends\t D. Yield\t Connection\t Interest\t Commissions\t")
 
 	pColor := color.New(color.FgGreen).FprintlnFunc()
 	if w.PercentageBenefits() < 0 {
@@ -62,10 +62,11 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 	wDYield := w.Dividend.Amount * 4 / w.Invested.Amount * 100
 
 	str := fmt.Sprintf(
-		"%s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t %.*f%%\t %s\t %s\t %s\t",
+		"%s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t %.*f%%\t %s\t %s\t %s\t",
 		export.PrintValue(w.Invested, precision),
 		export.PrintValue(w.Capital, precision),
 		export.PrintValue(w.Funds, precision),
+		export.PrintValue(w.FreeMargin(), precision),
 		export.PrintValue(w.NetCapital(), precision),
 		export.PrintValue(w.NetBenefits(), precision),
 		precision,
@@ -102,7 +103,7 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet, 
 			export.PrintValue(item.Capital(), precision),
 			export.PrintValue(item.Invested, precision),
 			precision,
-			item.PercentageInvestedRepresented(w.Invested.Amount),
+			item.PercentageInvestedRepresented(w.Capital.Amount),
 			export.PrintValue(item.Dividend, precision),
 			export.PrintValue(item.Buys, precision),
 			export.PrintValue(item.Sells, precision),

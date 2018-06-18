@@ -312,3 +312,19 @@ func (w *Wallet) DividendProjectedNextMonth() mm.Value {
 		Currency: mm.Euro,
 	}
 }
+
+func (w *Wallet) Margin() mm.Value {
+	netCapital := w.NetCapital()
+	margin := netCapital.Amount * 49 / 100
+
+	return mm.Value{
+		Amount:   margin,
+		Currency: netCapital.Currency,
+	}
+}
+
+func (w *Wallet) FreeMargin() mm.Value {
+	freeMargin := w.Margin()
+
+	return freeMargin.Increase(w.Funds)
+}
