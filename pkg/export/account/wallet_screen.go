@@ -60,8 +60,6 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 		pColor = color.New(color.FgRed).FprintlnFunc()
 	}
 
-	wDYield := w.Dividend.Amount * 4 / w.Invested.Amount * 100
-
 	str := fmt.Sprintf(
 		"%s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t %.*f%%\t %s\t %s\t %s\t",
 		export.PrintValue(w.Invested, precision),
@@ -74,7 +72,7 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 		w.PercentageBenefits(),
 		export.PrintValue(w.Dividend, precision),
 		precision,
-		wDYield,
+		w.DYield(),
 		export.PrintValue(w.Connection, precision),
 		export.PrintValue(w.Interest, precision),
 		export.PrintValue(w.Commission, precision),

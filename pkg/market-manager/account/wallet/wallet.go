@@ -328,3 +328,7 @@ func (w *Wallet) FreeMargin() mm.Value {
 
 	return freeMargin.Increase(w.Funds)
 }
+
+func (w *Wallet) DYield() float64 {
+	return w.Dividend.Amount * 4 / w.Invested.Amount * 100
+}
