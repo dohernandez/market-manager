@@ -275,8 +275,8 @@ func (cmd *StocksCommand) ImportDividend(cliCtx *cli.Context) error {
 func (cmd *StocksCommand) getStockDividendImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
 	var ris []resourceImport
 
-	stockName := cliCtx.String("stock")
-	if cliCtx.String("file") != "" && cliCtx.String("stock") != "" {
+	stockName := strings.ToLower(cliCtx.String("stock"))
+	if cliCtx.String("file") != "" && stockName != "" {
 		filePath := fmt.Sprintf("%s/%s.csv", importPath, cliCtx.String("file"))
 
 		ris = append(ris, resourceImport{
