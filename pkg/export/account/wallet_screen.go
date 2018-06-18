@@ -198,7 +198,7 @@ func formatStockItemsDividendToScreen(tw *tabwriter.Writer, precision int, items
 			strAmount,
 			strDYield,
 			strWADYield,
-			export.PrintDate(item.Stock.LastPriceUpdate),
+			export.PrintDateTime(item.Stock.LastPriceUpdate),
 		)
 
 		if len(strExDate) > 0 && tExDate.Month() == month {
@@ -238,7 +238,7 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 			export.PrintValue(item.Stock.High52week, precision),
 			export.PrintValue(item.Stock.Low52week, precision),
 			export.PrintValue(item.Stock.BuyUnder(), precision),
-			export.PrintDate(item.Stock.LastPriceUpdate),
+			export.PrintDateTime(item.Stock.LastPriceUpdate),
 		)
 
 		switch item.Stock.ComparePriceWithHighLow() {
