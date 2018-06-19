@@ -10,7 +10,8 @@ type Specification struct {
 	LogLevel    string `envconfig:"LOG_LEVEL" default:"info"`
 	Environment string `envconfig:"ENVIRONMENT" default:"staging"`
 
-	Database struct {
+	Retention float64 `envconfig:"RETENTION" default:"15"`
+	Database  struct {
 		DSN            string `envconfig:"PGSQL_DSN"`
 		MigrationsPath string `envconfig:"MIGRATIONS_PATH" default:"file://resources/migrations"`
 	}

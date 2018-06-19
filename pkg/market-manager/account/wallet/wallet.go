@@ -180,6 +180,7 @@ type Wallet struct {
 	Connection mm.Value
 	Interest   mm.Value
 
+	// Rate currency conversion
 	capitalRate float64
 }
 
@@ -293,11 +294,11 @@ func (w *Wallet) DividendProjectedNextMonth() mm.Value {
 
 	now := time.Now()
 	month := now.Month()
+	year := now.Year()
 
 	for _, item := range w.Items {
-		if len(item.Stock.Dividends) > 0 {
-			d := item.Stock.Dividends[0]
-			if d.ExDate.Month() == month {
+		for _, d := range item.Stock.Dividends {
+			if d.ExDate.Month() == month && d.ExDate.Year() == year {
 				dividends = dividends + d.Amount.Amount*float64(item.Amount)
 			}
 		}
@@ -329,10 +330,28 @@ func (w *Wallet) FreeMargin() mm.Value {
 	return freeMargin.Increase(w.Funds)
 }
 
-func (w *Wallet) DYield() float64 {
-	return w.Dividend.Amount * 4 / w.Invested.Amount * 100
-}
+func (w *Wallet) DividendProjectedNextYear() mm.Value {
+	var dividends float64
 
-//func (w *Wallet) ()  {
-//
-//}
+	now := time.Now()
+	month := now.Month()
+	year := now.Year()
+	untilYear := now.Year() + 1
+
+	for _, item := range w.Items {
+		for _, d := range item.Stock.Dividends {
+			if d.ExDate.Month() >= month && (d.ExDate.Year() >= year && d.ExDate.Year() < untilYear) {
+				dividends = dividends + d.Amount.Amount*float64(item.Amount)
+			}
+		}
+	}
+
+	if w.capitalRate > 0 {
+		dividends = dividends / w.capitalRate
+	}
+
+	return mm.Value{
+		Amount:   dividends,
+		Currency: mm.Euro,
+	}
+}

@@ -17,11 +17,11 @@ import (
 )
 
 // formatWalletItemsToScreen - convert Items structure to screen
-func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwriter.Writer {
+func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting, retention float64) *tabwriter.Writer {
 	precision := 2
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
 
-	formatWalletToScreen(tw, precision, w)
+	formatWalletToScreen(tw, precision, w, retention)
 
 	sortItems := make([]*wallet.Item, 0, len(w.Items))
 	for _, item := range w.Items {
@@ -36,7 +36,7 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 	}
 
 	formatItemsToScreen(tw, precision, w, sortItems)
-	formatWalletDividendProjected(tw, precision, w)
+	formatWalletDividendProjected(tw, precision, w, retention)
 	formatWalletItemsDividendToScreen(tw, precision, sortItems)
 	formatStockItemsToScreen(tw, precision, sortItems)
 
@@ -46,7 +46,7 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 }
 
 // formatWalletToScreen - convert wallet structure to screen
-func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet) {
+func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet, retention float64) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "")
 	noColor(tw, "# General")
@@ -60,6 +60,14 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 		pColor = color.New(color.FgRed).FprintlnFunc()
 	}
 
+	wDProjected := w.DividendProjectedNextYear()
+
+	var vRetention mm.Value
+	vRetention.Amount = retention * wDProjected.Amount / 100
+	vRetention.Currency = wDProjected.Currency
+
+	wDYield := (wDProjected.Decrease(vRetention)).Amount * 100 / w.Invested.Amount
+
 	str := fmt.Sprintf(
 		"%s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t %.*f%%\t %s\t %s\t %s\t",
 		export.PrintValue(w.Invested, precision),
@@ -72,7 +80,7 @@ func formatWalletToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet)
 		w.PercentageBenefits(),
 		export.PrintValue(w.Dividend, precision),
 		precision,
-		w.DYield(),
+		wDYield,
 		export.PrintValue(w.Connection, precision),
 		export.PrintValue(w.Interest, precision),
 		export.PrintValue(w.Commission, precision),
@@ -121,7 +129,7 @@ func formatItemsToScreen(tw *tabwriter.Writer, precision int, w *wallet.Wallet, 
 }
 
 // formatWalletDividendProjected ...
-func formatWalletDividendProjected(tw *tabwriter.Writer, precision int, w *wallet.Wallet) {
+func formatWalletDividendProjected(tw *tabwriter.Writer, precision int, w *wallet.Wallet, retention float64) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "")
 	noColor(tw, "# Dividend")
@@ -132,16 +140,16 @@ func formatWalletDividendProjected(tw *tabwriter.Writer, precision int, w *walle
 
 	dProjected := w.DividendProjectedNextMonth()
 
-	var retention mm.Value
-	retention.Amount = 15 * dProjected.Amount / 100
-	retention.Currency = dProjected.Currency
+	var vRetention mm.Value
+	vRetention.Amount = retention * dProjected.Amount / 100
+	vRetention.Currency = dProjected.Currency
 
 	inNormal := color.New(color.FgWhite).FprintlnFunc()
 	inNormal(tw, fmt.Sprintf(
 		"%s\t %s\t %s\t",
 		export.PrintValue(dProjected, precision),
-		export.PrintValue(retention, precision),
-		export.PrintValue(dProjected.Decrease(retention), precision),
+		export.PrintValue(vRetention, precision),
+		export.PrintValue(dProjected.Decrease(vRetention), precision),
 	))
 }
 

@@ -7,6 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
+	"github.com/dohernandez/market-manager/pkg/config"
 	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
@@ -54,6 +55,7 @@ type (
 	exportWallet struct {
 		ctx     context.Context
 		sorting export.Sorting
+		config  *config.Specification
 
 		accountService *account.Service
 
@@ -61,12 +63,13 @@ type (
 	}
 )
 
-func NewExportWallet(ctx context.Context, sorting export.Sorting, accountService *account.Service, ccClient *cc.Client) *exportWallet {
+func NewExportWallet(ctx context.Context, sorting export.Sorting, config *config.Specification, accountService *account.Service, ccClient *cc.Client) *exportWallet {
 	return &exportWallet{
 		ctx:            ctx,
 		sorting:        sorting,
 		accountService: accountService,
 		ccClient:       ccClient,
+		config:         config,
 	}
 }
 
@@ -96,7 +99,7 @@ func (e *exportWallet) Export() error {
 			return err
 		}
 
-		tabw = formatWalletItemsToScreen(w, e.sorting)
+		tabw = formatWalletItemsToScreen(w, e.sorting, e.config.Retention)
 	} else {
 		err := e.accountService.LoadWalletItem(w, stkSymbol)
 		if err != nil {
