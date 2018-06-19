@@ -37,7 +37,7 @@ func formatWalletItemsToScreen(w *wallet.Wallet, sorting export.Sorting) *tabwri
 
 	formatItemsToScreen(tw, precision, w, sortItems)
 	formatWalletDividendProjected(tw, precision, w)
-	formatStockItemsDividendToScreen(tw, precision, sortItems)
+	formatWalletItemsDividendToScreen(tw, precision, sortItems)
 	formatStockItemsToScreen(tw, precision, sortItems)
 
 	fmt.Fprintln(tw, "")
@@ -145,13 +145,17 @@ func formatWalletDividendProjected(tw *tabwriter.Writer, precision int, w *walle
 	))
 }
 
-// formatStockItemsDividendToScreen ...
-func formatStockItemsDividendToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
+// formatWalletItemsDividendToScreen ...
+func formatWalletItemsDividendToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
 	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Last Price Update\t")
+
+	now := time.Now()
+	month := now.Month()
+	year := now.Year()
 
 	for i, item := range items {
 		var (
@@ -164,24 +168,16 @@ func formatStockItemsDividendToScreen(tw *tabwriter.Writer, precision int, items
 
 		waPrice := item.WeightedAveragePrice()
 
-		dsLen := len(item.Stock.Dividends)
 		if len(item.Stock.Dividends) > 0 {
-			now := time.Now()
-
-			var j int
-			if dsLen == 1 {
-				j = i
-			}
-
 			for _, d := range item.Stock.Dividends {
-				if dsLen > 1 && now.After(d.ExDate) {
+				if d.ExDate.Month() < month || d.ExDate.Year() < year {
 					continue
 				}
 
 				tExDate = d.ExDate
 				strExDate = export.PrintDate(tExDate)
 
-				if item.Stock.Dividends[0].Amount.Amount > 0 {
+				if d.Amount.Amount > 0 {
 					wADYield := d.Amount.Amount * 4 / waPrice.Amount * 100
 
 					strAmount = fmt.Sprintf("%.*f", precision, d.Amount.Amount)
@@ -189,9 +185,9 @@ func formatStockItemsDividendToScreen(tw *tabwriter.Writer, precision int, items
 					strWADYield = fmt.Sprintf("%.*f%%", precision, wADYield)
 				}
 
-				sprintfStockDividend(tw, j, item, precision, waPrice, tExDate, strExDate, strAmount, strDYield, strWADYield)
+				sprintfStockDividend(tw, i, item, precision, waPrice, tExDate, strExDate, strAmount, strDYield, strWADYield)
 
-				j++
+				break
 			}
 		} else {
 			sprintfStockDividend(tw, i, item, precision, waPrice, tExDate, strExDate, strAmount, strDYield, strWADYield)
@@ -305,6 +301,60 @@ func formatWalletItemToScreen(w *wallet.Wallet) *tabwriter.Writer {
 	fmt.Fprintln(tw, "")
 
 	return tw
+}
+
+// formatStockItemsDividendToScreen ...
+func formatStockItemsDividendToScreen(tw *tabwriter.Writer, precision int, items []*wallet.Item) {
+	noColor := color.New(color.Reset).FprintlnFunc()
+	noColor(tw, "")
+
+	header := color.New(color.FgWhite).FprintlnFunc()
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Last Price Update\t")
+
+	for i, item := range items {
+		var (
+			strExDate   string
+			tExDate     time.Time
+			strAmount   string
+			strDYield   string
+			strWADYield string
+		)
+
+		waPrice := item.WeightedAveragePrice()
+
+		dsLen := len(item.Stock.Dividends)
+		if len(item.Stock.Dividends) > 0 {
+			now := time.Now()
+
+			var j int
+			if dsLen == 1 {
+				j = i
+			}
+
+			for _, d := range item.Stock.Dividends {
+				if dsLen > 1 && now.After(d.ExDate) {
+					continue
+				}
+
+				tExDate = d.ExDate
+				strExDate = export.PrintDate(tExDate)
+
+				if item.Stock.Dividends[0].Amount.Amount > 0 {
+					wADYield := d.Amount.Amount * 4 / waPrice.Amount * 100
+
+					strAmount = fmt.Sprintf("%.*f", precision, d.Amount.Amount)
+					strDYield = fmt.Sprintf("%.*f%%", precision, item.Stock.DividendYield)
+					strWADYield = fmt.Sprintf("%.*f%%", precision, wADYield)
+				}
+
+				sprintfStockDividend(tw, j, item, precision, waPrice, tExDate, strExDate, strAmount, strDYield, strWADYield)
+
+				j++
+			}
+		} else {
+			sprintfStockDividend(tw, i, item, precision, waPrice, tExDate, strExDate, strAmount, strDYield, strWADYield)
+		}
+	}
 }
 
 // formatStockItemsOperationToScreen ...

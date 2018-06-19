@@ -3,8 +3,6 @@ package account
 import (
 	"github.com/satori/go.uuid"
 
-	"time"
-
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
@@ -178,10 +176,6 @@ func (s *Service) LoadActiveWalletItems(w *wallet.Wallet) error {
 		return err
 	}
 
-	now := time.Now()
-	year := now.Year()
-	month := int(now.Month())
-
 	for _, i := range w.Items {
 		// Add this into go routing. Use the example explain in the page
 		// https://medium.com/@trevor4e/learning-gos-concurrency-through-illustrations-8c4aff603b3
@@ -197,7 +191,7 @@ func (s *Service) LoadActiveWalletItems(w *wallet.Wallet) error {
 			return err
 		}
 
-		d, err := s.stockDividendFinder.FindDividendNextAnnounceProjectFromYearAndMonth(i.Stock.ID, year, month)
+		ds, err := s.stockDividendFinder.FindAllFormStock(i.Stock.ID)
 		if err != nil {
 			if err != mm.ErrNotFound {
 				return err
@@ -206,7 +200,9 @@ func (s *Service) LoadActiveWalletItems(w *wallet.Wallet) error {
 			continue
 		}
 
-		stk.Dividends = append(stk.Dividends, d)
+		for _, d := range ds {
+			stk.Dividends = append(stk.Dividends, d)
+		}
 	}
 
 	return nil
