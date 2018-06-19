@@ -21,7 +21,7 @@ type Item struct {
 	Buys        mm.Value
 	Sells       mm.Value
 	CapitalRate float64
-	Operations  []operation.Operation
+	Operations  []*operation.Operation
 }
 
 func NewItem(stock *stock.Stock) *Item {
@@ -215,6 +215,8 @@ func (w *Wallet) AddOperation(o *operation.Operation) {
 		}
 	}
 
+	wi.Operations = append(wi.Operations, o)
+
 	switch o.Action {
 	case operation.Buy:
 		invested := wi.increaseInvestment(o.Amount, o.Value, o.PriceChangeCommission, o.Commission)
@@ -229,6 +231,17 @@ func (w *Wallet) AddOperation(o *operation.Operation) {
 		w.Funds = w.Funds.Increase(buyout)
 		w.Capital = w.Capital.Decrease(o.Capital())
 		w.Commission = w.Commission.Increase(o.FinalCommission())
+
+		items := map[uuid.UUID]*Item{}
+		for k, item := range w.Items {
+			if item.Stock.Equals(o.Stock) && item.Amount == 0 {
+				continue
+			}
+
+			items[k] = item
+		}
+
+		w.Items = items
 
 	case operation.Dividend:
 		wi.increaseDividend(o.Value)
@@ -287,6 +300,10 @@ func (w *Wallet) SetCapitalRate(capitalRate float64) {
 	for _, item := range w.Items {
 		item.CapitalRate = capitalRate
 	}
+}
+
+func (w *Wallet) CurrentCapitalRate() float64 {
+	return w.capitalRate
 }
 
 func (w *Wallet) DividendProjectedNextMonth() mm.Value {

@@ -32,3 +32,7 @@ func (e *ExportCommand) sortingFromCliCtx(cliCtx *cli.Context) export.Sorting {
 		Order: orderBy,
 	}
 }
+
+func (e *ExportCommand) runExport(ex export.Export) error {
+	return ex.Export()
+}

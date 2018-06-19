@@ -220,7 +220,7 @@ func (f *walletFinder) LoadItemOperations(i *wallet.Item) error {
 
 	for _, tuple := range tuples {
 		a, _ := strconv.Atoi(tuple.Amount)
-		i.Operations = append(i.Operations, operation.Operation{
+		i.Operations = append(i.Operations, &operation.Operation{
 			ID:                    tuple.ID,
 			Stock:                 i.Stock,
 			Action:                operation.Action(tuple.Action),

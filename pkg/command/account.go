@@ -176,6 +176,10 @@ func (cmd *AccountCommand) ExportWalletItems(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
+	if cliCtx.String("wallet") == "" {
+		logger.FromContext(ctx).Fatal("Missing wallet name")
+	}
+
 	// Database connection
 	logger.FromContext(ctx).Info("Initializing database connection")
 	db, err := cmd.initDatabaseConnection()
@@ -185,19 +189,12 @@ func (cmd *AccountCommand) ExportWalletItems(cliCtx *cli.Context) error {
 
 	c := cmd.Container(db)
 
-	if cliCtx.String("wallet") == "" {
-		logger.FromContext(ctx).WithError(err).Fatal("Missing wallet name")
-	}
-
 	ctx = context.WithValue(ctx, "wallet", cliCtx.String("wallet"))
 	ctx = context.WithValue(ctx, "stock", cliCtx.String("stock"))
+	ctx = context.WithValue(ctx, "sells", cliCtx.String("sells"))
+	ctx = context.WithValue(ctx, "buys", cliCtx.String("buys"))
 	sorting := cmd.sortingFromCliCtx(cliCtx)
 
 	ex := exportAccount.NewExportWallet(ctx, sorting, cmd.config, c.AccountServiceInstance(), c.CurrencyConverterClientInstance())
-	err = ex.Export()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return cmd.runExport(ex)
 }

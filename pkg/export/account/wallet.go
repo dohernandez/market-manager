@@ -2,13 +2,17 @@ package export_account
 
 import (
 	"context"
-	"errors"
-
+	"encoding/json"
+	"strconv"
+	"strings"
 	"text/tabwriter"
+
+	"github.com/pkg/errors"
 
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/config"
 	"github.com/dohernandez/market-manager/pkg/export"
+	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 )
@@ -90,16 +94,54 @@ func (e *exportWallet) Export() error {
 	}
 	w.SetCapitalRate(cEURUSD.EURUSD)
 
-	tabw := new(tabwriter.Writer)
+	var retention float64
+	if w.Name == "degiro" {
+		retention = e.config.Degiro.Retention
+	}
+
 	stkSymbol := e.ctx.Value("stock").(string)
+	tabw := new(tabwriter.Writer)
 
 	if stkSymbol == "" {
-		err := e.accountService.LoadActiveWalletItems(w)
+		sells := map[string]int{}
+		strSells := e.ctx.Value("sells").(string)
+		if strSells != "" {
+			sSells := strings.Split(strSells, ",")
+
+			for _, sSell := range sSells {
+				sa := strings.Split(sSell, ":")
+				a, _ := strconv.Atoi(sa[1])
+				sells[sa[0]] = a
+			}
+		}
+
+		buys := map[string]int{}
+		strBuys := e.ctx.Value("buys").(string)
+		if strBuys != "" {
+			sBuys := strings.Split(strBuys, ",")
+
+			for _, sBuy := range sBuys {
+				ba := strings.Split(sBuy, ":")
+				a, _ := strconv.Atoi(ba[1])
+				buys[ba[0]] = a
+			}
+		}
+
+		changeCommissions := e.getChangeCommissionsToApplyStockOperation()
+		appCommissions, err := e.getAppCommissionsToApplyStockOperation()
 		if err != nil {
 			return err
 		}
 
-		tabw = formatWalletItemsToScreen(w, e.sorting, e.config.Retention)
+		err = e.accountService.LoadActiveWalletItems(w)
+		if err != nil {
+			return err
+		}
+
+		e.accountService.SellStocksWallet(w, sells, changeCommissions, appCommissions)
+		e.accountService.BuyStocksWallet(w, buys, changeCommissions, appCommissions)
+
+		tabw = formatWalletItemsToScreen(w, e.sorting, retention)
 	} else {
 		err := e.accountService.LoadWalletItem(w, stkSymbol)
 		if err != nil {
@@ -112,4 +154,58 @@ func (e *exportWallet) Export() error {
 	tabw.Flush()
 
 	return nil
+}
+
+func (e *exportWallet) getChangeCommissionsToApplyStockOperation() map[string]mm.Value {
+	pChangeCommissions := map[string]mm.Value{}
+
+	exchanges := e.config.Degiro.Exchanges
+
+	pChangeCommissions["NASDAQ"] = mm.Value{
+		Amount:   exchanges.NASDAQ.ChangeCommission.Amount,
+		Currency: mm.Currency(exchanges.NASDAQ.ChangeCommission.Currency),
+	}
+
+	pChangeCommissions["NYSE"] = mm.Value{
+		Amount:   exchanges.NYSE.ChangeCommission.Amount,
+		Currency: mm.Currency(exchanges.NYSE.ChangeCommission.Currency),
+	}
+
+	return pChangeCommissions
+}
+
+func (e *exportWallet) getAppCommissionsToApplyStockOperation() (map[string]account.AppCommissions, error) {
+	appCommissions := map[string]account.AppCommissions{}
+
+	exchanges := e.config.Degiro.Exchanges
+
+	// NASDAQ
+	cCommission, err := json.Marshal(exchanges.NASDAQ)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Can not marshal config commission")
+	}
+
+	var appCommission account.AppCommissions
+	err = json.Unmarshal(cCommission, &appCommission)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Can not unmarshal config commission")
+	}
+
+	appCommissions["NASDAQ"] = appCommission
+
+	// NYSE
+	cCommission, err = json.Marshal(exchanges.NYSE)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Can not marshal config commission")
+	}
+
+	appCommission = account.AppCommissions{}
+	err = json.Unmarshal(cCommission, &appCommission)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Can not unmarshal config commission")
+	}
+
+	appCommissions["NASDAQ"] = appCommission
+
+	return appCommissions, nil
 }

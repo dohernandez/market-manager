@@ -3,8 +3,11 @@ package account
 import (
 	"github.com/satori/go.uuid"
 
+	"time"
+
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -234,6 +237,118 @@ func (s *Service) LoadWalletItem(w *wallet.Wallet, stkSymbol string) error {
 
 	for _, d := range ds {
 		stk.Dividends = append(stk.Dividends, d)
+	}
+
+	return nil
+}
+
+type AppCommissions struct {
+	Commission struct {
+		Base struct {
+			Amount   float64
+			Currency string
+		}
+		Extra struct {
+			Amount   float64
+			Currency string
+			Apply    string
+		}
+		Maximum struct {
+			Amount   float64
+			Currency string
+		}
+	}
+	ChangeCommission struct {
+		Amount   float64
+		Currency string
+	}
+}
+
+func (s *Service) SellStocksWallet(
+	w *wallet.Wallet,
+	stksSymbol map[string]int,
+	pChangeCommissions map[string]mm.Value,
+	commissions map[string]AppCommissions,
+) error {
+	for symbol, amount := range stksSymbol {
+		stk, err := s.stockFinder.FindBySymbol(symbol)
+		if err != nil {
+			return err
+		}
+
+		o := s.createOperation(stk, amount, operation.Sell, w.CurrentCapitalRate(), pChangeCommissions, commissions)
+		w.AddOperation(o)
+	}
+
+	return nil
+}
+
+func (s *Service) createOperation(
+	stk *stock.Stock,
+	amount int,
+	action operation.Action,
+	capitalRate float64,
+	pChangeCommissions map[string]mm.Value,
+	commissions map[string]AppCommissions,
+) *operation.Operation {
+	pChange := mm.Value{
+		Amount:   capitalRate,
+		Currency: mm.Dollar,
+	}
+
+	now := time.Now()
+
+	oValue := mm.Value{
+		Amount:   stk.Value.Amount * float64(amount) / pChange.Amount,
+		Currency: mm.Euro,
+	}
+
+	pChangeCommission, _ := pChangeCommissions[stk.Exchange.Symbol]
+
+	var commission mm.Value
+	appCommission, ok := commissions[stk.Exchange.Symbol]
+	if !ok {
+		if stk.Exchange.Symbol == "NASDAQ" || stk.Exchange.Symbol == "NYSE" {
+			commission.Amount = appCommission.Commission.Base.Amount
+			extra := appCommission.Commission.Extra.Amount * float64(amount) / pChange.Amount
+
+			commission = commission.Increase(mm.Value{Amount: extra, Currency: mm.Euro})
+		} else {
+			panic("Commission to apply not defined")
+		}
+	}
+
+	o := operation.NewOperation(now, stk, action, amount, stk.Value, pChange, pChangeCommission, oValue, commission)
+
+	return o
+}
+
+func (s *Service) BuyStocksWallet(
+	w *wallet.Wallet,
+	stksSymbol map[string]int,
+	pChangeCommissions map[string]mm.Value,
+	commissions map[string]AppCommissions,
+) error {
+	for symbol, amount := range stksSymbol {
+		stk, err := s.stockFinder.FindBySymbol(symbol)
+		if err != nil {
+			return err
+		}
+
+		o := s.createOperation(stk, amount, operation.Buy, w.CurrentCapitalRate(), pChangeCommissions, commissions)
+
+		ds, err := s.stockDividendFinder.FindAllFormStock(o.Stock.ID)
+		if err != nil {
+			if err != mm.ErrNotFound {
+				return err
+			}
+		}
+
+		for _, d := range ds {
+			o.Stock.Dividends = append(o.Stock.Dividends, d)
+		}
+
+		w.AddOperation(o)
 	}
 
 	return nil

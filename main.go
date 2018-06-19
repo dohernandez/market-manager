@@ -319,6 +319,14 @@ func main() {
 									Usage: "stock symbol",
 								},
 								cli.StringFlag{
+									Name:  "sells, ss",
+									Usage: "stock symbol to sell and amount separate by comma. Example epd:10",
+								},
+								cli.StringFlag{
+									Name:  "buys, sb",
+									Usage: "stock symbol to buy and amount separate by comma. Example epd:10",
+								},
+								cli.StringFlag{
 									Name:  "sort",
 									Usage: "Sort by (stock, invested) Default by stock",
 								},
