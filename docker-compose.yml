@@ -8,30 +8,22 @@ services:
         - GITHUB_TOKEN=${GITHUB_TOKEN}
     volumes:
       - .:/go/src/github.com/dohernandez/market-manager
-    env_file: .env
+    env_file: .env.dev
 
   http:
     extends: base
     depends_on:
       - postgres
     ports:
-      - '9081:8081'
+      - '9082:8081'
     command: "make dev-run-http"
-
-  scheduler:
-    extends: base
-    depends_on:
-      - postgres
-    command: "make dev-run-scheduler"
 
   postgres:
     image: postgres:10.1
     ports:
       - '4532:5432'
-    volumes:
-      - ./resources/postgresql/data:/var/lib/postgresql/data
     environment:
       LC_ALL: C.UTF-8
-      POSTGRES_DB: market-manager-service
-      POSTGRES_USER: mms
-      POSTGRES_PASSWORD: mms4you
+      POSTGRES_DB: market-manager-service-dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev4you

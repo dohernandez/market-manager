@@ -5,5 +5,5 @@
 set -e
 
 exec 5>&1
-output="$(goimports -local github.com/hellofresh/ -l -w "$@" | tee /dev/fd/5)"
+output="$(goimports -local github.com/dohernandez/ -l -w "$@" | tee /dev/fd/5)"
 [ -z "$output" ]

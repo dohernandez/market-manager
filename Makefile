@@ -154,6 +154,19 @@ dev-docker-test-integration:
 dev-docker-logs:
 	@docker-compose logs -f ${CONTAINER}
 
+
+# Prod with docker
+prod-docker-start:
+	@printf "$(OK_COLOR)==> Starting docker containers$(NO_COLOR)\n"
+	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+prod-docker-stop:
+	@printf "$(OK_COLOR)==> Stopping docker containers$(NO_COLOR)\n"
+	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml down
+
+prod-docker-logs:
+	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f ${CONTAINER}
+
 .PHONY: all usage run clean deps deps-dev build build-docs install test test-unit test-integration \
 dev-run-consumer dev-run-http dev-migrate dev-docker-start dev-docker-stop dev-docker-build dev-docker-migration \
 dev-docker-test-integration dev-docker-logs

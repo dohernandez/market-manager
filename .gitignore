@@ -1,6 +1,7 @@
 automation/roles/external
 vendor/
-.env
+.env.dev
+.env.prod
 
 # Code coverage
 *.coverprofile
