@@ -164,6 +164,10 @@ prod-docker-stop:
 	@printf "$(OK_COLOR)==> Stopping docker containers$(NO_COLOR)\n"
 	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml down
 
+prod-docker-migration:
+	@printf "$(OK_COLOR)==> Running migration using docker container$(NO_COLOR)\n"
+	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec http market-manager migrate up
+
 prod-docker-logs:
 	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f ${CONTAINER}
 
