@@ -19,15 +19,15 @@ import (
 type AccountCommand struct {
 	*BaseCommand
 	*ImportCommand
-	*ExportCommand
+	*BaseExportCommand
 }
 
 // NewAccountCommand constructs AccountCommand
-func NewAccountCommand(baseCommand *BaseCommand, importCommand *ImportCommand, exportCommand *ExportCommand) *AccountCommand {
+func NewAccountCommand(baseCommand *BaseCommand, importCommand *ImportCommand, exportCommand *BaseExportCommand) *AccountCommand {
 	return &AccountCommand{
-		BaseCommand:   baseCommand,
-		ImportCommand: importCommand,
-		ExportCommand: exportCommand,
+		BaseCommand:       baseCommand,
+		ImportCommand:     importCommand,
+		BaseExportCommand: exportCommand,
 	}
 }
 

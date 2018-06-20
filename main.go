@@ -48,7 +48,7 @@ func main() {
 	// Init command handlers
 	// TODO: Real ctx should be passed here
 	baseCommand := command.NewBaseCommand(context.TODO(), envConfig)
-	exportCommand := &command.ExportCommand{}
+	exportCommand := &command.BaseExportCommand{}
 	importCommand := command.NewImportCommand(baseCommand)
 
 	serverCommand := command.NewHTTPCommand(baseCommand)

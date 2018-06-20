@@ -11,12 +11,12 @@ type (
 	Sorting struct {
 	}
 
-	// ExportCommand ...
-	ExportCommand struct {
+	// BaseExportCommand ...
+	BaseExportCommand struct {
 	}
 )
 
-func (e *ExportCommand) sortingFromCliCtx(cliCtx *cli.Context) export.Sorting {
+func (e *BaseExportCommand) sortingFromCliCtx(cliCtx *cli.Context) export.Sorting {
 	sortBy := exportAccount.Stock
 	orderBy := export.Descending
 
@@ -33,6 +33,6 @@ func (e *ExportCommand) sortingFromCliCtx(cliCtx *cli.Context) export.Sorting {
 	}
 }
 
-func (e *ExportCommand) runExport(ex export.Export) error {
+func (e *BaseExportCommand) runExport(ex export.Export) error {
 	return ex.Export()
 }
