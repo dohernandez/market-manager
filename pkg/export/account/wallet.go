@@ -9,6 +9,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/satori/go.uuid"
+
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/config"
 	"github.com/dohernandez/market-manager/pkg/export"
@@ -140,6 +142,17 @@ func (e *exportWallet) Export() error {
 
 		e.accountService.SellStocksWallet(w, sells, changeCommissions, appCommissions)
 		e.accountService.BuyStocksWallet(w, buys, changeCommissions, appCommissions)
+
+		items := map[uuid.UUID]*wallet.Item{}
+		for k, item := range w.Items {
+			if item.Amount == 0 {
+				continue
+			}
+
+			items[k] = item
+		}
+
+		w.Items = items
 
 		tabw = formatWalletItemsToScreen(w, e.sorting, retention)
 	} else {
