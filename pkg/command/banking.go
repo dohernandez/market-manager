@@ -17,14 +17,14 @@ import (
 // BankingCommand ...
 type BankingCommand struct {
 	*BaseCommand
-	*ImportCommand
+	*BaseImportCommand
 }
 
 // NewBankingCommand constructs BankingCommand
-func NewBankingCommand(baseCommand *BaseCommand, importCommand *ImportCommand) *BankingCommand {
+func NewBankingCommand(baseCommand *BaseCommand, baseImportCommand *BaseImportCommand) *BankingCommand {
 	return &BankingCommand{
-		BaseCommand:   baseCommand,
-		ImportCommand: importCommand,
+		BaseCommand:       baseCommand,
+		BaseImportCommand: baseImportCommand,
 	}
 }
 

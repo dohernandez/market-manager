@@ -21,16 +21,16 @@ import (
 // StocksCommand ...
 type StocksCommand struct {
 	*BaseCommand
-	*ImportCommand
+	*BaseImportCommand
 	*BaseExportCommand
 }
 
 // NewStocksCommand constructs StocksCommand
-func NewStocksCommand(baseCommand *BaseCommand, importCommand *ImportCommand, exportCommand *BaseExportCommand) *StocksCommand {
+func NewStocksCommand(baseCommand *BaseCommand, baseImportCommand *BaseImportCommand, baseExportCommand *BaseExportCommand) *StocksCommand {
 	return &StocksCommand{
 		BaseCommand:       baseCommand,
-		ImportCommand:     importCommand,
-		BaseExportCommand: exportCommand,
+		BaseImportCommand: baseImportCommand,
+		BaseExportCommand: baseExportCommand,
 	}
 }
 

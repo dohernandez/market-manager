@@ -16,8 +16,8 @@ import (
 )
 
 type (
-	// ImportCommand ...
-	ImportCommand struct {
+	// BaseImportCommand ...
+	BaseImportCommand struct {
 		*BaseCommand
 	}
 
@@ -27,14 +27,7 @@ type (
 	}
 )
 
-// NewImportCommand constructs ImportCommand
-func NewImportCommand(baseCommand *BaseCommand) *ImportCommand {
-	return &ImportCommand{
-		BaseCommand: baseCommand,
-	}
-}
-
-func (cmd *ImportCommand) runImport(
+func (cmd *BaseImportCommand) runImport(
 	ctx context.Context,
 	c *container.Container,
 	resourceType string,
@@ -83,7 +76,7 @@ func (cmd *ImportCommand) runImport(
 	return nil
 }
 
-func (cmd *ImportCommand) geResourceNameFromFilePath(file string) string {
+func (cmd *BaseImportCommand) geResourceNameFromFilePath(file string) string {
 	var dir = filepath.Dir(file)
 	var ext = filepath.Ext(file)
 

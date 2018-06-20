@@ -48,15 +48,15 @@ func main() {
 	// Init command handlers
 	// TODO: Real ctx should be passed here
 	baseCommand := command.NewBaseCommand(context.TODO(), envConfig)
-	exportCommand := &command.BaseExportCommand{}
-	importCommand := command.NewImportCommand(baseCommand)
+	baseExportCommand := &command.BaseExportCommand{}
+	baseImportCommand := &command.BaseImportCommand{}
 
 	serverCommand := command.NewHTTPCommand(baseCommand)
 
 	migrateCommand := command.NewMigrateCommand(baseCommand)
-	stocksCommand := command.NewStocksCommand(baseCommand, importCommand, exportCommand)
-	bankingCommand := command.NewBankingCommand(baseCommand, importCommand)
-	accountCommand := command.NewAccountCommand(baseCommand, importCommand, exportCommand)
+	stocksCommand := command.NewStocksCommand(baseCommand, baseImportCommand, baseExportCommand)
+	bankingCommand := command.NewBankingCommand(baseCommand, baseImportCommand)
+	accountCommand := command.NewAccountCommand(baseCommand, baseImportCommand, baseExportCommand)
 	apiCommand := command.NewApiCommand(baseCommand)
 
 	schedulerCommand := command.NewSchedulerCommand(stocksCommand)
