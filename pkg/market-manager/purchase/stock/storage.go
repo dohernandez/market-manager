@@ -18,4 +18,12 @@ type (
 		UpdateDividendYield(s *Stock) error
 		UpdateHighLow52WeekPrice(s *Stock) error
 	}
+
+	InfoFinder interface {
+		FindByName(name string) (*Info, error)
+	}
+
+	InfoPersister interface {
+		Persist(i *Info) error
+	}
 )

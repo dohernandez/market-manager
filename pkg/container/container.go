@@ -50,6 +50,8 @@ type Container struct {
 	stockDividendPersister dividend.Persister
 	walletPersister        wallet.Persister
 	transferPersister      transfer.Persister
+	stockInfoPersister     stock.InfoPersister
+	stockInfoFinder        stock.InfoFinder
 
 	importStorage _import.Storage
 
@@ -124,6 +126,14 @@ func (c *Container) bankAccountFinderInstance() bank.Finder {
 	return c.bankAccountFinder
 }
 
+func (c *Container) stockInfoFinderInstance() stock.InfoFinder {
+	if c.stockInfoFinder == nil {
+		c.stockInfoFinder = storage.NewStockInfoFinder(c.db)
+	}
+
+	return c.stockInfoFinder
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // PERSISTER
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +167,14 @@ func (c *Container) transferPersisterInstance() transfer.Persister {
 	}
 
 	return c.transferPersister
+}
+
+func (c *Container) stockInfoPersisterInstance() stock.InfoPersister {
+	if c.stockInfoPersister == nil {
+		c.stockInfoPersister = storage.NewStockInfoPersister(c.db)
+	}
+
+	return c.stockInfoPersister
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -236,6 +254,8 @@ func (c *Container) PurchaseServiceInstance() *purchase.Service {
 			c.exchangeFinderInstance(),
 			c.AccountServiceInstance(),
 			c.IEXTradingClientInstance(),
+			c.stockInfoFinderInstance(),
+			c.stockInfoPersisterInstance(),
 		)
 	}
 

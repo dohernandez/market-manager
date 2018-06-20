@@ -6,6 +6,7 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -16,6 +17,8 @@ type (
 		ctx             context.Context
 		reader          _import.Reader
 		purchaseService *purchase.Service
+
+		stockInfos map[string]*stock.Info
 	}
 )
 
@@ -28,6 +31,7 @@ func NewImportStock(
 		ctx:             ctx,
 		reader:          reader,
 		purchaseService: purchaseService,
+		stockInfos:      map[string]*stock.Info{},
 	}
 }
 
@@ -55,8 +59,47 @@ func (i *ImportStock) Import() error {
 			return err
 		}
 
-		ss = append(ss, stock.NewStock(m, e, line[0], line[2]))
+		t, err := i.getStockInfo(line[3], stock.StockInfoType)
+		if err != nil {
+			return err
+		}
+
+		sector, err := i.getStockInfo(line[4], stock.StockInfoSector)
+		if err != nil {
+			return err
+		}
+
+		industry, err := i.getStockInfo(line[5], stock.StockInfoIndustry)
+		if err != nil {
+			return err
+		}
+
+		ss = append(ss, stock.NewStock(m, e, line[0], line[2], t, sector, industry))
 	}
 
 	return i.purchaseService.SaveAllStocks(ss)
+}
+
+func (i *ImportStock) getStockInfo(value string, t stock.InfoType) (*stock.Info, error) {
+	if stkInfo, ok := i.stockInfos[value]; ok {
+		return stkInfo, nil
+	}
+
+	stkInfo, err := i.purchaseService.FindStockInfoByValue(value)
+	if err != nil {
+		if err != mm.ErrNotFound {
+			return nil, err
+		}
+
+		stkInfo = stock.NewStockInfo(value, t)
+
+		err = i.purchaseService.SaveStockInfo(stkInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		i.stockInfos[value] = stkInfo
+	}
+
+	return stkInfo, nil
 }

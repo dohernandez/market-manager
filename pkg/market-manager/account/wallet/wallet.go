@@ -215,7 +215,9 @@ func (w *Wallet) AddOperation(o *operation.Operation) {
 		}
 	}
 
-	wi.Operations = append(wi.Operations, o)
+	if wi != nil {
+		wi.Operations = append(wi.Operations, o)
+	}
 
 	switch o.Action {
 	case operation.Buy:
@@ -231,17 +233,6 @@ func (w *Wallet) AddOperation(o *operation.Operation) {
 		w.Funds = w.Funds.Increase(buyout)
 		w.Capital = w.Capital.Decrease(o.Capital())
 		w.Commission = w.Commission.Increase(o.FinalCommission())
-
-		items := map[uuid.UUID]*Item{}
-		for k, item := range w.Items {
-			if item.Stock.Equals(o.Stock) && item.Amount == 0 {
-				continue
-			}
-
-			items[k] = item
-		}
-
-		w.Items = items
 
 	case operation.Dividend:
 		wi.increaseDividend(o.Value)

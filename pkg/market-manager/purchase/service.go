@@ -32,9 +32,11 @@ type (
 		stockDividendFinder dividend.Finder
 		marketFinder        market.Finder
 		exchangeFinder      exchange.Finder
+		stockInfoFinder     stock.InfoFinder
 
 		stockPersister         stock.Persister
 		stockDividendPersister dividend.Persister
+		stockInfoPersister     stock.InfoPersister
 
 		iexClient *iex.Client
 
@@ -52,6 +54,8 @@ func NewService(
 	exchangeFinder exchange.Finder,
 	accountService *account.Service,
 	iexClient *iex.Client,
+	stockInfoFinder stock.InfoFinder,
+	stockInfoPersister stock.InfoPersister,
 ) *Service {
 	return &Service{
 		ctx:                    ctx,
@@ -63,6 +67,8 @@ func NewService(
 		exchangeFinder:         exchangeFinder,
 		accountService:         accountService,
 		iexClient:              iexClient,
+		stockInfoFinder:        stockInfoFinder,
+		stockInfoPersister:     stockInfoPersister,
 	}
 }
 
@@ -521,4 +527,12 @@ func (s *Service) StocksByDividendAnnounceProjectYearAndMonth(year, month string
 	m, _ := strconv.Atoi(month)
 
 	return s.stockFinder.FindAllByDividendAnnounceProjectYearAndMonth(y, m)
+}
+
+func (s *Service) FindStockInfoByValue(symbol string) (*stock.Info, error) {
+	return s.stockInfoFinder.FindByName(symbol)
+}
+
+func (s *Service) SaveStockInfo(stkInfo *stock.Info) error {
+	return s.stockInfoPersister.Persist(stkInfo)
 }

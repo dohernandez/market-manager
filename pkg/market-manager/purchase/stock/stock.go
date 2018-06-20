@@ -12,6 +12,14 @@ import (
 )
 
 type (
+	InfoType string
+
+	Info struct {
+		ID   uuid.UUID
+		Type InfoType
+		Name string
+	}
+
 	// Stock represents stock struct
 	Stock struct {
 		ID                  uuid.UUID
@@ -27,6 +35,9 @@ type (
 		High52week          mm.Value
 		Low52week           mm.Value
 		HighLow52WeekUpdate time.Time
+		Type                *Info
+		Sector              *Info
+		Industry            *Info
 	}
 
 	// Price represents stock's price struct
@@ -47,14 +58,32 @@ type (
 	}
 )
 
+const (
+	StockInfoType     InfoType = "type"
+	StockInfoSector            = "sector"
+	StockInfoIndustry          = "industry"
+)
+
+// NewStockInfo creates an stock info instance
+func NewStockInfo(name string, t InfoType) *Info {
+	return &Info{
+		ID:   uuid.NewV4(),
+		Name: name,
+		Type: t,
+	}
+}
+
 // NewStock creates an stock instance
-func NewStock(market *market.Market, exchange *exchange.Exchange, name, symbol string) *Stock {
+func NewStock(market *market.Market, exchange *exchange.Exchange, name, symbol string, t, sector, industry *Info) *Stock {
 	return &Stock{
 		ID:       uuid.NewV4(),
 		Market:   market,
 		Exchange: exchange,
 		Name:     name,
 		Symbol:   symbol,
+		Type:     t,
+		Sector:   sector,
+		Industry: industry,
 	}
 }
 
@@ -85,4 +114,8 @@ func (s *Stock) BuyUnder() mm.Value {
 		Amount:   s.High52week.Amount - r52wk.Amount/3*2,
 		Currency: r52wk.Currency,
 	}
+}
+
+func (s *Stock) Equals(stk *Stock) bool {
+	return s.Symbol == stk.Symbol
 }
