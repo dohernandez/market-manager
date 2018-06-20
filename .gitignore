@@ -9,16 +9,13 @@ vendor/
 docs/api.html
 
 resources/import/accounts/
-!resources/import/accounts/.gitkeep
-
 resources/import/dividends/
-!resources/import/dividends/.gitkeep
-
 resources/import/transfers/
-!resources/import/transfers/.gitkeep
-
 resources/import/wallets/
-!resources/import/wallets/.gitkeep
+
+!resources/import/*/.gitkeep
 
 resources/postgresql/data/
-!resources/postgresql/data/.gitkeep
+
+resources/dev/import/
+!resources/dev/import/*/.gitkeep

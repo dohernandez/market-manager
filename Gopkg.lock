@@ -2,6 +2,16 @@
 
 
 [[projects]]
+  name = "github.com/DATA-DOG/godog"
+  packages = [
+    ".",
+    "colors",
+    "gherkin"
+  ]
+  revision = "0371765570d36374bef4ab9f62ed0491f0862a3c"
+  version = "v0.7.6"
+
+[[projects]]
   branch = "master"
   name = "github.com/almerlucke/go-iban"
   packages = ["iban"]
@@ -181,6 +191,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9257e60b610ca6ef107eb752feb759a7a1f3acc24c62d9640705d8db48762b32"
+  inputs-digest = "8d5c152a211002f2b77297529047dedfc30716bd089203f25f9acae6640dc7b5"
   solver-name = "gps-cdcl"
   solver-version = 1
