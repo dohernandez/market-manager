@@ -19,7 +19,7 @@ Feature:
       | 8cc8f7ca-43f2-4f4f-84d7-aac4efdbc173 | stock          | Stock          |
 
   Scenario: Import stocks
-    When I add a new csv file "01_stocks.csv" to the stock import folder with the following lines
+    When I add a new csv file "01_stocks.csv" to the "stock" import folder with the following lines
 
       | Name                                  | Exchange | Symbol | Type   | Sector          | Industry                   |
       | STARBUCKS CORPORATION                 | NASDAQ   | SBUX   | COMMON | SERVICES        | SPECIALTY EATERIES         |

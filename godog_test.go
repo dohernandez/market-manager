@@ -42,7 +42,10 @@ func FeatureContext(s *godog.Suite) {
 	}
 
 	bootstrap.RegisterDBContext(s, db)
-	bootstrap.StockCommandContext(s, db, conf.Import.StocksPath)
+	bootstrap.RegisterCommandContext(s)
+	bootstrap.RegisterCsvFileContext(s, conf.Import.StocksPath, conf.Import.WalletsPath)
+	bootstrap.RegisterStockCommandContext(s, db)
+	bootstrap.RegisterAccountCommandContext(s, db)
 
 	//ctx := context.TODO()
 
