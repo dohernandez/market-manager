@@ -1,9 +1,9 @@
 package account
 
 import (
-	"github.com/satori/go.uuid"
-
 	"time"
+
+	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/market-manager"

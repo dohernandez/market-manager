@@ -3,12 +3,11 @@ package storage
 import (
 	"database/sql"
 	"strconv"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
-
-	"time"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"

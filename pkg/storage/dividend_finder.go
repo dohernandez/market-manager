@@ -2,14 +2,13 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
-
-	"fmt"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"

@@ -1,9 +1,9 @@
 package transfer
 
 import (
-	"github.com/satori/go.uuid"
-
 	"time"
+
+	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"

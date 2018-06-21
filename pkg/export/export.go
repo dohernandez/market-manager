@@ -2,7 +2,6 @@ package export
 
 import (
 	"fmt"
-
 	"time"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"

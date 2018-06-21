@@ -2,13 +2,11 @@ package import_banking
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"time"
-
-	"io"
-
-	"fmt"
 
 	"github.com/pkg/errors"
 

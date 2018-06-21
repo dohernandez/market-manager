@@ -2,9 +2,8 @@ package storage
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/satori/go.uuid"
-
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )

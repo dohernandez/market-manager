@@ -1,10 +1,9 @@
 package _import
 
 import (
-	"os"
-
 	"bufio"
 	"encoding/csv"
+	"os"
 
 	"github.com/pkg/errors"
 )

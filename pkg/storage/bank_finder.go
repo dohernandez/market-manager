@@ -1,14 +1,13 @@
 package storage
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 
 	"github.com/almerlucke/go-iban/iban"
 	"github.com/jmoiron/sqlx"
 	uuid "github.com/satori/go.uuid"
-
-	"database/sql"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"

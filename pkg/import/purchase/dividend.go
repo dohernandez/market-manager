@@ -2,11 +2,10 @@ package import_purchase
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"strconv"
 	"time"
-
-	"fmt"
 
 	"github.com/pkg/errors"
 

@@ -8,7 +8,6 @@ import (
 	"text/tabwriter"
 
 	"github.com/pkg/errors"
-
 	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"

@@ -2,18 +2,15 @@ package container
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/f2prateek/train"
 	"github.com/jmoiron/sqlx"
 	cache "github.com/patrickmn/go-cache"
-
-	"fmt"
-
 	"github.com/sirupsen/logrus"
 	"github.com/sony/gobreaker"
-
-	"github.com/f2prateek/train"
 
 	"github.com/dohernandez/market-manager/pkg/client"
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"

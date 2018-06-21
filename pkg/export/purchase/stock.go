@@ -2,12 +2,9 @@ package export_purchase
 
 import (
 	"context"
-
-	"strings"
-
-	"time"
-
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager"

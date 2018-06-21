@@ -1,11 +1,10 @@
 package bootstrap
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
 	"strings"
-
-	"bytes"
 
 	"github.com/DATA-DOG/godog"
 )

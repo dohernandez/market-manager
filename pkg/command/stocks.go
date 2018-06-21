@@ -3,13 +3,11 @@ package command
 import (
 	"context"
 	"fmt"
-
-	"github.com/urfave/cli"
-
 	"os"
 	"path/filepath"
-
 	"strings"
+
+	"github.com/urfave/cli"
 
 	"github.com/dohernandez/market-manager/pkg/container"
 	exportPurchase "github.com/dohernandez/market-manager/pkg/export/purchase"

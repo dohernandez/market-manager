@@ -2,6 +2,7 @@ package purchase
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 
@@ -9,9 +10,6 @@ import (
 
 	"github.com/dohernandez/go-quote"
 	gf "github.com/dohernandez/googlefinance-client-go"
-
-	"strconv"
-
 	"github.com/dohernandez/market-manager/pkg/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"

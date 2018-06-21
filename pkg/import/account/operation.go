@@ -2,15 +2,11 @@ package import_account
 
 import (
 	"context"
-	"time"
-
-	"io"
-
-	"strconv"
-
-	"strings"
-
 	"fmt"
+	"io"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 

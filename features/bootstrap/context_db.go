@@ -1,10 +1,8 @@
 package bootstrap
 
 import (
-	"log"
-
 	"fmt"
-
+	"log"
 	"strings"
 
 	"github.com/DATA-DOG/godog"

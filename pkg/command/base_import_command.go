@@ -2,12 +2,9 @@ package command
 
 import (
 	"context"
-
-	"path/filepath"
-
-	"regexp"
-
 	"path"
+	"path/filepath"
+	"regexp"
 
 	"github.com/dohernandez/market-manager/pkg/container"
 	"github.com/dohernandez/market-manager/pkg/import"

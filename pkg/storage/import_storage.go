@@ -1,11 +1,10 @@
 package storage
 
 import (
-	"github.com/jmoiron/sqlx"
-
 	"database/sql"
 	"fmt"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
 	"github.com/dohernandez/market-manager/pkg/import"

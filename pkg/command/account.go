@@ -2,11 +2,10 @@ package command
 
 import (
 	"context"
-
-	"github.com/urfave/cli"
-
 	"os"
 	"path/filepath"
+
+	"github.com/urfave/cli"
 
 	"github.com/dohernandez/market-manager/pkg/container"
 	exportAccount "github.com/dohernandez/market-manager/pkg/export/account"

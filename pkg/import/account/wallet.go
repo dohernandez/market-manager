@@ -2,7 +2,6 @@ package import_account
 
 import (
 	"context"
-
 	"io"
 
 	"github.com/pkg/errors"

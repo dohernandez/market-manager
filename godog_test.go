@@ -2,18 +2,15 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
-	"log"
-
 	"github.com/DATA-DOG/godog"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/DATA-DOG/godog/colors"
-
-	"strings"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/dohernandez/market-manager/features/bootstrap"
 	"github.com/dohernandez/market-manager/pkg/config"

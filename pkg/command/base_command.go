@@ -2,13 +2,11 @@ package command
 
 import (
 	"context"
-
-	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
-
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/patrickmn/go-cache"
+	"github.com/pkg/errors"
 
 	"github.com/dohernandez/market-manager/pkg/config"
 	"github.com/dohernandez/market-manager/pkg/container"
