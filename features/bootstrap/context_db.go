@@ -5,6 +5,8 @@ import (
 
 	"fmt"
 
+	"strings"
+
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/jmoiron/sqlx"
@@ -21,10 +23,11 @@ func RegisterDBContext(s *godog.Suite, db *sqlx.DB) *DBContext {
 	dbc := DBContext{
 		db: db,
 		tables: []string{
+			"transfer",
+			"wallet_bank_account",
+			"wallet",
 			"stock",
 			"stock_info",
-			"exchange",
-			"market",
 			"import",
 		},
 	}
@@ -33,8 +36,7 @@ func RegisterDBContext(s *godog.Suite, db *sqlx.DB) *DBContext {
 		dbc.cleanUpDB()
 	})
 
-	s.Step(`^that the following exchanges are stored:$`, dbc.thatTheFollowingExchangesAreStored)
-	s.Step(`^that the following markets are stored:$`, dbc.thatTheFollowingMarketsAreStored)
+	s.Step(`^that the following wallets are stored:$`, dbc.thatTheFollowingWalletsAreStored)
 
 	return &dbc
 }
@@ -48,12 +50,23 @@ func (c *DBContext) cleanUpDB() {
 	}
 }
 
-func (c *DBContext) thatTheFollowingExchangesAreStored(exchanges *gherkin.DataTable) error {
-	for _, row := range exchanges.Rows[1:] {
+func (c *DBContext) thatTheFollowingWalletsAreStored(wallets *gherkin.DataTable) error {
+	var tColumns []string
+	for _, cell := range wallets.Rows[0].Cells {
+		tColumns = append(tColumns, cell.Value)
+	}
+
+	if len(tColumns) == 0 {
+		return fmt.Errorf("there is no column defined INSERT INTO wallet")
+	}
+
+	query := fmt.Sprintf(`INSERT INTO wallet (%s) VALUES ($1, $2, $3)`, strings.Join(tColumns, ", "))
+
+	for _, row := range wallets.Rows[1:] {
 		ID, _ := uuid.FromString(row.Cells[0].Value)
 
 		_, err := c.db.Exec(
-			`INSERT INTO exchange (id, name, symbol) VALUES ($1, $2, $3)`,
+			query,
 			ID,
 			row.Cells[1].Value,
 			row.Cells[2].Value,
@@ -66,20 +79,21 @@ func (c *DBContext) thatTheFollowingExchangesAreStored(exchanges *gherkin.DataTa
 	return nil
 }
 
-func (c *DBContext) thatTheFollowingMarketsAreStored(markets *gherkin.DataTable) error {
-	for _, row := range markets.Rows[1:] {
-		ID, _ := uuid.FromString(row.Cells[0].Value)
-
-		_, err := c.db.Exec(
-			`INSERT INTO market (id, name, display_name) VALUES ($1, $2, $3)`,
-			ID,
-			row.Cells[1].Value,
-			row.Cells[2].Value,
-		)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
+//
+//func (c *DBContext) thatTheFollowingMarketsAreStored(markets *gherkin.DataTable) error {
+//	for _, row := range markets.Rows[1:] {
+//		ID, _ := uuid.FromString(row.Cells[0].Value)
+//
+//		_, err := c.db.Exec(
+//			`INSERT INTO market (id, name, display_name) VALUES ($1, $2, $3)`,
+//			ID,
+//			row.Cells[1].Value,
+//			row.Cells[2].Value,
+//		)
+//		if err != nil {
+//			return err
+//		}
+//	}
+//
+//	return nil
+//}

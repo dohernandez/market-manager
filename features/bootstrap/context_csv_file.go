@@ -10,19 +10,22 @@ import (
 )
 
 type csvFileContext struct {
-	stocksPath string
-	walletPath string
+	stocksPath    string
+	walletPath    string
+	transfersPath string
 }
 
-func RegisterCsvFileContext(s *godog.Suite, stocksPath, walletPath string) {
+func RegisterCsvFileContext(s *godog.Suite, stocksPath, walletPath, transfersPath string) {
 	fc := &csvFileContext{
-		stocksPath: stocksPath,
-		walletPath: walletPath,
+		stocksPath:    stocksPath,
+		walletPath:    walletPath,
+		transfersPath: transfersPath,
 	}
 
 	s.BeforeScenario(func(i interface{}) {
 		fc.cleanDir(fc.stocksPath)
 		fc.cleanDir(fc.walletPath)
+		fc.cleanDir(fc.transfersPath)
 	})
 
 	s.Step(`^I add a new csv file "([^"]*)" to the "([^"]*)" import folder with the following lines$`, fc.iAddANewCsvFileToTheStockImportFolderWithTheFollowingLines)
@@ -57,6 +60,8 @@ func (c *csvFileContext) iAddANewCsvFileToTheStockImportFolderWithTheFollowingLi
 		basePath = c.stocksPath
 	case "wallet":
 		basePath = c.walletPath
+	case "transfer":
+		basePath = c.transfersPath
 	default:
 		return fmt.Errorf("folder not allowed")
 	}

@@ -17,10 +17,10 @@ func RegisterAccountCommandContext(s *godog.Suite, db *sqlx.DB) {
 		wallets: map[string]string{},
 	}
 
-	s.Step(`^following wallet should be stored:$`, acc.followingWalletShouldBeStored)
+	s.Step(`^following wallets should be stored:$`, acc.followingWalletsShouldBeStored)
 }
 
-func (c *accountCommandContext) followingWalletShouldBeStored(wallets *gherkin.DataTable) error {
+func (c *accountCommandContext) followingWalletsShouldBeStored(wallets *gherkin.DataTable) error {
 	query := `SELECT id FROM wallet WHERE name = $1 AND url  = $2`
 
 	for _, row := range wallets.Rows[1:] {
