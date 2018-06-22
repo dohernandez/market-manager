@@ -4,7 +4,7 @@ Feature:
   so that I can operate with the stocks
 
   Scenario: Import stocks
-    When I add a new csv file "01_stocks.csv" to the "stock" import folder with the following lines
+    When I add a new csv file "01_stocks.csv" to the "stock" import folder with the following lines:
 
       | Name                                  | Exchange | Symbol | Type   | Sector          | Industry                   |
       | STARBUCKS CORPORATION                 | NASDAQ   | SBUX   | COMMON | SERVICES        | SPECIALTY EATERIES         |
@@ -15,7 +15,7 @@ Feature:
       | QUALCOMM INCORPORATED                 | NASDAQ   | QCOM   | COMMON | TECHNOLOGY      | COMMUNICATION EQUIPMENT    |
       | BROOKFIELD INFRASTRUCTURE PARTNERS LP | NYSE     | BIP    | MLP    | UTILITIES       | DIVERSIFIED UTILITIES      |
 
-    And I run a command "market-manager" with args "purchase import quote"
+    And I run a command "market-manager" with args "purchase import quote":
     Then following stocks info should be stored:
       | id | name                       | type     |
       | 1  | COMMON                     | type     |

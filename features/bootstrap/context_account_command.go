@@ -1,6 +1,8 @@
 package bootstrap
 
 import (
+	"fmt"
+
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/jmoiron/sqlx"
@@ -18,6 +20,7 @@ func RegisterAccountCommandContext(s *godog.Suite, db *sqlx.DB) {
 	}
 
 	s.Step(`^following wallets should be stored:$`, acc.followingWalletsShouldBeStored)
+	s.Step(`^the wallets should have:$`, acc.theWalletsShouldHave)
 }
 
 func (c *accountCommandContext) followingWalletsShouldBeStored(wallets *gherkin.DataTable) error {
@@ -32,6 +35,30 @@ func (c *accountCommandContext) followingWalletsShouldBeStored(wallets *gherkin.
 		}
 
 		c.wallets[row.Cells[0].Value] = id
+	}
+
+	return nil
+}
+
+func (c *accountCommandContext) theWalletsShouldHave(wallets *gherkin.DataTable) error {
+	query := `SELECT id FROM wallet WHERE id = $1`
+
+	for i, cell := range wallets.Rows[0].Cells[1:] {
+		query = fmt.Sprintf("%s AND %s=$%d", query, cell.Value, i+2)
+	}
+
+	for _, row := range wallets.Rows[1:] {
+		var id string
+		var args []interface{}
+
+		for _, cell := range row.Cells {
+			args = append(args, cell.Value)
+		}
+
+		err := c.db.Get(&id, query, args...)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

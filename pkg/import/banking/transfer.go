@@ -77,6 +77,7 @@ func (i *ImportTransfer) Import() error {
 	return i.bankingService.SaveAllTransfers(ts)
 }
 
+// parseDateString - parse a potentially partial date string to Time
 func (i *ImportTransfer) parseDateString(dt string) time.Time {
 	if dt == "" {
 		return time.Now()
@@ -87,7 +88,7 @@ func (i *ImportTransfer) parseDateString(dt string) time.Time {
 	return t
 }
 
-// parseDateString - parse a potentially partial date string to Time
+// parsePriceString - parse a potentially float string to float64
 func (i *ImportTransfer) parsePriceString(price string) (float64, error) {
 	price = strings.Replace(price, ".", "", 1)
 	price = strings.Replace(price, ",", ".", 1)

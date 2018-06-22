@@ -124,7 +124,7 @@ test-unit:
 
 test-integration:
 	@printf "$(OK_COLOR)==> Running integration tests$(NO_COLOR)\n"
-	@go test -godog -stop-on-failure -tag="${TAGS}"
+	@go test -godog -stop-on-failure -tag="${TAGS}" -feature="${FEATURE}"
 
 # Dev
 dev-run-http:
@@ -162,7 +162,7 @@ dev-docker-test-unit:
 dev-docker-test-integration:
 	@printf "$(OK_COLOR)==> Running integration test using docker container$(NO_COLOR)\n"
 	@printf "Don't forget before run integration test to update deps and run migration if need it\n"
-	@docker-compose exec http make test-integration TAGS=${TAGS}
+	@docker-compose exec http make test-integration TAGS=${TAGS} FEATURE=${FEATURE}
 
 dev-docker-logs:
 	@docker-compose logs -f ${CONTAINER}

@@ -12,6 +12,8 @@ import (
 	"github.com/DATA-DOG/godog/colors"
 	"github.com/jmoiron/sqlx"
 
+	"fmt"
+
 	"github.com/dohernandez/market-manager/features/bootstrap"
 	"github.com/dohernandez/market-manager/pkg/config"
 )
@@ -24,6 +26,7 @@ var (
 	runGoDogTests bool
 	stopOnFailure bool
 	runWithTags   string
+	runFeature    string
 )
 
 func init() {
@@ -37,6 +40,7 @@ func init() {
 		strings.Repeat(" ", 4) + "- " + colors.Yellow(`"@test,@undone"`) + ": run wip or undone scenarios"
 
 	flag.StringVar(&runWithTags, "tag", "", descTagsOption)
+	flag.StringVar(&runFeature, "feature", "", "Optional feature to run. Filename without the extension .feature")
 
 	flag.Parse()
 }
@@ -62,6 +66,7 @@ func FeatureContext(s *godog.Suite) {
 	)
 	bootstrap.RegisterStockCommandContext(s, db)
 	bootstrap.RegisterAccountCommandContext(s, db)
+	bootstrap.RegisterBankingCommandContext(s, db)
 
 	//ctx := context.TODO()
 
@@ -72,11 +77,17 @@ func TestMain(m *testing.M) {
 	if !runGoDogTests {
 		os.Exit(0)
 	}
+
+	paths := []string{"features"}
+	if runFeature != "" {
+		paths = []string{fmt.Sprintf("features/%s.feature", runFeature)}
+	}
+
 	status := godog.RunWithOptions("MarketManager", func(s *godog.Suite) {
 		FeatureContext(s)
 	}, godog.Options{
 		Format:        "pretty",
-		Paths:         []string{"features"},
+		Paths:         paths,
 		Randomize:     time.Now().UTC().UnixNano(),
 		StopOnFailure: stopOnFailure,
 		Tags:          runWithTags,

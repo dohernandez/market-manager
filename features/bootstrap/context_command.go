@@ -15,7 +15,7 @@ type commandContext struct {
 func RegisterCommandContext(s *godog.Suite) {
 	cc := &commandContext{}
 
-	s.Step(`^I run a command "([^"]*)" with args "([^"]*)"$`, cc.iRunACommand)
+	s.Step(`^I run a command "([^"]*)" with args "([^"]*)":$`, cc.iRunACommand)
 }
 
 func (c *commandContext) iRunACommand(command, args string) error {

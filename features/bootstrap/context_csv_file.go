@@ -28,7 +28,7 @@ func RegisterCsvFileContext(s *godog.Suite, stocksPath, walletPath, transfersPat
 		fc.cleanDir(fc.transfersPath)
 	})
 
-	s.Step(`^I add a new csv file "([^"]*)" to the "([^"]*)" import folder with the following lines$`, fc.iAddANewCsvFileToTheStockImportFolderWithTheFollowingLines)
+	s.Step(`^I add a new csv file "([^"]*)" to the "([^"]*)" import folder with the following lines:$`, fc.iAddANewCsvFileToTheStockImportFolderWithTheFollowingLines)
 }
 
 func (c *csvFileContext) cleanDir(directory string) {

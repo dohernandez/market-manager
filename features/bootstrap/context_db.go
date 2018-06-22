@@ -26,6 +26,7 @@ func RegisterDBContext(s *godog.Suite, db *sqlx.DB) *DBContext {
 			"wallet",
 			"stock",
 			"stock_info",
+			"bank_account",
 			"import",
 		},
 	}
@@ -35,6 +36,8 @@ func RegisterDBContext(s *godog.Suite, db *sqlx.DB) *DBContext {
 	})
 
 	s.Step(`^that the following wallets are stored:$`, dbc.thatTheFollowingWalletsAreStored)
+	s.Step(`^that the following bank accounts are stored:$`, dbc.thatTheFollowingBankAccountsAreStored)
+	s.Step(`^that the following wallet bank accounts are stored:$`, dbc.thatTheFollowingWalletBankAccountsAreStored)
 
 	return &dbc
 }
@@ -48,27 +51,45 @@ func (c *DBContext) cleanUpDB() {
 	}
 }
 
+// thatTheFollowingWalletsAreStored inserts into the db table wallet the values from the DataTable.
 func (c *DBContext) thatTheFollowingWalletsAreStored(wallets *gherkin.DataTable) error {
-	var tColumns []string
-	for _, cell := range wallets.Rows[0].Cells {
+	return c.runStoreData("wallet", wallets)
+}
+
+// runStoreData inserts into the db table the values from the DataTable.
+// The DataTable could expand dynamically as many column contain the table, resulting in some cases a DataTable
+// with 3 columns or 5 columns depends on the background data require
+func (c *DBContext) runStoreData(table string, data *gherkin.DataTable) error {
+	var tColumns, qValue []string
+	for i, cell := range data.Rows[0].Cells {
 		tColumns = append(tColumns, cell.Value)
+		qValue = append(qValue, fmt.Sprintf("$%d", i+1))
 	}
 
 	if len(tColumns) == 0 {
 		return fmt.Errorf("there is no column defined INSERT INTO wallet")
 	}
 
-	query := fmt.Sprintf(`INSERT INTO wallet (%s) VALUES ($1, $2, $3)`, strings.Join(tColumns, ", "))
+	query := fmt.Sprintf(
+		`INSERT INTO %s (%s) VALUES (%s)`,
+		table,
+		strings.Join(tColumns, ", "),
+		strings.Join(qValue, ", "),
+	)
 
-	for _, row := range wallets.Rows[1:] {
+	fmt.Println(query)
+
+	for _, row := range data.Rows[1:] {
 		ID, _ := uuid.FromString(row.Cells[0].Value)
 
-		_, err := c.db.Exec(
-			query,
+		args := []interface{}{
 			ID,
-			row.Cells[1].Value,
-			row.Cells[2].Value,
-		)
+		}
+		for _, cell := range row.Cells[1:] {
+			args = append(args, cell.Value)
+		}
+
+		_, err := c.db.Exec(query, args...)
 		if err != nil {
 			return err
 		}
@@ -77,21 +98,12 @@ func (c *DBContext) thatTheFollowingWalletsAreStored(wallets *gherkin.DataTable)
 	return nil
 }
 
-//
-//func (c *DBContext) thatTheFollowingMarketsAreStored(markets *gherkin.DataTable) error {
-//	for _, row := range markets.Rows[1:] {
-//		ID, _ := uuid.FromString(row.Cells[0].Value)
-//
-//		_, err := c.db.Exec(
-//			`INSERT INTO market (id, name, display_name) VALUES ($1, $2, $3)`,
-//			ID,
-//			row.Cells[1].Value,
-//			row.Cells[2].Value,
-//		)
-//		if err != nil {
-//			return err
-//		}
-//	}
-//
-//	return nil
-//}
+// thatTheFollowingBankAccountsAreStored inserts into the db table bank_account the values from the DataTable.
+func (c *DBContext) thatTheFollowingBankAccountsAreStored(bAccount *gherkin.DataTable) error {
+	return c.runStoreData("bank_account", bAccount)
+}
+
+// thatTheFollowingWalletBankAccountsAreStored inserts into the db table wallet_bank_account the values from the DataTable.
+func (c *DBContext) thatTheFollowingWalletBankAccountsAreStored(wbAccount *gherkin.DataTable) error {
+	return c.runStoreData("wallet_bank_account", wbAccount)
+}
