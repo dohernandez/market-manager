@@ -10,22 +10,16 @@ import (
 )
 
 type csvFileContext struct {
-	stocksPath    string
-	walletPath    string
-	transfersPath string
+	importPath string
 }
 
-func RegisterCsvFileContext(s *godog.Suite, stocksPath, walletPath, transfersPath string) {
+func RegisterCsvFileContext(s *godog.Suite, importPath string) {
 	fc := &csvFileContext{
-		stocksPath:    stocksPath,
-		walletPath:    walletPath,
-		transfersPath: transfersPath,
+		importPath: importPath,
 	}
 
 	s.BeforeScenario(func(i interface{}) {
-		fc.cleanDir(fc.stocksPath)
-		fc.cleanDir(fc.walletPath)
-		fc.cleanDir(fc.transfersPath)
+		fc.cleanDir(fc.importPath)
 	})
 
 	s.Step(`^I add a new csv file "([^"]*)" to the "([^"]*)" import folder with the following lines:$`, fc.iAddANewCsvFileToTheStockImportFolderWithTheFollowingLines)
@@ -54,17 +48,11 @@ func (c *csvFileContext) cleanDir(directory string) {
 }
 
 func (c *csvFileContext) iAddANewCsvFileToTheStockImportFolderWithTheFollowingLines(filename, folder string, lines *gherkin.DataTable) error {
-	var basePath string
-	switch folder {
-	case "stock":
-		basePath = c.stocksPath
-	case "wallet":
-		basePath = c.walletPath
-	case "transfer":
-		basePath = c.transfersPath
-	default:
+	if folder != "stock" && folder != "wallet" && folder != "transfer" && folder != "accounts" {
 		return fmt.Errorf("folder not allowed")
 	}
+
+	basePath := c.importPath
 
 	file, err := os.Create(fmt.Sprintf("%s/%s", basePath, filename))
 	if err != nil {

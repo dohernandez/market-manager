@@ -58,12 +58,7 @@ func FeatureContext(s *godog.Suite) {
 
 	bootstrap.RegisterDBContext(s, db)
 	bootstrap.RegisterCommandContext(s)
-	bootstrap.RegisterCsvFileContext(
-		s,
-		conf.Import.StocksPath,
-		conf.Import.WalletsPath,
-		conf.Import.TransfersPath,
-	)
+	bootstrap.RegisterCsvFileContext(s, "resources/dev/import")
 	bootstrap.RegisterStockCommandContext(s, db)
 	bootstrap.RegisterAccountCommandContext(s, db)
 	bootstrap.RegisterBankingCommandContext(s, db)

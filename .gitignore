@@ -17,5 +17,5 @@ resources/import/wallets/
 
 resources/postgresql/data/
 
-resources/dev/import/
-!resources/dev/import/*/.gitkeep
+resources/dev/import/*
+!resources/dev/import/.gitkeep

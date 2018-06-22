@@ -5,6 +5,9 @@ import (
 	"log"
 	"strings"
 
+	"strconv"
+	"time"
+
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/jmoiron/sqlx"
@@ -21,6 +24,8 @@ func RegisterDBContext(s *godog.Suite, db *sqlx.DB) *DBContext {
 	dbc := DBContext{
 		db: db,
 		tables: []string{
+			"wallet_item",
+			"operation",
 			"transfer",
 			"wallet_bank_account",
 			"wallet",
@@ -38,6 +43,9 @@ func RegisterDBContext(s *godog.Suite, db *sqlx.DB) *DBContext {
 	s.Step(`^that the following wallets are stored:$`, dbc.thatTheFollowingWalletsAreStored)
 	s.Step(`^that the following bank accounts are stored:$`, dbc.thatTheFollowingBankAccountsAreStored)
 	s.Step(`^that the following wallet bank accounts are stored:$`, dbc.thatTheFollowingWalletBankAccountsAreStored)
+	s.Step(`^that the following transfers are stored:$`, dbc.thatTheFollowingTransfersAreStored)
+	s.Step(`^that the following stocks info are stored:$`, dbc.thatTheFollowingStocksInfoAreStored)
+	s.Step(`^that the following stocks are stored:$`, dbc.thatTheFollowingStocksAreStored)
 
 	return &dbc
 }
@@ -77,15 +85,20 @@ func (c *DBContext) runStoreData(table string, data *gherkin.DataTable) error {
 		strings.Join(qValue, ", "),
 	)
 
-	fmt.Println(query)
-
 	for _, row := range data.Rows[1:] {
 		ID, _ := uuid.FromString(row.Cells[0].Value)
 
 		args := []interface{}{
 			ID,
 		}
-		for _, cell := range row.Cells[1:] {
+		for k, cell := range row.Cells[1:] {
+			if data.Rows[0].Cells[k+1].Value == "date" || data.Rows[0].Cells[k+1].Value == "last_price_update" ||
+				data.Rows[0].Cells[k+1].Value == "high_low_52_week_update" {
+				args = append(args, parseDateString(cell.Value))
+
+				continue
+			}
+
 			args = append(args, cell.Value)
 		}
 
@@ -99,11 +112,96 @@ func (c *DBContext) runStoreData(table string, data *gherkin.DataTable) error {
 }
 
 // thatTheFollowingBankAccountsAreStored inserts into the db table bank_account the values from the DataTable.
-func (c *DBContext) thatTheFollowingBankAccountsAreStored(bAccount *gherkin.DataTable) error {
-	return c.runStoreData("bank_account", bAccount)
+func (c *DBContext) thatTheFollowingBankAccountsAreStored(bAccounts *gherkin.DataTable) error {
+	return c.runStoreData("bank_account", bAccounts)
 }
 
 // thatTheFollowingWalletBankAccountsAreStored inserts into the db table wallet_bank_account the values from the DataTable.
-func (c *DBContext) thatTheFollowingWalletBankAccountsAreStored(wbAccount *gherkin.DataTable) error {
-	return c.runStoreData("wallet_bank_account", wbAccount)
+func (c *DBContext) thatTheFollowingWalletBankAccountsAreStored(wbAccounts *gherkin.DataTable) error {
+	return c.runStoreData("wallet_bank_account", wbAccounts)
+}
+
+// thatTheFollowingTransfersAreStored inserts into the db table transfer the values from the DataTable.
+func (c *DBContext) thatTheFollowingTransfersAreStored(transfers *gherkin.DataTable) error {
+	for _, row := range transfers.Rows[1:] {
+		for k, cell := range row.Cells {
+			if transfers.Rows[0].Cells[k].Value == "amount" {
+				a, err := parsePriceString(cell.Value)
+				if err != nil {
+					return err
+				}
+
+				cell.Value = strconv.FormatFloat(a, 'E', -1, 64)
+			}
+		}
+	}
+
+	return c.runStoreData("transfer", transfers)
+}
+
+// thatTheFollowingStocksAreStored inserts into the db table stock_info the values from the DataTable.
+func (c *DBContext) thatTheFollowingStocksInfoAreStored(stocksInfo *gherkin.DataTable) error {
+	return c.runStoreData("stock_info", stocksInfo)
+}
+
+// thatTheFollowingStocksAreStored inserts into the db table stock the values from the DataTable.
+func (c *DBContext) thatTheFollowingStocksAreStored(stocks *gherkin.DataTable) error {
+	for _, row := range stocks.Rows[1:] {
+		for k, cell := range row.Cells {
+			if stocks.Rows[0].Cells[k].Value == "exchange_symbol" {
+				var id string
+				err := c.db.Get(&id, `SELECT id  FROM exchange WHERE symbol like $1`, cell.Value)
+				if err != nil {
+					return err
+				}
+
+				cell.Value = id
+
+				continue
+			}
+
+			if stocks.Rows[0].Cells[k].Value == "market_name" {
+				var id string
+				err := c.db.Get(&id, `SELECT id  FROM market WHERE name like $1`, cell.Value)
+				if err != nil {
+					return err
+				}
+
+				cell.Value = id
+			}
+		}
+	}
+
+	for _, cell := range stocks.Rows[0].Cells {
+		if cell.Value == "exchange_symbol" {
+			cell.Value = "exchange_id"
+
+			continue
+		}
+
+		if cell.Value == "market_name" {
+			cell.Value = "market_id"
+		}
+	}
+
+	return c.runStoreData("stock", stocks)
+}
+
+// parseDateString - parse a potentially partial date string to Time
+func parseDateString(dt string) time.Time {
+	if dt == "" {
+		return time.Now()
+	}
+
+	t, _ := time.Parse("2/1/2006", dt)
+
+	return t
+}
+
+// parsePriceString - parse a potentially float string to float64
+func parsePriceString(price string) (float64, error) {
+	price = strings.Replace(price, ".", "", 1)
+	price = strings.Replace(price, ",", ".", 1)
+
+	return strconv.ParseFloat(price, 64)
 }

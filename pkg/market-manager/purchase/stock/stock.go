@@ -76,14 +76,16 @@ func NewStockInfo(name string, t InfoType) *Info {
 // NewStock creates an stock instance
 func NewStock(market *market.Market, exchange *exchange.Exchange, name, symbol string, t, sector, industry *Info) *Stock {
 	return &Stock{
-		ID:       uuid.NewV4(),
-		Market:   market,
-		Exchange: exchange,
-		Name:     name,
-		Symbol:   symbol,
-		Type:     t,
-		Sector:   sector,
-		Industry: industry,
+		ID:                  uuid.NewV4(),
+		Market:              market,
+		Exchange:            exchange,
+		Name:                name,
+		Symbol:              symbol,
+		Type:                t,
+		Sector:              sector,
+		Industry:            industry,
+		LastPriceUpdate:     time.Time{},
+		HighLow52WeekUpdate: time.Time{},
 	}
 }
 

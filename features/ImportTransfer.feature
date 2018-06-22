@@ -36,7 +36,7 @@ Feature:
       | 2  | f8e0d0b7-8b5f-46e2-a65a-aae8a7ef5b63 | cf9ef982-a9c1-4c7b-bbd3-011ed81f1bbd | 600,00 | 15/10/2017 |
       | 3  | f8e0d0b7-8b5f-46e2-a65a-aae8a7ef5b63 | cf9ef982-a9c1-4c7b-bbd3-011ed81f1bbd | 100,00 | 6/11/2017  |
 
-    And the wallets should have:
+    And the following wallets should have:
 
-      | id                                   | invested |
-      | b0c650ff-130e-4460-bcd9-423643ee314d | 720.00   |
+      | id                                   | invested | funds  |
+      | b0c650ff-130e-4460-bcd9-423643ee314d | 720.00   | 720.00 |
