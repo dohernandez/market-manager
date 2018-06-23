@@ -59,10 +59,6 @@
   version = "1.0.2"
 
 [[constraint]]
-  name = "github.com/timpalpant/go-iex"
-  branch = "master"
-
-[[constraint]]
   name = "github.com/almerlucke/go-iban"
   branch = "master"
 

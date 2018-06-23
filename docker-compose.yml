@@ -8,10 +8,10 @@ services:
         - GITHUB_TOKEN=${GITHUB_TOKEN}
     volumes:
       - .:/go/src/github.com/dohernandez/market-manager
-    env_file: .env.dev
 
   http:
     extends: base
+    env_file: .env.dev
     depends_on:
       - postgres
     ports:

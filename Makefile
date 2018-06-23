@@ -88,7 +88,7 @@ deps:
 	@go get -u github.com/golang/dep/cmd/dep
 
 	@printf "$(OK_COLOR)==> Ensuring dependencies$(NO_COLOR)\n"
-	@dep ensure
+	@dep ensure -v
 
 deps-dev: deps-dev-overalls
 	@printf "$(OK_COLOR)==> Installing CompileDaemon$(NO_COLOR)\n"
@@ -182,6 +182,9 @@ prod-docker-migration:
 
 prod-docker-logs:
 	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f ${CONTAINER}
+
+prod-docker-bash:
+	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec ${CONTAINER} bash
 
 fix-style:
 	@./resources/dev/fix-style.sh
