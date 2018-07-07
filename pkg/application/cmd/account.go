@@ -11,7 +11,7 @@ import (
 	exportAccount "github.com/dohernandez/market-manager/pkg/application/export/account"
 	"github.com/dohernandez/market-manager/pkg/application/import"
 	"github.com/dohernandez/market-manager/pkg/application/import/account"
-	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 )
 
 // AccountCMD ...

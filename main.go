@@ -10,7 +10,7 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/application/cmd"
 	"github.com/dohernandez/market-manager/pkg/application/config"
-	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 )
 
 // Build version. Sent as a linker flag in Makefile

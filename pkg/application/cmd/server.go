@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/urfave/cli"
 
-	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 )
 
 // HTTPCMD holds the necessary data for its execution

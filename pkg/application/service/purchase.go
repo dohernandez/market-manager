@@ -12,7 +12,7 @@ import (
 	"github.com/dohernandez/go-quote"
 	gf "github.com/dohernandez/googlefinance-client-go"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client/go-iex"
-	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"

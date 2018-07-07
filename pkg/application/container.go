@@ -19,7 +19,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client/go-iex"
-	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
