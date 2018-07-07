@@ -26,8 +26,8 @@
 [[projects]]
   name = "github.com/dohernandez/go-quote"
   packages = ["."]
-  revision = "df00069452bb60fc3458dbd41be39b7f8575acb4"
-  version = "1.0.2"
+  revision = "53c581d106a490080c415867f9318755a516b12d"
+  version = "1.1.0"
 
 [[projects]]
   name = "github.com/dohernandez/googlefinance-client-go"
@@ -61,12 +61,6 @@
   packages = ["."]
   revision = "9f855fadd4b8cde7773f9ef51f6b2705af239519"
   version = "v1.0.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/jasonlvhit/gocron"
-  packages = ["."]
-  revision = "54194c9749d48b073c9aeb2c787b6882e95dd0cd"
 
 [[projects]]
   branch = "master"
@@ -175,9 +169,24 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/yhat/scrape"
+  packages = ["."]
+  revision = "24b7890b0945459dbf91743e4d2ac5d75a51fee2"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   revision = "2d027ae1dddd4694d54f7a8b6cbe78dca8720226"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/net"
+  packages = [
+    "html",
+    "html/atom"
+  ]
+  revision = "32a936f46389aa10549d60bd7833e54b01685d09"
 
 [[projects]]
   branch = "master"
@@ -191,6 +200,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8d5c152a211002f2b77297529047dedfc30716bd089203f25f9acae6640dc7b5"
+  inputs-digest = "c2f54fba493aad049d1f5ef86fe31211600bb4d923b7e311125fe4818c581d96"
   solver-name = "gps-cdcl"
   solver-version = 1

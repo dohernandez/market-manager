@@ -23,7 +23,7 @@ func (c *commandContext) iRunACommand(command, args string) error {
 	var out bytes.Buffer
 
 	cmd := exec.Command(command, cArgs...)
-	cmd.Stdout = &out
+	cmd.Stderr = &out
 	err := cmd.Run()
 	if err != nil {
 		return fmt.Errorf("running command %s. Error: %s\n%s\n", command, err.Error(), out.String())

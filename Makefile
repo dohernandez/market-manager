@@ -167,6 +167,9 @@ dev-docker-test-integration:
 dev-docker-logs:
 	@docker-compose logs -f ${CONTAINER}
 
+dev-docker-bash:
+	@docker-compose exec ${CONTAINER} bash
+
 # Prod with docker
 prod-docker-start:
 	@printf "$(OK_COLOR)==> Starting docker containers$(NO_COLOR)\n"

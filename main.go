@@ -8,9 +8,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
-	"github.com/dohernandez/market-manager/pkg/command"
-	"github.com/dohernandez/market-manager/pkg/config"
-	"github.com/dohernandez/market-manager/pkg/logger"
+	"github.com/dohernandez/market-manager/pkg/application/cmd"
+	"github.com/dohernandez/market-manager/pkg/application/config"
+	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 )
 
 // Build version. Sent as a linker flag in Makefile
@@ -47,50 +47,50 @@ func main() {
 
 	// Init command handlers
 	// TODO: Real ctx should be passed here
-	baseCommand := command.NewBaseCommand(context.TODO(), envConfig)
-	baseExportCommand := &command.BaseExportCommand{}
-	baseImportCommand := &command.BaseImportCommand{}
+	baseCMD := cmd.NewBaseCMD(context.TODO(), envConfig)
+	baseExportCMD := &cmd.BaseExportCMD{}
+	baseImportCMD := &cmd.BaseImportCMD{}
 
-	serverCommand := command.NewHTTPCommand(baseCommand)
+	serverCMD := cmd.NewHTTPCMD(baseCMD)
 
-	migrateCommand := command.NewMigrateCommand(baseCommand)
-	stocksCommand := command.NewStocksCommand(baseCommand, baseImportCommand, baseExportCommand)
-	bankingCommand := command.NewBankingCommand(baseCommand, baseImportCommand)
-	accountCommand := command.NewAccountCommand(baseCommand, baseImportCommand, baseExportCommand)
-	apiCommand := command.NewApiCommand(baseCommand)
-
-	schedulerCommand := command.NewSchedulerCommand(stocksCommand)
+	migrateCMD := cmd.NewMigrateCMD(baseCMD)
+	purchaseCMD := cmd.NewPurchaseCMD(baseCMD, baseImportCMD, baseExportCMD)
+	bankingCMD := cmd.NewBankingCMD(baseCMD, baseImportCMD)
+	accountCMD := cmd.NewAccountCMD(baseCMD, baseImportCMD, baseExportCMD)
+	apiCMD := cmd.NewApiCMD(baseCMD)
+	//
+	//schedulerCMD := command.NewSchedulerCMD(purchaseCMD)
 
 	app.Commands = []cli.Command{
 		{
 			Name:   "http",
 			Usage:  "Start REST API service",
-			Action: serverCommand.Run,
+			Action: serverCMD.Run,
 		},
-		{
-			Name:   "scheduler",
-			Usage:  "Start Scheduler service",
-			Action: schedulerCommand.Run,
-		},
+		//	{
+		//		Name:   "scheduler",
+		//		Usage:  "Start Scheduler service",
+		//		Action: schedulerCommand.Run,
+		//	},
 		{
 			Name:      "migrate",
 			Aliases:   []string{"m"},
 			Usage:     "Run database migrations to the specific version",
-			Action:    migrateCommand.Run,
+			Action:    migrateCMD.Run,
 			ArgsUsage: "",
 			Subcommands: []cli.Command{
 				{
 					Name:      "up",
 					Aliases:   []string{"u"},
 					Usage:     "Up the database migrations",
-					Action:    migrateCommand.Up,
+					Action:    migrateCMD.Up,
 					ArgsUsage: "",
 				},
 				{
 					Name:      "down",
 					Aliases:   []string{"d"},
 					Usage:     "Down the database migrations",
-					Action:    migrateCommand.Down,
+					Action:    migrateCMD.Down,
 					ArgsUsage: "",
 				},
 			},
@@ -106,10 +106,10 @@ func main() {
 					Usage:   "Import from csv file",
 					Subcommands: []cli.Command{
 						{
-							Name:      "quote",
+							Name:      "stock",
 							Aliases:   []string{"q"},
 							Usage:     "Import market stock from csv file",
-							Action:    stocksCommand.ImportStock,
+							Action:    purchaseCMD.ImportStock,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -122,7 +122,7 @@ func main() {
 							Name:      "dividend",
 							Aliases:   []string{"s"},
 							Usage:     "Import market stock dividend from csv file",
-							Action:    stocksCommand.ImportDividend,
+							Action:    purchaseCMD.ImportDividend,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -146,7 +146,7 @@ func main() {
 							Name:      "price",
 							Aliases:   []string{"p"},
 							Usage:     "Update stock price value based on the yahoo/google api",
-							Action:    stocksCommand.UpdatePrice,
+							Action:    purchaseCMD.UpdatePrice,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -158,7 +158,7 @@ func main() {
 							Name:      "highLow52week",
 							Aliases:   []string{"phl52w"},
 							Usage:     "Update high - Low 52 week stock price value based on the yahoo/google api",
-							Action:    stocksCommand.UpdatePrice52week,
+							Action:    purchaseCMD.UpdatePrice52week,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -171,7 +171,7 @@ func main() {
 							Name:      "dividend",
 							Aliases:   []string{"d"},
 							Usage:     "Update stock dividend value based on the yahoo/iextrading api",
-							Action:    stocksCommand.Dividend,
+							Action:    purchaseCMD.Dividend,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -190,7 +190,7 @@ func main() {
 						{
 							Name:      "stocks",
 							Aliases:   []string{"s"},
-							Action:    stocksCommand.ExportStocks,
+							Action:    purchaseCMD.ExportStocks,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -222,7 +222,7 @@ func main() {
 						{
 							Name:      "stocksDividends",
 							Aliases:   []string{"sd"},
-							Action:    stocksCommand.ExportStocksWithDividend,
+							Action:    purchaseCMD.ExportStocksWithDividend,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -264,7 +264,7 @@ func main() {
 						{
 							Name:      "wallet",
 							Aliases:   []string{"w"},
-							Action:    accountCommand.ImportWallet,
+							Action:    accountCMD.ImportWallet,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -280,7 +280,7 @@ func main() {
 						{
 							Name:      "operation",
 							Aliases:   []string{"o"},
-							Action:    accountCommand.ImportOperation,
+							Action:    accountCMD.ImportOperation,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -303,7 +303,7 @@ func main() {
 						{
 							Name:      "walletItems",
 							Aliases:   []string{"wi"},
-							Action:    accountCommand.ExportWalletItems,
+							Action:    accountCMD.ExportWalletItems,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -353,7 +353,7 @@ func main() {
 						{
 							Name:      "transfer",
 							Aliases:   []string{"t"},
-							Action:    bankingCommand.ImportTransfer,
+							Action:    bankingCMD.ImportTransfer,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -369,7 +369,7 @@ func main() {
 		{
 			Name:   "api",
 			Usage:  "Api test",
-			Action: apiCommand.Run,
+			Action: apiCMD.Run,
 		},
 	}
 

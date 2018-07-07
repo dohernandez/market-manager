@@ -1,0 +1,6 @@
+version: '2'
+services:
+  finance-yahoo:
+      image: rodolpheche/wiremock:2.15.0
+      ports:
+        - '9080:8080'
