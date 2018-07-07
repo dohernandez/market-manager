@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dohernandez/market-manager/pkg/application/exportation/export"
+	"github.com/dohernandez/market-manager/pkg/application/export"
 	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"

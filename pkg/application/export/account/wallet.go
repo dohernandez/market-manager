@@ -11,7 +11,7 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/application/config"
-	"github.com/dohernandez/market-manager/pkg/application/exportation/export"
+	"github.com/dohernandez/market-manager/pkg/application/export"
 	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
