@@ -13,6 +13,7 @@ import (
 	"github.com/sony/gobreaker"
 
 	"github.com/dohernandez/market-manager/pkg/application/config"
+	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/client"
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/client/go-iex"
@@ -23,7 +24,6 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
-	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -55,7 +55,7 @@ type Container struct {
 	iexClient *iex.Client
 	ccClient  *cc.Client
 
-	purchaseService *purchase.Service
+	purchaseService *service.Purchase
 	accountService  *account.Service
 	bankingService  *banking.Service
 
@@ -239,9 +239,9 @@ func (c *Container) CurrencyConverterClientInstance() *cc.Client {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SERVICE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-func (c *Container) PurchaseServiceInstance() *purchase.Service {
+func (c *Container) PurchaseServiceInstance() *service.Purchase {
 	if c.purchaseService == nil {
-		c.purchaseService = purchase.NewService(
+		c.purchaseService = service.NewPurchaseService(
 			c.ctx,
 			c.stockPersisterInstance(),
 			c.stockFinderInstance(),

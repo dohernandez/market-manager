@@ -1,4 +1,4 @@
-package command
+package cmd
 
 import (
 	"context"
@@ -13,18 +13,18 @@ import (
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
-// HTTPCommand holds the necessary data for its execution
-type HTTPCommand struct {
-	*BaseCommand
+// HTTPCMD holds the necessary data for its execution
+type HTTPCMD struct {
+	*BaseCMD
 }
 
-// NewHTTPCommand constructs HTTPCommand
-func NewHTTPCommand(baseCommand *BaseCommand) *HTTPCommand {
-	return &HTTPCommand{baseCommand}
+// NewHTTPCMD constructs HTTPCMD
+func NewHTTPCMD(baseCMD *BaseCMD) *HTTPCMD {
+	return &HTTPCMD{baseCMD}
 }
 
 // Run ...
-func (cmd *HTTPCommand) Run(cliCtx *cli.Context) error {
+func (cmd *HTTPCMD) Run(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -36,7 +36,7 @@ func (cmd *HTTPCommand) Run(cliCtx *cli.Context) error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", cmd.config.HTTP.Port), router)
 }
 
-func (cmd *HTTPCommand) newRouter(version string) *chi.Mux {
+func (cmd *HTTPCMD) newRouter(version string) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(render.SetContentType(render.ContentTypeJSON))

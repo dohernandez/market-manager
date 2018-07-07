@@ -9,10 +9,10 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
@@ -21,14 +21,14 @@ type (
 		ctx    context.Context
 		reader _import.Reader
 
-		purchaseService *purchase.Service
+		purchaseService *service.Purchase
 	}
 )
 
 func NewImportStockDividend(
 	ctx context.Context,
 	reader _import.Reader,
-	purchaseService *purchase.Service,
+	purchaseService *service.Purchase,
 ) *ImportStockDividend {
 	return &ImportStockDividend{
 		ctx:             ctx,

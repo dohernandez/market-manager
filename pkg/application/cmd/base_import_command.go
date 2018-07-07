@@ -1,4 +1,4 @@
-package command
+package cmd
 
 import (
 	"context"
@@ -13,9 +13,9 @@ import (
 )
 
 type (
-	// BaseImportCommand ...
-	BaseImportCommand struct {
-		*BaseCommand
+	// BaseImportCMD ...
+	BaseImportCMD struct {
+		*BaseCMD
 	}
 
 	resourceImport struct {
@@ -24,7 +24,7 @@ type (
 	}
 )
 
-func (cmd *BaseImportCommand) runImport(
+func (cmd *BaseImportCMD) runImport(
 	ctx context.Context,
 	c *app.Container,
 	resourceType string,
@@ -73,7 +73,7 @@ func (cmd *BaseImportCommand) runImport(
 	return nil
 }
 
-func (cmd *BaseImportCommand) geResourceNameFromFilePath(file string) string {
+func (cmd *BaseImportCMD) geResourceNameFromFilePath(file string) string {
 	var dir = filepath.Dir(file)
 	var ext = filepath.Ext(file)
 

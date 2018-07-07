@@ -1,4 +1,4 @@
-package command
+package cmd
 
 import (
 	"github.com/urfave/cli"
@@ -11,12 +11,12 @@ type (
 	Sorting struct {
 	}
 
-	// BaseExportCommand ...
-	BaseExportCommand struct {
+	// BaseExportCMD ...
+	BaseExportCMD struct {
 	}
 )
 
-func (e *BaseExportCommand) sortingFromCliCtx(cliCtx *cli.Context) export.Sorting {
+func (e *BaseExportCMD) sortingFromCliCtx(cliCtx *cli.Context) export.Sorting {
 	sortBy := exportAccount.Stock
 	orderBy := export.Descending
 
@@ -33,6 +33,6 @@ func (e *BaseExportCommand) sortingFromCliCtx(cliCtx *cli.Context) export.Sortin
 	}
 }
 
-func (e *BaseExportCommand) runExport(ex export.Export) error {
+func (e *BaseExportCMD) runExport(ex export.Export) error {
 	return ex.Export()
 }

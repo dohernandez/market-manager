@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
-	"github.com/dohernandez/market-manager/pkg/application/command"
+	"github.com/dohernandez/market-manager/pkg/application/cmd"
 	"github.com/dohernandez/market-manager/pkg/application/config"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
@@ -47,14 +47,14 @@ func main() {
 
 	// Init command handlers
 	// TODO: Real ctx should be passed here
-	baseCommand := command.NewBaseCommand(context.TODO(), envConfig)
-	baseExportCommand := &command.BaseExportCommand{}
-	baseImportCommand := &command.BaseImportCommand{}
+	baseCMD := cmd.NewBaseCMD(context.TODO(), envConfig)
+	baseExportCMD := &cmd.BaseExportCMD{}
+	baseImportCMD := &cmd.BaseImportCMD{}
 
-	serverCommand := command.NewHTTPCommand(baseCommand)
+	serverCMD := cmd.NewHTTPCMD(baseCMD)
 
-	migrateCommand := command.NewMigrateCommand(baseCommand)
-	purchaseCommand := command.NewPurchaseCommand(baseCommand, baseImportCommand, baseExportCommand)
+	migrateCMD := cmd.NewMigrateCMD(baseCMD)
+	purchaseCMD := cmd.NewPurchaseCMD(baseCMD, baseImportCMD, baseExportCMD)
 	//bankingCommand := command.NewBankingCommand(baseCommand, baseImportCommand)
 	//accountCommand := command.NewAccountCommand(baseCommand, baseImportCommand, baseExportCommand)
 	//apiCommand := command.NewApiCommand(baseCommand)
@@ -65,7 +65,7 @@ func main() {
 		{
 			Name:   "http",
 			Usage:  "Start REST API service",
-			Action: serverCommand.Run,
+			Action: serverCMD.Run,
 		},
 		//	{
 		//		Name:   "scheduler",
@@ -76,21 +76,21 @@ func main() {
 			Name:      "migrate",
 			Aliases:   []string{"m"},
 			Usage:     "Run database migrations to the specific version",
-			Action:    migrateCommand.Run,
+			Action:    migrateCMD.Run,
 			ArgsUsage: "",
 			Subcommands: []cli.Command{
 				{
 					Name:      "up",
 					Aliases:   []string{"u"},
 					Usage:     "Up the database migrations",
-					Action:    migrateCommand.Up,
+					Action:    migrateCMD.Up,
 					ArgsUsage: "",
 				},
 				{
 					Name:      "down",
 					Aliases:   []string{"d"},
 					Usage:     "Down the database migrations",
-					Action:    migrateCommand.Down,
+					Action:    migrateCMD.Down,
 					ArgsUsage: "",
 				},
 			},
@@ -109,7 +109,7 @@ func main() {
 							Name:      "stock",
 							Aliases:   []string{"q"},
 							Usage:     "Import market stock from csv file",
-							Action:    purchaseCommand.ImportStock,
+							Action:    purchaseCMD.ImportStock,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

@@ -1,4 +1,4 @@
-package command
+package cmd
 
 import (
 	"context"
@@ -15,20 +15,20 @@ import (
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
-// MigrateCommand ...
-type MigrateCommand struct {
-	*BaseCommand
+// MigrateCMD ...
+type MigrateCMD struct {
+	*BaseCMD
 }
 
-// NewMigrateCommand constructs MigrateCommand
-func NewMigrateCommand(baseCommand *BaseCommand) *MigrateCommand {
-	return &MigrateCommand{
-		BaseCommand: baseCommand,
+// NewMigrateCMD constructs MigrateCMD
+func NewMigrateCMD(baseCMD *BaseCMD) *MigrateCMD {
+	return &MigrateCMD{
+		BaseCMD: baseCMD,
 	}
 }
 
 // Run runs the application database migrations
-func (cmd *MigrateCommand) Run(cliCtx *cli.Context) error {
+func (cmd *MigrateCMD) Run(cliCtx *cli.Context) error {
 	m, err := cmd.getMigrate()
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (cmd *MigrateCommand) Run(cliCtx *cli.Context) error {
 }
 
 // Up runs all the migrations
-func (cmd *MigrateCommand) Up(cliCtx *cli.Context) error {
+func (cmd *MigrateCMD) Up(cliCtx *cli.Context) error {
 	m, err := cmd.getMigrate()
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func (cmd *MigrateCommand) Up(cliCtx *cli.Context) error {
 }
 
 // Down downs the migrations
-func (cmd *MigrateCommand) Down(cliCtx *cli.Context) error {
+func (cmd *MigrateCMD) Down(cliCtx *cli.Context) error {
 	m, err := cmd.getMigrate()
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func (cmd *MigrateCommand) Down(cliCtx *cli.Context) error {
 	return cmd.checkMigrationError(context.TODO(), m.Down())
 }
 
-func (cmd *MigrateCommand) getMigrate() (*migrate.Migrate, error) {
+func (cmd *MigrateCMD) getMigrate() (*migrate.Migrate, error) {
 	logger.FromContext(context.TODO()).WithFields(logrus.Fields{
 		"migrations_path": cmd.config.Database.MigrationsPath,
 	}).Info("Initializing migration")
@@ -80,7 +80,7 @@ func (cmd *MigrateCommand) getMigrate() (*migrate.Migrate, error) {
 	return m, errors.Wrap(err, "Initializing migrations failed")
 }
 
-func (cmd *MigrateCommand) checkMigrationError(ctx context.Context, err error) error {
+func (cmd *MigrateCMD) checkMigrationError(ctx context.Context, err error) error {
 	if err == migrate.ErrNoChange {
 		logger.FromContext(ctx).Info("No new migrations to run")
 		return nil

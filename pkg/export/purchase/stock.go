@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
@@ -75,11 +75,11 @@ type (
 		ctx     context.Context
 		sorting export.Sorting
 
-		purchaseService *purchase.Service
+		purchaseService *service.Purchase
 	}
 )
 
-func NewExportStock(ctx context.Context, sorting export.Sorting, purchaseService *purchase.Service) *exportStock {
+func NewExportStock(ctx context.Context, sorting export.Sorting, purchaseService *service.Purchase) *exportStock {
 	return &exportStock{
 		ctx:             ctx,
 		sorting:         sorting,
@@ -139,11 +139,11 @@ type (
 		ctx     context.Context
 		sorting export.Sorting
 
-		purchaseService *purchase.Service
+		purchaseService *service.Purchase
 	}
 )
 
-func NewExportStockWithDividends(ctx context.Context, sorting export.Sorting, purchaseService *purchase.Service) *exportStockWithDividends {
+func NewExportStockWithDividends(ctx context.Context, sorting export.Sorting, purchaseService *service.Purchase) *exportStockWithDividends {
 	return &exportStockWithDividends{
 		ctx:             ctx,
 		sorting:         sorting,

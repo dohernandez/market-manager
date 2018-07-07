@@ -4,10 +4,10 @@ import (
 	"context"
 	"io"
 
+	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
@@ -16,7 +16,7 @@ type (
 	ImportStock struct {
 		ctx             context.Context
 		reader          _import.Reader
-		purchaseService *purchase.Service
+		purchaseService *service.Purchase
 
 		stockInfos map[string]*stock.Info
 	}
@@ -25,7 +25,7 @@ type (
 func NewImportStock(
 	ctx context.Context,
 	reader _import.Reader,
-	purchaseService *purchase.Service,
+	purchaseService *service.Purchase,
 ) *ImportStock {
 	return &ImportStock{
 		ctx:             ctx,

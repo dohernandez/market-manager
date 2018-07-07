@@ -1,4 +1,4 @@
-package command
+package cmd
 
 import (
 	"context"
@@ -13,24 +13,24 @@ import (
 )
 
 type (
-	// BaseCommand hold common command properties
-	BaseCommand struct {
+	// BaseCMD hold common command properties
+	BaseCMD struct {
 		ctx    context.Context
 		config *config.Specification
 		cache  *cache.Cache
 	}
 )
 
-// NewBaseCommand creates a structure with common shared properties of the commands
-func NewBaseCommand(ctx context.Context, config *config.Specification) *BaseCommand {
-	return &BaseCommand{
+// NewBaseCMD creates a structure with common shared properties of the commands
+func NewBaseCMD(ctx context.Context, config *config.Specification) *BaseCMD {
+	return &BaseCMD{
 		ctx:    ctx,
 		config: config,
 		cache:  cache.New(time.Hour*2, time.Hour*10),
 	}
 }
 
-func (cmd *BaseCommand) initDatabaseConnection() (*sqlx.DB, error) {
+func (cmd *BaseCMD) initDatabaseConnection() (*sqlx.DB, error) {
 	db, err := sqlx.Connect("postgres", cmd.config.Database.DSN)
 	if err != nil {
 		return nil, errors.Wrap(err, "Connecting to postgres")
@@ -39,6 +39,6 @@ func (cmd *BaseCommand) initDatabaseConnection() (*sqlx.DB, error) {
 	return db, nil
 }
 
-func (cmd *BaseCommand) Container(db *sqlx.DB) *app.Container {
+func (cmd *BaseCMD) Container(db *sqlx.DB) *app.Container {
 	return app.NewContainer(cmd.ctx, db, cmd.config, cmd.cache)
 }
