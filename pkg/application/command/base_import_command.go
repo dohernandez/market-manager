@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/dohernandez/market-manager/pkg/container"
+	"github.com/dohernandez/market-manager/pkg/application"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
@@ -26,10 +26,10 @@ type (
 
 func (cmd *BaseImportCommand) runImport(
 	ctx context.Context,
-	c *container.Container,
+	c *app.Container,
 	resourceType string,
 	ris []resourceImport,
-	fn func(ctx context.Context, c *container.Container, ri resourceImport) error,
+	fn func(ctx context.Context, c *app.Container, ri resourceImport) error,
 ) error {
 	is := c.ImportStorageInstance()
 	irs, err := is.FindAllByResource(resourceType)

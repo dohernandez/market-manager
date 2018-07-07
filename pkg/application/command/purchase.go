@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/dohernandez/market-manager/pkg/container"
+	app "github.com/dohernandez/market-manager/pkg/application"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/import/purchase"
 	"github.com/dohernandez/market-manager/pkg/logger"
@@ -46,7 +46,7 @@ func (cmd *PurchaseCommand) ImportStock(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
-	err = cmd.runImport(ctx, c, "stocks", sis, func(ctx context.Context, c *container.Container, ri resourceImport) error {
+	err = cmd.runImport(ctx, c, "stocks", sis, func(ctx context.Context, c *app.Container, ri resourceImport) error {
 		ctx = context.WithValue(ctx, "stock", ri.resourceName)
 
 		r := _import.NewCsvReader(ri.filePath)

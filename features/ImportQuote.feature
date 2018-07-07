@@ -15,7 +15,7 @@ Feature:
       | QUALCOMM INCORPORATED                 | NASDAQ   | QCOM   | COMMON | TECHNOLOGY      | COMMUNICATION EQUIPMENT    |
       | BROOKFIELD INFRASTRUCTURE PARTNERS LP | NYSE     | BIP    | MLP    | UTILITIES       | DIVERSIFIED UTILITIES      |
 
-    And I run a command "market-manager" with args "purchase import quote":
+    And I run a command "market-manager" with args "purchase import stock":
     Then following stocks info should be stored:
       | id | name                       | type     |
       | 1  | COMMON                     | type     |
@@ -35,11 +35,11 @@ Feature:
 
     And following stocks should be stored:
 
-      | id | name                                  | exchange_symbol | symbol | type | sector | industry |
-      | 1  | STARBUCKS CORPORATION                 | NASDAQ          | SBUX   | 1    | 3      | 8        |
-      | 2  | INTEL CORPORATION - CO                | NASDAQ          | INTC   | 1    | 4      | 9        |
-      | 3  | SCOTTS MIRACLE-GRO COMPANY            | NYSE            | SMG    | 1    | 5      | 10       |
-      | 4  | WALMART INC                           | NYSE            | WMT    | 1    | 3      | 11       |
-      | 5  | ELI LILLY AND COMPANY                 | NYSE            | LLY    | 1    | 6      | 12       |
-      | 6  | QUALCOMM INCORPORATED                 | NASDAQ          | QCOM   | 1    | 4      | 13       |
-      | 7  | BROOKFIELD INFRASTRUCTURE PARTNERS LP | NYSE            | BIP    | 2    | 7      | 14       |
+      | id | name                                  | exchange_symbol | symbol | id_type | id_sector | id_industry |
+      | 1  | STARBUCKS CORPORATION                 | NASDAQ          | SBUX   | 1       | 3         | 8           |
+      | 2  | INTEL CORPORATION - CO                | NASDAQ          | INTC   | 1       | 4         | 9           |
+      | 3  | SCOTTS MIRACLE-GRO COMPANY            | NYSE            | SMG    | 1       | 5         | 10          |
+      | 4  | WALMART INC                           | NYSE            | WMT    | 1       | 3         | 11          |
+      | 5  | ELI LILLY AND COMPANY                 | NYSE            | LLY    | 1       | 6         | 12          |
+      | 6  | QUALCOMM INCORPORATED                 | NASDAQ          | QCOM   | 1       | 4         | 13          |
+      | 7  | BROOKFIELD INFRASTRUCTURE PARTNERS LP | NYSE            | BIP    | 2       | 7         | 14          |
