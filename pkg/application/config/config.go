@@ -2,6 +2,8 @@ package config
 
 import (
 	"github.com/kelseyhightower/envconfig"
+
+	"github.com/dohernandez/go-quote"
 )
 
 // Specification structured configuration variables.
@@ -25,12 +27,18 @@ type Specification struct {
 		TransfersPath string `envconfig:"TRANSFERS_PATH" default:"resources/import/transfers"`
 		WalletsPath   string `envconfig:"WALLETS_PATH" default:"resources/import/wallets"`
 	}
+
 	IEXTrading struct {
 		Timeout int `envconfig:"IEX_TRADING_TIMEOUT" default:"30"`
 	}
 	CurrencyConverter struct {
 		Timeout int `envconfig:"CURRENCY_CONVERTER_TIMEOUT" default:"15"`
 	}
+	YahooUrls struct {
+		QuoteFinanceBaseURL string `envconfig:"FINANCE_YAHOO_BASEURL" default:"https://finance.yahoo.com"`
+		QuoteQuery1BaseURL  string `envconfig:"QUERY1_YAHOO_BASEURL" default:"https://query1.finance.yahoo.com"`
+	}
+
 	Degiro struct {
 		Retention float64 `envconfig:"RETENTION" default:"15"`
 		Exchanges struct {
@@ -126,6 +134,9 @@ func LoadEnv() (*Specification, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	quote.YahooUrls.FinanceBaseURL = config.YahooUrls.QuoteFinanceBaseURL
+	quote.YahooUrls.Query1BaseURL = config.YahooUrls.QuoteQuery1BaseURL
 
 	return &config, err
 }
