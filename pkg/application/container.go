@@ -14,6 +14,7 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/application/config"
 	"github.com/dohernandez/market-manager/pkg/application/service"
+	"github.com/dohernandez/market-manager/pkg/application/storage"
 	"github.com/dohernandez/market-manager/pkg/client"
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/client/go-iex"
@@ -26,7 +27,6 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
-	"github.com/dohernandez/market-manager/pkg/storage"
 )
 
 type Container struct {
