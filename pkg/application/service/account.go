@@ -5,7 +5,7 @@ import (
 
 	"github.com/satori/go.uuid"
 
-	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
+	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"

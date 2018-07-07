@@ -12,8 +12,8 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/application/config"
 	"github.com/dohernandez/market-manager/pkg/application/service"
-	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/export"
+	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 )
