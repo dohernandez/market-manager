@@ -1,30 +1,33 @@
-package command
+package cmd
 
 import (
-	"context"
+	"net/http"
+
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/urfave/cli"
-
-	gf "github.com/dohernandez/googlefinance-client-go"
+	"github.com/yhat/scrape"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
-// ApiCommand ...
-type ApiCommand struct {
-	*BaseCommand
+// ApiCMD ...
+type ApiCMD struct {
+	*BaseCMD
 }
 
-// NewApiCommand constructs ApiCommand
-func NewApiCommand(baseCommand *BaseCommand) *ApiCommand {
-	return &ApiCommand{
-		BaseCommand: baseCommand,
+// NewApiCMD constructs ApiCMD
+func NewApiCMD(baseCMD *BaseCMD) *ApiCMD {
+	return &ApiCMD{
+		BaseCMD: baseCMD,
 	}
 }
 
 // Run runs the application import data
-func (cmd *ApiCommand) Run(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
-	defer cancelCtx()
+func (cmd *ApiCMD) Run(cliCtx *cli.Context) error {
+	//ctx, cancelCtx := context.WithCancel(context.TODO())
+	//defer cancelCtx()
 	//
 	//// Database connection
 	//logger.FromContext(ctx).Info("Initializing database connection")
@@ -93,13 +96,64 @@ func (cmd *ApiCommand) Run(cliCtx *cli.Context) error {
 	//
 	//fmt.Printf("52 wk start: %s  end %s high [%.2f] - low [%.2f]\n", wk52back.Format("2006-01-02"), now.Format("2006-01-02"), high52wk, low52wk)
 	//
+	//
+	//prices, err := gf.GetPrices(ctx, &gf.Query{P: "1Y", I: "86400", X: "NYSE", Q: "ETP"})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//fmt.Println(prices)
 
-	prices, err := gf.GetPrices(ctx, &gf.Query{P: "1Y", I: "86400", X: "NYSE", Q: "ETP"})
+	type yhaooSummary struct {
+		MarketCap string
+		PERatio   string
+		EPS       string
+	}
+
+	var ys yhaooSummary
+
+	resp, err := http.Get("https://finance.yahoo.com/quote/HEP?p=HEP")
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(prices)
+	root, err := html.Parse(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	// define a matcher
+	matcher := func(n *html.Node) bool {
+		// must check for nil values
+		if n.DataAtom == atom.Div && scrape.Attr(n, "data-test") == "right-summary-table" {
+			if n.Parent.DataAtom == atom.Div && scrape.Attr(n.Parent, "id") == "quote-summary" {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	rightSummaryTable, ok := scrape.Find(root, matcher)
+	if !ok {
+		return errors.New("EPS not found")
+	}
+
+	rows := scrape.FindAll(rightSummaryTable, scrape.ByTag(atom.Tr))
+
+	for i, row := range rows {
+		switch i {
+		case 0:
+			ys.MarketCap = scrape.Text(row.FirstChild.NextSibling)
+		case 2:
+			ys.PERatio = scrape.Text(row.FirstChild.NextSibling)
+		case 3:
+			ys.EPS = scrape.Text(row.FirstChild.NextSibling)
+		}
+	}
+
+	fmt.Printf("%+v\n", ys)
+	//fmt.Printf("%2d %s (%s)\n", i, scrape.Text(article), scrape.Attr(article, "href"))
 
 	return nil
 }

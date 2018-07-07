@@ -11,10 +11,9 @@ import (
 
 	"github.com/dohernandez/go-quote"
 	gf "github.com/dohernandez/googlefinance-client-go"
-	iex "github.com/dohernandez/market-manager/pkg/client/go-iex"
+	"github.com/dohernandez/market-manager/pkg/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -39,7 +38,7 @@ type (
 
 		iexClient *iex.Client
 
-		accountService *account.Service
+		accountService *Account
 	}
 )
 
@@ -51,7 +50,7 @@ func NewPurchaseService(
 	stockDividendFinder dividend.Finder,
 	marketFinder market.Finder,
 	exchangeFinder exchange.Finder,
-	accountService *account.Service,
+	accountService *Account,
 	iexClient *iex.Client,
 	stockInfoFinder stock.InfoFinder,
 	stockInfoPersister stock.InfoPersister,

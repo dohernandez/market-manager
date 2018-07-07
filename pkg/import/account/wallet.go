@@ -6,11 +6,10 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
-	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
-	"github.com/dohernandez/market-manager/pkg/market-manager/banking"
 )
 
 type (
@@ -18,8 +17,8 @@ type (
 		ctx    context.Context
 		reader _import.Reader
 
-		accountService *account.Service
-		bankingService *banking.Service
+		accountService *service.Account
+		bankingService *service.Banking
 	}
 )
 
@@ -28,8 +27,8 @@ var _ _import.Import = &ImportWallet{}
 func NewImportWallet(
 	ctx context.Context,
 	reader _import.Reader,
-	accountService *account.Service,
-	bankingService *banking.Service,
+	accountService *service.Account,
+	bankingService *service.Banking,
 ) *ImportWallet {
 	return &ImportWallet{
 		ctx:            ctx,

@@ -14,9 +14,18 @@ import (
 
 	"fmt"
 
+	"github.com/kelseyhightower/envconfig"
+
 	"github.com/dohernandez/market-manager/features/bootstrap"
-	"github.com/dohernandez/market-manager/pkg/config"
+	"github.com/dohernandez/market-manager/pkg/application/config"
 )
+
+type externalUrls struct {
+	FinanceYahooBaseURL string `envconfig:"FINANCE_YAHOO_BASEURL"`
+	Query1YahooBaseURL  string `envconfig:"QUERY1_YAHOO_BASEURL"`
+}
+
+var eUrls externalUrls
 
 type deferredCall func()
 
@@ -51,15 +60,20 @@ func FeatureContext(s *godog.Suite) {
 		log.Fatal(err)
 	}
 
+	envconfig.Process("", &eUrls)
+
 	db, err := sqlx.Connect("postgres", conf.Database.DSN)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	yahooFinanceWeb := bootstrap.RegisterWireMockExtension(s, eUrls.FinanceYahooBaseURL)
+	query1FinanceWeb := bootstrap.RegisterWireMockExtension(s, eUrls.Query1YahooBaseURL)
+
 	bootstrap.RegisterDBContext(s, db)
 	bootstrap.RegisterCommandContext(s)
 	bootstrap.RegisterCsvFileContext(s, "resources/dev/import")
-	bootstrap.RegisterStockCommandContext(s, db)
+	bootstrap.RegisterStockCommandContext(s, db, yahooFinanceWeb, query1FinanceWeb)
 	bootstrap.RegisterAccountCommandContext(s, db)
 	bootstrap.RegisterBankingCommandContext(s, db)
 
@@ -75,7 +89,7 @@ func TestMain(m *testing.M) {
 
 	paths := []string{"features"}
 	if runFeature != "" {
-		paths = []string{fmt.Sprintf("features/%s.feature", runFeature)}
+		paths = []string{fmt.Sprintf("features/%s", runFeature)}
 	}
 
 	status := godog.RunWithOptions("MarketManager", func(s *godog.Suite) {

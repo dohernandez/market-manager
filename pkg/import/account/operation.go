@@ -10,12 +10,11 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
-	"github.com/dohernandez/market-manager/pkg/market-manager/purchase"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
@@ -24,16 +23,16 @@ type (
 		ctx    context.Context
 		reader _import.Reader
 
-		purchaseService *purchase.Service
-		accountService  *account.Service
+		purchaseService *service.Purchase
+		accountService  *service.Account
 	}
 )
 
 func NewImportAccount(
 	ctx context.Context,
 	reader _import.Reader,
-	purchaseService *purchase.Service,
-	accountService *account.Service,
+	purchaseService *service.Purchase,
+	accountService *service.Account,
 ) *ImportAccount {
 	return &ImportAccount{
 		ctx:             ctx,

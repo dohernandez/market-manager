@@ -10,11 +10,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
+	"github.com/dohernandez/market-manager/pkg/application/config"
+	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/client/currency-converter"
-	"github.com/dohernandez/market-manager/pkg/config"
 	"github.com/dohernandez/market-manager/pkg/export"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
-	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 )
 
@@ -62,13 +62,13 @@ type (
 		sorting export.Sorting
 		config  *config.Specification
 
-		accountService *account.Service
+		accountService *service.Account
 
 		ccClient *cc.Client
 	}
 )
 
-func NewExportWallet(ctx context.Context, sorting export.Sorting, config *config.Specification, accountService *account.Service, ccClient *cc.Client) *exportWallet {
+func NewExportWallet(ctx context.Context, sorting export.Sorting, config *config.Specification, accountService *service.Account, ccClient *cc.Client) *exportWallet {
 	return &exportWallet{
 		ctx:            ctx,
 		sorting:        sorting,
@@ -186,8 +186,8 @@ func (e *exportWallet) getChangeCommissionsToApplyStockOperation() map[string]mm
 	return pChangeCommissions
 }
 
-func (e *exportWallet) getAppCommissionsToApplyStockOperation() (map[string]account.AppCommissions, error) {
-	appCommissions := map[string]account.AppCommissions{}
+func (e *exportWallet) getAppCommissionsToApplyStockOperation() (map[string]service.AppCommissions, error) {
+	appCommissions := map[string]service.AppCommissions{}
 
 	exchanges := e.config.Degiro.Exchanges
 
@@ -197,7 +197,7 @@ func (e *exportWallet) getAppCommissionsToApplyStockOperation() (map[string]acco
 		return nil, errors.Wrapf(err, "Can not marshal config commission")
 	}
 
-	var appCommission account.AppCommissions
+	var appCommission service.AppCommissions
 	err = json.Unmarshal(cCommission, &appCommission)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Can not unmarshal config commission")
@@ -211,7 +211,7 @@ func (e *exportWallet) getAppCommissionsToApplyStockOperation() (map[string]acco
 		return nil, errors.Wrapf(err, "Can not marshal config commission")
 	}
 
-	appCommission = account.AppCommissions{}
+	appCommission = service.AppCommissions{}
 	err = json.Unmarshal(cCommission, &appCommission)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Can not unmarshal config commission")

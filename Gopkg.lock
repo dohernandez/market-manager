@@ -175,9 +175,24 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/yhat/scrape"
+  packages = ["."]
+  revision = "24b7890b0945459dbf91743e4d2ac5d75a51fee2"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   revision = "2d027ae1dddd4694d54f7a8b6cbe78dca8720226"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/net"
+  packages = [
+    "html",
+    "html/atom"
+  ]
+  revision = "32a936f46389aa10549d60bd7833e54b01685d09"
 
 [[projects]]
   branch = "master"
@@ -191,6 +206,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8d5c152a211002f2b77297529047dedfc30716bd089203f25f9acae6640dc7b5"
+  inputs-digest = "3032e601088740371215dd2b1545d3919b0c27d49827efabd941911ddc44f93d"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,4 +1,4 @@
-package command
+package cmd
 
 import (
 	"context"
@@ -7,31 +7,31 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/dohernandez/market-manager/pkg/container"
+	"github.com/dohernandez/market-manager/pkg/application"
 	exportAccount "github.com/dohernandez/market-manager/pkg/export/account"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/import/account"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
-// AccountCommand ...
-type AccountCommand struct {
-	*BaseCommand
-	*BaseImportCommand
-	*BaseExportCommand
+// AccountCMD ...
+type AccountCMD struct {
+	*BaseCMD
+	*BaseImportCMD
+	*BaseExportCMD
 }
 
-// NewAccountCommand constructs AccountCommand
-func NewAccountCommand(baseCommand *BaseCommand, baseImportCommand *BaseImportCommand, baseExportCommand *BaseExportCommand) *AccountCommand {
-	return &AccountCommand{
-		BaseCommand:       baseCommand,
-		BaseImportCommand: baseImportCommand,
-		BaseExportCommand: baseExportCommand,
+// NewAccountCMD constructs AccountCMD
+func NewAccountCMD(baseCMD *BaseCMD, baseImportCMD *BaseImportCMD, baseExportCMD *BaseExportCMD) *AccountCMD {
+	return &AccountCMD{
+		BaseCMD:       baseCMD,
+		BaseImportCMD: baseImportCMD,
+		BaseExportCMD: baseExportCMD,
 	}
 }
 
 // ImportWallet
-func (cmd *AccountCommand) ImportWallet(cliCtx *cli.Context) error {
+func (cmd *AccountCMD) ImportWallet(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -49,7 +49,7 @@ func (cmd *AccountCommand) ImportWallet(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
-	cmd.runImport(ctx, c, "wallets", wis, func(ctx context.Context, c *container.Container, ri resourceImport) error {
+	cmd.runImport(ctx, c, "wallets", wis, func(ctx context.Context, c *app.Container, ri resourceImport) error {
 		ctx = context.WithValue(ctx, "wallet", ri.resourceName)
 
 		r := _import.NewCsvReader(ri.filePath)
@@ -68,7 +68,7 @@ func (cmd *AccountCommand) ImportWallet(cliCtx *cli.Context) error {
 	return nil
 }
 
-func (cmd *AccountCommand) getWalletImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
+func (cmd *AccountCMD) getWalletImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
 	var wis []resourceImport
 
 	if cliCtx.String("file") == "" && cliCtx.String("wallet") != "" {
@@ -130,7 +130,7 @@ func (cmd *AccountCommand) getWalletImport(cliCtx *cli.Context, importPath strin
 	return wis, nil
 }
 
-func (cmd *AccountCommand) ImportOperation(cliCtx *cli.Context) error {
+func (cmd *AccountCMD) ImportOperation(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -148,7 +148,7 @@ func (cmd *AccountCommand) ImportOperation(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
-	err = cmd.runImport(ctx, c, "accounts", ois, func(ctx context.Context, c *container.Container, ri resourceImport) error {
+	err = cmd.runImport(ctx, c, "accounts", ois, func(ctx context.Context, c *app.Container, ri resourceImport) error {
 		ctx = context.WithValue(ctx, "wallet", ri.resourceName)
 
 		r := _import.NewCsvReader(ri.filePath)
@@ -171,7 +171,7 @@ func (cmd *AccountCommand) ImportOperation(cliCtx *cli.Context) error {
 }
 
 // ExportWalletItems List in csv format or print into screen the wallet items from a wallet
-func (cmd *AccountCommand) ExportWalletItems(cliCtx *cli.Context) error {
+func (cmd *AccountCMD) ExportWalletItems(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 

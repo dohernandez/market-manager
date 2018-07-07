@@ -69,3 +69,7 @@
 [[constraint]]
   name = "github.com/jasonlvhit/gocron"
   branch = "master"
+
+[[constraint]]
+  name = "github.com/yhat/scrape"
+  branch = "master"

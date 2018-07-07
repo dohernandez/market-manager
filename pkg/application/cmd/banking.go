@@ -1,4 +1,4 @@
-package command
+package cmd
 
 import (
 	"context"
@@ -7,27 +7,27 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/dohernandez/market-manager/pkg/container"
+	"github.com/dohernandez/market-manager/pkg/application"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/import/banking"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 
-// BankingCommand ...
-type BankingCommand struct {
-	*BaseCommand
-	*BaseImportCommand
+// BankingCMD ...
+type BankingCMD struct {
+	*BaseCMD
+	*BaseImportCMD
 }
 
-// NewBankingCommand constructs BankingCommand
-func NewBankingCommand(baseCommand *BaseCommand, baseImportCommand *BaseImportCommand) *BankingCommand {
-	return &BankingCommand{
-		BaseCommand:       baseCommand,
-		BaseImportCommand: baseImportCommand,
+// NewBankingCMD constructs BankingCMD
+func NewBankingCMD(baseCMD *BaseCMD, baseImportCMD *BaseImportCMD) *BankingCMD {
+	return &BankingCMD{
+		BaseCMD:       baseCMD,
+		BaseImportCMD: baseImportCMD,
 	}
 }
 
-func (cmd *BankingCommand) ImportTransfer(cliCtx *cli.Context) error {
+func (cmd *BankingCMD) ImportTransfer(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -45,7 +45,7 @@ func (cmd *BankingCommand) ImportTransfer(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
-	err = cmd.runImport(ctx, c, "transfers", tis, func(ctx context.Context, c *container.Container, ri resourceImport) error {
+	err = cmd.runImport(ctx, c, "transfers", tis, func(ctx context.Context, c *app.Container, ri resourceImport) error {
 		r := _import.NewCsvReader(ri.filePath)
 		i := import_banking.NewImportTransfer(ctx, r, c.BankingServiceInstance())
 
@@ -64,7 +64,7 @@ func (cmd *BankingCommand) ImportTransfer(cliCtx *cli.Context) error {
 
 	return nil
 }
-func (cmd *BankingCommand) getTransferImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
+func (cmd *BankingCMD) getTransferImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
 	var ris []resourceImport
 
 	if cliCtx.String("file") != "" {

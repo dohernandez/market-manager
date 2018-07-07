@@ -10,9 +10,9 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
-	"github.com/dohernandez/market-manager/pkg/market-manager/banking"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
 )
 
@@ -21,7 +21,7 @@ type (
 		ctx    context.Context
 		reader _import.Reader
 
-		bankingService *banking.Service
+		bankingService *service.Banking
 	}
 )
 
@@ -30,7 +30,7 @@ var _ _import.Import = &ImportTransfer{}
 func NewImportTransfer(
 	ctx context.Context,
 	reader _import.Reader,
-	bankingService *banking.Service,
+	bankingService *service.Banking,
 ) *ImportTransfer {
 	return &ImportTransfer{
 		ctx:            ctx,

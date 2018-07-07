@@ -19,9 +19,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
-	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
-	"github.com/dohernandez/market-manager/pkg/market-manager/banking"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
@@ -56,8 +54,8 @@ type Container struct {
 	ccClient  *cc.Client
 
 	purchaseService *service.Purchase
-	accountService  *account.Service
-	bankingService  *banking.Service
+	accountService  *service.Account
+	bankingService  *service.Banking
 
 	cache *cache.Cache
 }
@@ -259,9 +257,9 @@ func (c *Container) PurchaseServiceInstance() *service.Purchase {
 	return c.purchaseService
 }
 
-func (c *Container) AccountServiceInstance() *account.Service {
+func (c *Container) AccountServiceInstance() *service.Account {
 	if c.accountService == nil {
-		c.accountService = account.NewService(
+		c.accountService = service.NewAccountService(
 			c.walletFinderInstance(),
 			c.walletPersisterInstance(),
 			c.stockFinderInstance(),
@@ -273,9 +271,9 @@ func (c *Container) AccountServiceInstance() *account.Service {
 	return c.accountService
 }
 
-func (c *Container) BankingServiceInstance() *banking.Service {
+func (c *Container) BankingServiceInstance() *service.Banking {
 	if c.bankingService == nil {
-		c.bankingService = banking.NewService(
+		c.bankingService = service.NewBankingService(
 			c.bankAccountFinderInstance(),
 			c.transferPersisterInstance(),
 			c.AccountServiceInstance(),

@@ -175,6 +175,7 @@ func formatWalletItemsDividendToScreen(tw *tabwriter.Writer, precision int, item
 
 		waPrice := item.WeightedAveragePrice()
 
+		var dPrinted bool
 		if len(item.Stock.Dividends) > 0 {
 			for _, d := range item.Stock.Dividends {
 				if d.ExDate.Month() < month || d.ExDate.Year() < year {
@@ -194,9 +195,12 @@ func formatWalletItemsDividendToScreen(tw *tabwriter.Writer, precision int, item
 
 				sprintfStockDividend(tw, i, item, precision, waPrice, tExDate, strExDate, strAmount, strDYield, strWADYield)
 
+				dPrinted = true
 				break
 			}
-		} else {
+		}
+
+		if !dPrinted {
 			sprintfStockDividend(tw, i, item, precision, waPrice, tExDate, strExDate, strAmount, strDYield, strWADYield)
 		}
 	}

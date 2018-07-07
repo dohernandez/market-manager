@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/dohernandez/market-manager/pkg/market-manager/account"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
 )
@@ -11,11 +10,11 @@ type (
 		bankAccountFinder bank.Finder
 		transferPersister transfer.Persister
 
-		accountService *account.Service
+		accountService *Account
 	}
 )
 
-func NewBankingService(bankAccountFinder bank.Finder, transferPersister transfer.Persister, accountService *account.Service) *Banking {
+func NewBankingService(bankAccountFinder bank.Finder, transferPersister transfer.Persister, accountService *Account) *Banking {
 	return &Banking{
 		bankAccountFinder: bankAccountFinder,
 		transferPersister: transferPersister,
