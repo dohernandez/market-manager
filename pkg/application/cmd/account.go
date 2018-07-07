@@ -8,9 +8,9 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/dohernandez/market-manager/pkg/application"
-	exportAccount "github.com/dohernandez/market-manager/pkg/export/account"
-	"github.com/dohernandez/market-manager/pkg/import"
-	"github.com/dohernandez/market-manager/pkg/import/account"
+	exportAccount "github.com/dohernandez/market-manager/pkg/application/export/account"
+	"github.com/dohernandez/market-manager/pkg/application/import"
+	"github.com/dohernandez/market-manager/pkg/application/import/account"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 

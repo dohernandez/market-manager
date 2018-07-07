@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	"github.com/dohernandez/market-manager/pkg/application"
-	"github.com/dohernandez/market-manager/pkg/import"
+	"github.com/dohernandez/market-manager/pkg/application/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 )

@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/urfave/cli"
 
-	"github.com/dohernandez/market-manager/pkg/export"
-	exportAccount "github.com/dohernandez/market-manager/pkg/export/account"
+	"github.com/dohernandez/market-manager/pkg/application/export"
+	exportAccount "github.com/dohernandez/market-manager/pkg/application/export/account"
 )
 
 type (

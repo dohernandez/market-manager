@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	app "github.com/dohernandez/market-manager/pkg/application"
-	exportPurchase "github.com/dohernandez/market-manager/pkg/export/purchase"
-	"github.com/dohernandez/market-manager/pkg/import"
-	"github.com/dohernandez/market-manager/pkg/import/purchase"
+	exportPurchase "github.com/dohernandez/market-manager/pkg/application/export/purchase"
+	"github.com/dohernandez/market-manager/pkg/application/import"
+	"github.com/dohernandez/market-manager/pkg/application/import/purchase"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 

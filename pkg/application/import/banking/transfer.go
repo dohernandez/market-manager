@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/dohernandez/market-manager/pkg/application/service"
-	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
 )

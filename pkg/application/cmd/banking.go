@@ -8,8 +8,8 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/dohernandez/market-manager/pkg/application"
-	"github.com/dohernandez/market-manager/pkg/import"
-	"github.com/dohernandez/market-manager/pkg/import/banking"
+	"github.com/dohernandez/market-manager/pkg/application/import"
+	"github.com/dohernandez/market-manager/pkg/application/import/banking"
 	"github.com/dohernandez/market-manager/pkg/logger"
 )
 

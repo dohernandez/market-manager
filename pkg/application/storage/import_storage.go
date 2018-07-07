@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
-	"github.com/dohernandez/market-manager/pkg/import"
+	"github.com/dohernandez/market-manager/pkg/application/import"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 )
 

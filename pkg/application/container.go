@@ -13,9 +13,9 @@ import (
 	"github.com/sony/gobreaker"
 
 	"github.com/dohernandez/market-manager/pkg/application/config"
+	"github.com/dohernandez/market-manager/pkg/application/import"
 	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/application/storage"
-	"github.com/dohernandez/market-manager/pkg/import"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client/go-iex"
