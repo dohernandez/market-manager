@@ -1,5 +1,7 @@
-### Change this variables ###
-
+### --------------------------------------------------------------------------------------------------------------------
+### Variables
+### (https://www.gnu.org/software/make/manual/html_node/Using-Variables.html#Using-Variables)
+### --------------------------------------------------------------------------------------------------------------------
 NAME=market-manager
 
 VERSION ?= "dev"
@@ -75,11 +77,16 @@ usage:
 
 run: clean deps build install
 
+#-----------------------------------------------------------------------------------------------------------------------
+# House keeping - Cleans our project: deletes binaries
+#-----------------------------------------------------------------------------------------------------------------------
 clean:
 	@printf "$(OK_COLOR)==> Cleaning build artifacts$(NO_COLOR)\n"
 	@rm -rf $(BUILD_DIR)
 
-# Deps
+### --------------------------------------------------------------------------------------------------------------------
+# Dependencies
+### --------------------------------------------------------------------------------------------------------------------
 deps:
 	@git config --global url."https://${GITHUB_TOKEN}@github.com/dohernandez/".insteadOf "https://github.com/dohernandez/"
 	@git config --global http.https://gopkg.in.followRedirects true
@@ -98,7 +105,9 @@ deps-dev-overalls:
 	@printf "$(OK_COLOR)==> Installing overalls(NO_COLOR)\n"
 	@go get github.com/go-playground/overalls
 
-# Build
+### --------------------------------------------------------------------------------------------------------------------
+# Building
+### --------------------------------------------------------------------------------------------------------------------
 build:
 	@printf "$(OK_COLOR)==> Building Binary $(NO_COLOR)\n"
 	@go build -o ${BUILD_DIR}/${BINARY} ${GO_LINKER_FLAGS} ${BINARY_SRC}
@@ -106,7 +115,9 @@ build:
 build-docs:
 	@docker run --rm -w "/data/" -v `pwd`:/data mattjtodd/raml2html:7.0.0 raml2html  -i "docs/raml/api.raml" -o "docs/api.html"
 
-# Install
+### --------------------------------------------------------------------------------------------------------------------
+# Installing
+### --------------------------------------------------------------------------------------------------------------------
 install:
 	@printf "$(OK_COLOR)==> Installing using go install$(NO_COLOR)\n"
 	@go install ${REPO}
@@ -115,7 +126,9 @@ codecov: deps-dev-overalls
 	@printf "$(OK_COLOR)==> Running code coverage $(NO_COLOR)\n"
 	@overalls -project=github.com/dohernandez/market-manager -ignore="adapter,vendor,.glide,common" -covermode=count
 
-# Test
+### --------------------------------------------------------------------------------------------------------------------
+# Testing
+### --------------------------------------------------------------------------------------------------------------------
 test: test-unit test-integration
 
 test-unit:
@@ -126,7 +139,9 @@ test-integration:
 	@printf "$(OK_COLOR)==> Running integration tests$(NO_COLOR)\n"
 	@go test -godog -stop-on-failure -tag="${TAGS}" -feature="${FEATURE}"
 
-# Dev
+### --------------------------------------------------------------------------------------------------------------------
+# Developing
+### --------------------------------------------------------------------------------------------------------------------
 dev-run-http:
 	@CompileDaemon -build="make install" -graceful-kill -command="market-manager http"
 
@@ -135,6 +150,9 @@ dev-run-scheduler:
 
 dev-migrate:
 	@docker-compose run --rm --name app-migrations base market-manager migrate up
+
+dev-fix-style:
+	@./resources/dev/fix-style.sh
 
 # Dev with docker
 dev-docker-start:
@@ -170,7 +188,9 @@ dev-docker-logs:
 dev-docker-bash:
 	@docker-compose exec ${CONTAINER} bash
 
+### --------------------------------------------------------------------------------------------------------------------
 # Prod with docker
+### --------------------------------------------------------------------------------------------------------------------
 prod-docker-start:
 	@printf "$(OK_COLOR)==> Starting docker containers$(NO_COLOR)\n"
 	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
@@ -189,9 +209,11 @@ prod-docker-logs:
 prod-docker-bash:
 	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec ${CONTAINER} bash
 
-fix-style:
-	@./resources/dev/fix-style.sh
+### --------------------------------------------------------------------------------------------------------------------
+### RULES
+### (https://www.gnu.org/software/make/manual/html_node/Rule-Introduction.html#Rule-Introduction)
+### --------------------------------------------------------------------------------------------------------------------
 
 .PHONY: all usage run clean deps deps-dev build build-docs install test test-unit test-integration \
 dev-run-consumer dev-run-http dev-migrate dev-docker-start dev-docker-stop dev-docker-build dev-docker-migration \
-dev-docker-test-integration dev-docker-logs fix-style
+dev-docker-test-integration dev-docker-logs dev-fix-style
