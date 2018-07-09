@@ -63,6 +63,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/gogolfing/cbus"
+  packages = ["."]
+  revision = "aa9229165f6c77bbdc9e2f4b845c1374619e31fd"
+  version = "v3.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/jmoiron/sqlx"
   packages = [
@@ -200,6 +206,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c2f54fba493aad049d1f5ef86fe31211600bb4d923b7e311125fe4818c581d96"
+  inputs-digest = "f04bf2e563d390c8bac04cd5296c5eaac43813a595cc6894bb0796d7bf3962da"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -73,3 +73,7 @@
 [[constraint]]
   name = "github.com/yhat/scrape"
   branch = "master"
+
+[[constraint]]
+  name = "github.com/gogolfing/cbus"
+  version = "3.1.0"

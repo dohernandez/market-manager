@@ -16,6 +16,8 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 
+	"errors"
+
 	"github.com/dohernandez/market-manager/features/bootstrap"
 	"github.com/dohernandez/market-manager/pkg/application/config"
 )
@@ -58,6 +60,10 @@ func FeatureContext(s *godog.Suite) {
 	conf, err := config.LoadEnv()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if conf.Environment == "production" {
+		log.Fatal(errors.New("can not run feature test in production"))
 	}
 
 	envconfig.Process("", &eUrls)
