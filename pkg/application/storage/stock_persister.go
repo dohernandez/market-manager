@@ -88,7 +88,7 @@ func (p *stockPersister) execUpdatePrice(tx *sqlx.Tx, s *stock.Stock) error {
 			  	high_low_52_Week_update = $2 
 			  WHERE id = $3`
 
-	_, err := tx.Exec(query, s.Value.Amount, time.Now(), s.ID, s.Change.Amount, s.High52week.Amount, s.Low52week.Amount)
+	_, err := tx.Exec(query, s.Value.Amount, time.Now(), s.ID, s.Change.Amount, s.High52Week.Amount, s.Low52Week.Amount)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (p *stockPersister) UpdateHighLow52WeekPrice(s *stock.Stock) error {
 func (p *stockPersister) execUpdateHighLow52WeekPrice(tx *sqlx.Tx, s *stock.Stock) error {
 	query := `UPDATE stock SET high_52_week = $1, low_52_week = $2, high_low_52_Week_update = $3 WHERE id = $4`
 
-	_, err := tx.Exec(query, s.High52week.Amount, s.Low52week.Amount, time.Now(), s.ID)
+	_, err := tx.Exec(query, s.High52Week.Amount, s.Low52Week.Amount, time.Now(), s.ID)
 	if err != nil {
 		return err
 	}

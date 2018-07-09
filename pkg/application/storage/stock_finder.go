@@ -104,8 +104,8 @@ func (f *stockFinder) hydrate(tuple *stockTuple) *stock.Stock {
 		DividendYield:       dy,
 		Change:              mm.ValueDollarFromString(tuple.Change),
 		LastPriceUpdate:     tuple.LastPriceUpdate,
-		High52week:          mm.ValueFromStringAndExchange(tuple.High52week, tuple.ExchangeSymbol),
-		Low52week:           mm.ValueFromStringAndExchange(tuple.Low52week, tuple.ExchangeSymbol),
+		High52Week:          mm.ValueFromStringAndExchange(tuple.High52week, tuple.ExchangeSymbol),
+		Low52Week:           mm.ValueFromStringAndExchange(tuple.Low52week, tuple.ExchangeSymbol),
 		HighLow52WeekUpdate: tuple.HighLow52WeekUpdate,
 	}
 }

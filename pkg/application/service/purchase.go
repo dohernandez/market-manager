@@ -287,17 +287,17 @@ func (s *Purchase) updateLastClosedPriceOfStock(stk *stock.Stock, p stock.Price)
 		return err
 	}
 
-	if stk.High52week.Amount < p.High {
-		stk.High52week = mm.Value{
+	if stk.High52Week.Amount < p.High {
+		stk.High52Week = mm.Value{
 			Amount:   p.High,
-			Currency: stk.High52week.Currency,
+			Currency: stk.High52Week.Currency,
 		}
 	}
 
-	if stk.Low52week.Amount > p.Low {
-		stk.Low52week = mm.Value{
+	if stk.Low52Week.Amount > p.Low {
+		stk.Low52Week = mm.Value{
 			Amount:   p.High,
-			Currency: stk.Low52week.Currency,
+			Currency: stk.Low52Week.Currency,
 		}
 	}
 
@@ -415,8 +415,8 @@ func (s *Purchase) get52WeekHighLowPriceFromYahoo(stk *stock.Stock) (stock.Price
 	}
 
 	return stock.Price52WeekHighLow{
-		High: high52wk,
-		Low:  low52wk,
+		High52Week: high52wk,
+		Low52Week:  low52wk,
 	}, nil
 }
 
@@ -451,28 +451,28 @@ func (s *Purchase) get52WeekHighLowPriceFromGoogle(stk *stock.Stock) (stock.Pric
 	}
 
 	return stock.Price52WeekHighLow{
-		High: high52wk,
-		Low:  low52wk,
+		High52Week: high52wk,
+		Low52Week:  low52wk,
 	}, nil
 
 	p := gps[len(gps)-1]
 
 	return stock.Price52WeekHighLow{
-		High: p.High,
-		Low:  p.Low,
+		High52Week: p.High,
+		Low52Week:  p.Low,
 	}, nil
 }
 
 func (s *Purchase) update52WeekHighLowPriceOfStock(stk *stock.Stock, p stock.Price52WeekHighLow) error {
 	c := mm.ExchangeCurrency(stk.Exchange.Symbol)
 
-	stk.High52week = mm.Value{
-		Amount:   p.High,
+	stk.High52Week = mm.Value{
+		Amount:   p.High52Week,
 		Currency: c,
 	}
 
-	stk.Low52week = mm.Value{
-		Amount:   p.Low,
+	stk.Low52Week = mm.Value{
+		Amount:   p.Low52Week,
 		Currency: c,
 	}
 

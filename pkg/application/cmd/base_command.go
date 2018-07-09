@@ -24,7 +24,6 @@ import (
 	"github.com/dohernandez/market-manager/pkg/application/storage"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
-	"github.com/dohernandez/market-manager/pkg/infrastructure/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 )
 
@@ -77,17 +76,18 @@ func (cmd *BaseCMD) initCommandBus() *cbus.Bus {
 	walletPersister := storage.NewWalletPersister(db)
 
 	// CLIENT
-	timeout := time.Second * time.Duration(cmd.config.IEXTrading.Timeout)
-	iexClient := iex.NewClient(cmd.newHTTPClient("IEX-TRADING", timeout))
+	//timeout := time.Second * time.Duration(cmd.config.IEXTrading.Timeout)
+	//iexClient := iex.NewClient(cmd.newHTTPClient("IEX-TRADING", timeout))
 
-	timeout = time.Second * time.Duration(cmd.config.CurrencyConverter.Timeout)
+	timeout := time.Second * time.Duration(cmd.config.CurrencyConverter.Timeout)
 	ccClient := cc.NewClient(cmd.newHTTPClient("CURRENCY-CONVERTER", timeout), cmd.cache)
 
 	// SERVICE
-	stockPrice := service.NewStockPrice(cmd.ctx, iexClient)
+	//stockPrice := service.NewStockPrice(cmd.ctx, iexClient)
+	stockPriceScrapeYahoo := service.NewStockPriceScrapeYahoo(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
 
 	// HANDLER
-	updateAllStockPriceHandler := handler.NewUpdateAllStockPrice(stockFinder, stockPrice, stockPersister)
+	updateAllStockPriceHandler := handler.NewUpdateAllStockPrice(stockFinder, stockPriceScrapeYahoo, stockPersister)
 
 	// LISTENER
 	updateStockDividendYield := listener.NewUpdateStockDividendYield(stockDividendFinder, stockPersister)

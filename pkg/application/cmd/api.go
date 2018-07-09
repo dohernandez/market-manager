@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"net/http"
-
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/urfave/cli"
-	"github.com/yhat/scrape"
-	"golang.org/x/net/html"
-	"golang.org/x/net/html/atom"
+
+	"github.com/dohernandez/market-manager/pkg/application/service"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
 // ApiCMD ...
@@ -104,56 +101,64 @@ func (cmd *ApiCMD) Run(cliCtx *cli.Context) error {
 	//
 	//fmt.Println(prices)
 
-	type yhaooSummary struct {
-		MarketCap string
-		PERatio   string
-		EPS       string
-	}
+	//type yhaooSummary struct {
+	//	MarketCap string
+	//	PERatio   string
+	//	EPS       string
+	//}
+	//
+	//var ys yhaooSummary
+	//
+	//resp, err := http.Get("https://finance.yahoo.com/quote/HEP?p=HEP")
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//root, err := html.Parse(resp.Body)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//// define a matcher
+	//matcher := func(n *html.Node) bool {
+	//	// must check for nil values
+	//	if n.DataAtom == atom.Div && scrape.Attr(n, "data-test") == "right-summary-table" {
+	//		if n.Parent.DataAtom == atom.Div && scrape.Attr(n.Parent, "id") == "quote-summary" {
+	//			return true
+	//		}
+	//	}
+	//
+	//	return false
+	//}
+	//
+	//rightSummaryTable, ok := scrape.Find(root, matcher)
+	//if !ok {
+	//	return errors.New("EPS not found")
+	//}
+	//
+	//rows := scrape.FindAll(rightSummaryTable, scrape.ByTag(atom.Tr))
+	//
+	//for i, row := range rows {
+	//	switch i {
+	//	case 0:
+	//		ys.MarketCap = scrape.Text(row.FirstChild.NextSibling)
+	//	case 2:
+	//		ys.PERatio = scrape.Text(row.FirstChild.NextSibling)
+	//	case 3:
+	//		ys.EPS = scrape.Text(row.FirstChild.NextSibling)
+	//	}
+	//}
 
-	var ys yhaooSummary
+	ps := service.NewStockPriceScrapeYahoo(cmd.ctx, "https://finance.yahoo.com/quote")
 
-	resp, err := http.Get("https://finance.yahoo.com/quote/HEP?p=HEP")
+	p, err := ps.Price(&stock.Stock{Symbol: "EXPE"})
 	if err != nil {
-		panic(err)
+		fmt.Printf("%+v", err)
+
+		return err
 	}
 
-	root, err := html.Parse(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	// define a matcher
-	matcher := func(n *html.Node) bool {
-		// must check for nil values
-		if n.DataAtom == atom.Div && scrape.Attr(n, "data-test") == "right-summary-table" {
-			if n.Parent.DataAtom == atom.Div && scrape.Attr(n.Parent, "id") == "quote-summary" {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	rightSummaryTable, ok := scrape.Find(root, matcher)
-	if !ok {
-		return errors.New("EPS not found")
-	}
-
-	rows := scrape.FindAll(rightSummaryTable, scrape.ByTag(atom.Tr))
-
-	for i, row := range rows {
-		switch i {
-		case 0:
-			ys.MarketCap = scrape.Text(row.FirstChild.NextSibling)
-		case 2:
-			ys.PERatio = scrape.Text(row.FirstChild.NextSibling)
-		case 3:
-			ys.EPS = scrape.Text(row.FirstChild.NextSibling)
-		}
-	}
-
-	fmt.Printf("%+v\n", ys)
-	//fmt.Printf("%2d %s (%s)\n", i, scrape.Text(article), scrape.Attr(article, "href"))
+	fmt.Printf("%+v\n", p)
 
 	return nil
 }

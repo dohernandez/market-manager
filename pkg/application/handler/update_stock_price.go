@@ -30,17 +30,27 @@ func (h *updateStockPrice) updateStock(stk *stock.Stock) error {
 		Currency: mm.Dollar,
 	}
 
-	if stk.High52week.Amount < p.High {
-		stk.High52week = mm.Value{
+	if p.High52Week > 0 {
+		stk.High52Week = mm.Value{
+			Amount:   p.High52Week,
+			Currency: stk.High52Week.Currency,
+		}
+	} else if stk.High52Week.Amount < p.High {
+		stk.High52Week = mm.Value{
 			Amount:   p.High,
-			Currency: stk.High52week.Currency,
+			Currency: stk.High52Week.Currency,
 		}
 	}
 
-	if stk.Low52week.Amount > p.Low {
-		stk.Low52week = mm.Value{
+	if p.Low52Week > 0 {
+		stk.Low52Week = mm.Value{
+			Amount:   p.Low52Week,
+			Currency: stk.Low52Week.Currency,
+		}
+	} else if stk.Low52Week.Amount > p.Low {
+		stk.Low52Week = mm.Value{
 			Amount:   p.High,
-			Currency: stk.Low52week.Currency,
+			Currency: stk.Low52Week.Currency,
 		}
 	}
 

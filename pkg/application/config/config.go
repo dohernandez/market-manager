@@ -34,9 +34,10 @@ type Specification struct {
 	CurrencyConverter struct {
 		Timeout int `envconfig:"CURRENCY_CONVERTER_TIMEOUT" default:"15"`
 	}
-	YahooUrls struct {
-		QuoteFinanceBaseURL string `envconfig:"FINANCE_YAHOO_BASEURL" default:"https://finance.yahoo.com"`
-		QuoteQuery1BaseURL  string `envconfig:"QUERY1_YAHOO_BASEURL" default:"https://query1.finance.yahoo.com"`
+	QuoteScraper struct {
+		FinanceYahooBaseURL  string `envconfig:"FINANCE_YAHOO_BASEURL" default:"https://finance.yahoo.com"`
+		Query1YahooBaseURL   string `envconfig:"QUERY1_YAHOO_BASEURL" default:"https://query1.finance.yahoo.com"`
+		FinanceYahooQuoteURL string `envconfig:"FINANCE_YAHOO_QUOTE_URL" default:"https://finance.yahoo.com/quote"`
 	}
 
 	Degiro struct {
@@ -135,8 +136,8 @@ func LoadEnv() (*Specification, error) {
 		return nil, err
 	}
 
-	quote.YahooUrls.FinanceBaseURL = config.YahooUrls.QuoteFinanceBaseURL
-	quote.YahooUrls.Query1BaseURL = config.YahooUrls.QuoteQuery1BaseURL
+	quote.YahooUrls.FinanceBaseURL = config.QuoteScraper.FinanceYahooBaseURL
+	quote.YahooUrls.Query1BaseURL = config.QuoteScraper.Query1YahooBaseURL
 
 	return &config, err
 }

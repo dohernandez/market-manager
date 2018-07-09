@@ -271,8 +271,8 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 			item.Amount,
 			export.PrintValue(item.Stock.Value, precision),
 			export.PrintValue(waPrice, precision),
-			export.PrintValue(item.Stock.High52week, precision),
-			export.PrintValue(item.Stock.Low52week, precision),
+			export.PrintValue(item.Stock.High52Week, precision),
+			export.PrintValue(item.Stock.Low52Week, precision),
 			export.PrintValue(item.Stock.BuyUnder(), precision),
 			export.PrintDateTime(item.Stock.LastPriceUpdate),
 		)

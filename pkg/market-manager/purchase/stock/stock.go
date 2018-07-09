@@ -32,8 +32,8 @@ type (
 		DividendYield       float64
 		Change              mm.Value
 		LastPriceUpdate     time.Time
-		High52week          mm.Value
-		Low52week           mm.Value
+		High52Week          mm.Value
+		Low52Week           mm.Value
 		HighLow52WeekUpdate time.Time
 		Type                *Info
 		Sector              *Info
@@ -42,19 +42,21 @@ type (
 
 	// Price represents stock's price struct
 	Price struct {
-		Date   time.Time
-		Close  float64
-		High   float64
-		Low    float64
-		Open   float64
-		Change float64
-		Volume int64
+		Date       time.Time
+		Close      float64
+		High       float64
+		Low        float64
+		Open       float64
+		Change     float64
+		Volume     int64
+		High52Week float64
+		Low52Week  float64
 	}
 
 	// Price52WeekHighLow represents 52 week high -low stock's price struct
 	Price52WeekHighLow struct {
-		High float64
-		Low  float64
+		High52Week float64
+		Low52Week  float64
 	}
 )
 
@@ -94,14 +96,14 @@ func NewStock(market *market.Market, exchange *exchange.Exchange, name, symbol s
 // 0 - Price between 31% - 70%
 // -1 - Price between 0% - 30%
 func (s *Stock) ComparePriceWithHighLow() int {
-	r52wk := s.High52week.Decrease(s.Low52week)
+	r52wk := s.High52Week.Decrease(s.Low52Week)
 	p := s.Value
 
-	if p.Amount > s.High52week.Amount-r52wk.Amount/3 {
+	if p.Amount > s.High52Week.Amount-r52wk.Amount/3 {
 		return 1
 	}
 
-	if p.Amount > s.Low52week.Amount+r52wk.Amount/3 {
+	if p.Amount > s.Low52Week.Amount+r52wk.Amount/3 {
 		return 0
 	}
 
@@ -110,10 +112,10 @@ func (s *Stock) ComparePriceWithHighLow() int {
 
 // BuyUnder Price proposal when is appropriate to buy the stock
 func (s *Stock) BuyUnder() mm.Value {
-	r52wk := s.High52week.Decrease(s.Low52week)
+	r52wk := s.High52Week.Decrease(s.Low52Week)
 
 	return mm.Value{
-		Amount:   s.High52week.Amount - r52wk.Amount/3*2,
+		Amount:   s.High52Week.Amount - r52wk.Amount/3*2,
 		Currency: r52wk.Currency,
 	}
 }
