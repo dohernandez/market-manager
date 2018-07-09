@@ -210,13 +210,15 @@ func (s *stockPriceScrapeYahoo) Price(stk *stock.Stock) (stock.Price, error) {
 	logger.FromContext(s.ctx).Debugf("got yahoo summary %+v from stock %s", sYahooSummary, stk.Symbol)
 
 	p := stock.Price{
-		Date:   time.Now(),
-		Close:  sYahooSummary.Close,
-		Open:   sYahooSummary.Open,
-		High:   sYahooSummary.High,
-		Low:    sYahooSummary.Low,
-		Volume: sYahooSummary.Volume,
-		Change: sYahooSummary.Change,
+		Date:       time.Now(),
+		Close:      sYahooSummary.Close,
+		Open:       sYahooSummary.Open,
+		High:       sYahooSummary.High,
+		Low:        sYahooSummary.Low,
+		Volume:     sYahooSummary.Volume,
+		Change:     sYahooSummary.Change,
+		High52Week: sYahooSummary.High52Week,
+		Low52Week:  sYahooSummary.Low52Week,
 	}
 	logger.FromContext(s.ctx).Debugf("got price %+v from stock %s", p, stk.Symbol)
 
