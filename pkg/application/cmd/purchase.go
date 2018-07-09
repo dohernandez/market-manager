@@ -113,56 +113,13 @@ func (cmd *PurchaseCMD) UpdatePrice(cliCtx *cli.Context) error {
 	bus := cmd.initCommandBus()
 
 	if cliCtx.String("stock") == "" {
-		//stocks, err := stockService.Stocks()
-		//if err != nil {
-		//	logger.FromContext(ctx).Debugf("err: %v\n", err)
-		//
-		//	return err
-		//}
-		//
-		//errs := stockService.UpdateLastClosedPriceStocks(stocks)
-		//if len(errs) > 0 {
-		//	if stocks == nil {
-		//		for _, err := range errs {
-		//			logger.FromContext(ctx).Debugf("err: %v\n", err)
-		//		}
-		//
-		//		return errs[0]
-		//	} else {
-		//		logger.FromContext(ctx).Debug("some errs happen while updating stocks price:")
-		//		for _, err := range errs {
-		//			logger.FromContext(ctx).Debugf("err: %v\n", err)
-		//		}
-		//	}
-		//}
-
 		_, err := bus.ExecuteContext(ctx, &command.UpdateAllStocksPrice{})
-
-		return err
-	} else {
-		// Database connection
-		logger.FromContext(ctx).Info("Initializing database connection")
-		db, err := cmd.initDatabaseConnection()
 		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed initializing database")
-		}
-
-		c := cmd.Container(db)
-
-		stockService := c.PurchaseServiceInstance()
-
-		stock, err := stockService.FindStockBySymbol(cliCtx.String("stock"))
-		if err != nil {
-			logger.FromContext(ctx).Debugf("err: %v\n", err)
-
 			return err
 		}
-
-		err = stockService.UpdateLastClosedPriceStock(stock)
+	} else {
+		_, err := bus.ExecuteContext(ctx, &command.UpdateOneStockPrice{Symbol: cliCtx.String("stock")})
 		if err != nil {
-			logger.FromContext(ctx).Debug("some errs happen while updating stocks price:")
-			logger.FromContext(ctx).Debugf("err: %v\n", err)
-
 			return err
 		}
 	}

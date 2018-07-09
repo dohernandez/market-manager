@@ -88,6 +88,7 @@ func (cmd *BaseCMD) initCommandBus() *cbus.Bus {
 
 	// HANDLER
 	updateAllStockPriceHandler := handler.NewUpdateAllStockPrice(stockFinder, stockPriceScrapeYahoo, stockPersister)
+	updateOneStockPrice := handler.NewUpdateOneStockPrice(stockFinder, stockPriceScrapeYahoo, stockPersister)
 
 	// LISTENER
 	updateStockDividendYield := listener.NewUpdateStockDividendYield(stockDividendFinder, stockPersister)
@@ -102,8 +103,11 @@ func (cmd *BaseCMD) initCommandBus() *cbus.Bus {
 	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateStockDividendYield)
 	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateWalletCapital)
 
-	// Update all stock price
-	bus.Handle(&command.UpdateOneStockPrice{}, handler.NewUpdateOneStockPrice(stockFinder))
+	// Update one stock price
+	updateOneStocksPrice := command.UpdateOneStockPrice{}
+	bus.Handle(&updateOneStocksPrice, updateOneStockPrice)
+	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockDividendYield)
+	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateWalletCapital)
 
 	return &bus
 }
