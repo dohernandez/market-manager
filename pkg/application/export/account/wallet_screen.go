@@ -158,7 +158,7 @@ func formatWalletItemsDividendToScreen(tw *tabwriter.Writer, precision int, item
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Last Price Update\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Updated At\t")
 
 	now := time.Now()
 	month := now.Month()
@@ -253,7 +253,7 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t High 52wk\t Low 52wk\t Buy Under\t Last Price Update\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t High 52wk\t Low 52wk\t Buy Under\t EPS\t P/E\t Updated At\t")
 
 	normal := color.New(color.FgWhite).FprintlnFunc()
 	overSell := color.New(color.FgGreen).FprintlnFunc()
@@ -263,7 +263,7 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 		waPrice := item.WeightedAveragePrice()
 
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t",
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %.*f\t %.*f\t %s\t",
 			i+1,
 			item.Stock.Name,
 			item.Stock.Exchange.Symbol,
@@ -274,6 +274,10 @@ func formatStockItemsToScreen(tw *tabwriter.Writer, precision int, items []*wall
 			export.PrintValue(item.Stock.High52Week, precision),
 			export.PrintValue(item.Stock.Low52Week, precision),
 			export.PrintValue(item.Stock.BuyUnder(), precision),
+			precision,
+			item.Stock.EPS,
+			precision,
+			item.Stock.PER,
 			export.PrintDateTime(item.Stock.LastPriceUpdate),
 		)
 
@@ -320,7 +324,7 @@ func formatStockItemsDividendToScreen(tw *tabwriter.Writer, precision int, items
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Last Price Update\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Updated At\t")
 
 	for i, item := range items {
 		var (

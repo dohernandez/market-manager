@@ -9,6 +9,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
+	"fmt"
+	"strings"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
@@ -28,6 +31,8 @@ type (
 		High52week          string    `db:"high_52_week"`
 		Low52week           string    `db:"low_52_week"`
 		HighLow52WeekUpdate time.Time `db:"high_low_52_week_update"`
+		EPS                 string    `db:"eps"`
+		PER                 string    `db:"per"`
 
 		MarketID          uuid.UUID `db:"market_id"`
 		MarketName        string    `db:"market_name"`
@@ -54,16 +59,13 @@ func NewStockFinder(db sqlx.Queryer) *stockFinder {
 func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 	var tuples []stockTuple
 
-	query := `
+	query := fmt.Sprintf(`
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
-			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
-			m.name AS market_name, m.display_name AS market_display_name,
-			e.name AS exchange_name, e.symbol AS exchange_symbol
+			%s
 		FROM stock s 
 		INNER JOIN market m ON s.market_id = m.id
 		INNER JOIN exchange e ON s.exchange_id = e.id
-	`
+	`, strings.Join(f.selectStockColumns(), ", "))
 
 	err := sqlx.Select(f.db, &tuples, query)
 	if err != nil {
@@ -83,8 +85,33 @@ func (f *stockFinder) FindAll() ([]*stock.Stock, error) {
 	return ss, nil
 }
 
+func (f *stockFinder) selectStockColumns() []string {
+	return []string{
+		"s.id",
+		"s.name",
+		"s.symbol",
+		"s.market_id",
+		"s.exchange_id",
+		"s.value",
+		"s.dividend_yield",
+		"s.change",
+		"s.last_price_update",
+		"s.high_52_week",
+		"s.low_52_week",
+		"s.high_low_52_week_update",
+		"m.name AS market_name",
+		"m.display_name AS market_display_name",
+		"e.name AS exchange_name",
+		"e.symbol AS exchange_symbol",
+		"s.eps",
+		"s.per",
+	}
+}
+
 func (f *stockFinder) hydrate(tuple *stockTuple) *stock.Stock {
 	dy, _ := strconv.ParseFloat(tuple.DividendYield, 64)
+	eps, _ := strconv.ParseFloat(tuple.EPS, 64)
+	per, _ := strconv.ParseFloat(tuple.PER, 64)
 
 	return &stock.Stock{
 		ID: tuple.ID,
@@ -107,23 +134,22 @@ func (f *stockFinder) hydrate(tuple *stockTuple) *stock.Stock {
 		High52Week:          mm.ValueFromStringAndExchange(tuple.High52week, tuple.ExchangeSymbol),
 		Low52Week:           mm.ValueFromStringAndExchange(tuple.Low52week, tuple.ExchangeSymbol),
 		HighLow52WeekUpdate: tuple.HighLow52WeekUpdate,
+		EPS:                 eps,
+		PER:                 per,
 	}
 }
 
 func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
 	var tuple stockTuple
 
-	query := `
+	query := fmt.Sprintf(`
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
-			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
-			m.name AS market_name, m.display_name AS market_display_name,
-			e.name AS exchange_name, e.symbol AS exchange_symbol
+			%s
 		FROM stock s 
 		INNER JOIN market m ON s.market_id = m.id
 		INNER JOIN exchange e ON s.exchange_id = e.id
 		WHERE s.symbol LIKE upper($1)
-	`
+	`, strings.Join(f.selectStockColumns(), ", "))
 
 	err := sqlx.Get(f.db, &tuple, query, symbol)
 	if err != nil {
@@ -140,17 +166,14 @@ func (f *stockFinder) FindBySymbol(symbol string) (*stock.Stock, error) {
 func (f *stockFinder) FindByName(name string) (*stock.Stock, error) {
 	var tuple stockTuple
 
-	query := `
+	query := fmt.Sprintf(`
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
-			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
-			m.name AS market_name, m.display_name AS market_display_name,
-			e.name AS exchange_name, e.symbol AS exchange_symbol
+			%s
 		FROM stock s 
 		INNER JOIN market m ON s.market_id = m.id
 		INNER JOIN exchange e ON s.exchange_id = e.id
 		WHERE s.name LIKE $1
-	`
+	`, strings.Join(f.selectStockColumns(), ", "))
 
 	err := sqlx.Get(f.db, &tuple, query, name)
 	if err != nil {
@@ -167,17 +190,14 @@ func (f *stockFinder) FindByName(name string) (*stock.Stock, error) {
 func (f *stockFinder) FindByID(ID uuid.UUID) (*stock.Stock, error) {
 	var tuple stockTuple
 
-	query := `
+	query := fmt.Sprintf(`
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
-			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
-			m.name AS market_name, m.display_name AS market_display_name,
-			e.name AS exchange_name, e.symbol AS exchange_symbol
+			%s
 		FROM stock s 
 		INNER JOIN market m ON s.market_id = m.id
 		INNER JOIN exchange e ON s.exchange_id = e.id
 		WHERE s.id = $1
-	`
+	`, strings.Join(f.selectStockColumns(), ", "))
 
 	err := sqlx.Get(f.db, &tuple, query, ID)
 	if err != nil {
@@ -194,17 +214,14 @@ func (f *stockFinder) FindByID(ID uuid.UUID) (*stock.Stock, error) {
 func (f *stockFinder) FindAllByExchanges(exchanges []string) ([]*stock.Stock, error) {
 	var tuples []stockTuple
 
-	query := `
+	query := fmt.Sprintf(`
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
-			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
-			m.name AS market_name, m.display_name AS market_display_name,
-			e.name AS exchange_name, e.symbol AS exchange_symbol
+			%s
 		FROM stock s 
 		INNER JOIN market m ON s.market_id = m.id
 		INNER JOIN exchange e ON s.exchange_id = e.id
 		WHERE upper(e.symbol) IN (?)
-	`
+	`, strings.Join(f.selectStockColumns(), ", "))
 
 	query, args, err := sqlx.In(query, exchanges)
 	if err != nil {
@@ -240,12 +257,9 @@ func (f *stockFinder) FindAllByDividendAnnounceProjectYearAndMonth(year, month i
 
 	var tuples []stockWithDividendsTuple
 
-	query := `
+	query := fmt.Sprintf(`
 		SELECT 
-			s.id, s.name, s.symbol, s.market_id, s.exchange_id, s.value, s.dividend_yield, s.change, s.last_price_update,
-			s.high_52_week, s.low_52_week, s.high_low_52_week_update,
-			m.name AS market_name, m.display_name AS market_display_name,
-			e.name AS exchange_name, e.symbol AS exchange_symbol,
+			%s,
            	sd.ex_date AS dividend_ex_date, sd.status AS dividend_status, sd.amount AS dividend_amount, sd.record_date AS dividend_record_date
 		FROM stock s 
 		INNER JOIN market m ON s.market_id = m.id
@@ -254,7 +268,7 @@ func (f *stockFinder) FindAllByDividendAnnounceProjectYearAndMonth(year, month i
 		WHERE sd.status IN ('announced', 'projected')
        	AND EXTRACT(YEAR FROM sd.ex_date) = $1
 		AND EXTRACT(MONTH FROM sd.ex_date) = $2
-	`
+	`, strings.Join(f.selectStockColumns(), ", "))
 	err := sqlx.Select(f.db, &tuples, query, year, month)
 	if err != nil {
 		if err == sql.ErrNoRows {

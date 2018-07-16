@@ -219,6 +219,8 @@ func (s *stockPriceScrapeYahoo) Price(stk *stock.Stock) (stock.Price, error) {
 		Change:     sYahooSummary.Change,
 		High52Week: sYahooSummary.High52Week,
 		Low52Week:  sYahooSummary.Low52Week,
+		EPS:        sYahooSummary.EPS,
+		PER:        sYahooSummary.PERatio,
 	}
 	logger.FromContext(s.ctx).Debugf("got price %+v from stock %s", p, stk.Symbol)
 
@@ -349,13 +351,17 @@ func (s *stockPriceScrapeYahoo) marshalQuoteSummaryLeftTable(root *html.Node, sY
 		case 4:
 			highLowDay := strings.Split(scrape.Text(row.FirstChild.NextSibling), " - ")
 
-			sYahooSummary.Low, _ = strconv.ParseFloat(highLowDay[0], 64)
-			sYahooSummary.High, _ = strconv.ParseFloat(highLowDay[1], 64)
+			if len(highLowDay) == 2 {
+				sYahooSummary.Low, _ = strconv.ParseFloat(highLowDay[0], 64)
+				sYahooSummary.High, _ = strconv.ParseFloat(highLowDay[1], 64)
+			}
 		case 5:
 			highLow52week := strings.Split(scrape.Text(row.FirstChild.NextSibling), " - ")
 
-			sYahooSummary.Low52Week, _ = strconv.ParseFloat(highLow52week[0], 64)
-			sYahooSummary.High52Week, _ = strconv.ParseFloat(highLow52week[1], 64)
+			if len(highLow52week) == 2 {
+				sYahooSummary.Low52Week, _ = strconv.ParseFloat(highLow52week[0], 64)
+				sYahooSummary.High52Week, _ = strconv.ParseFloat(highLow52week[1], 64)
+			}
 		case 6:
 			vStr := s.sanitizeVolume(scrape.Text(row.FirstChild.NextSibling))
 			sYahooSummary.Volume, _ = strconv.ParseInt(vStr, 10, 64)

@@ -85,10 +85,22 @@ func (p *stockPersister) execUpdatePrice(tx *sqlx.Tx, s *stock.Stock) error {
 			  	change = $4,
 			  	high_52_week = $5, 
 			  	low_52_week = $6, 
-			  	high_low_52_Week_update = $2 
+			  	high_low_52_Week_update = $2,
+			  	eps = $7,
+			  	per = $8 
 			  WHERE id = $3`
 
-	_, err := tx.Exec(query, s.Value.Amount, time.Now(), s.ID, s.Change.Amount, s.High52Week.Amount, s.Low52Week.Amount)
+	_, err := tx.Exec(
+		query,
+		s.Value.Amount,
+		time.Now(),
+		s.ID,
+		s.Change.Amount,
+		s.High52Week.Amount,
+		s.Low52Week.Amount,
+		s.EPS,
+		s.PER,
+	)
 	if err != nil {
 		return err
 	}

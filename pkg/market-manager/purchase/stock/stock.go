@@ -38,6 +38,8 @@ type (
 		Type                *Info
 		Sector              *Info
 		Industry            *Info
+		EPS                 float64
+		PER                 float64
 	}
 
 	// Price represents stock's price struct
@@ -51,6 +53,8 @@ type (
 		Volume     int64
 		High52Week float64
 		Low52Week  float64
+		EPS        float64
+		PER        float64
 	}
 
 	// Price52WeekHighLow represents 52 week high -low stock's price struct

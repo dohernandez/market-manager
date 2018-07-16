@@ -38,7 +38,7 @@ func formatStocksToScreen(stks []*stock.Stock, sorting export.Sorting, gby expor
 
 	if gby != ExDateMonth {
 		noColor(tw, "")
-		header(tw, "#\t Stock\t Market\t Symbol\t Value\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t Ex Date\t Change\t Last Price Update\t")
+		header(tw, "#\t Stock\t Market\t Symbol\t Value\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t Ex Date\t Change\t Updated At\t")
 		addStocksToTabWriter(tw, sortStks, precision)
 	} else {
 		mSortStks := map[string][]*stock.Stock{}
@@ -84,7 +84,7 @@ func formatStocksToScreen(stks []*stock.Stock, sorting export.Sorting, gby expor
 
 			noColor(tw, "")
 
-			header(tw, "#\t Stock\t Market\t Symbol\t Value\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t Ex Date\t Change\t Last Price Update\t")
+			header(tw, "#\t Stock\t Market\t Symbol\t Value\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t EPS\t Ex Date\t Change\t Updated At\t")
 			addStocksToTabWriter(tw, mSortStks[key], precision)
 		}
 	}
@@ -112,7 +112,7 @@ func addStocksToTabWriter(tw *tabwriter.Writer, stks []*stock.Stock, precision i
 		}
 
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t",
+			"%d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f\t %s\t %s\t %s\t",
 			i+1,
 			stk.Name,
 			stk.Exchange.Symbol,
@@ -122,6 +122,8 @@ func addStocksToTabWriter(tw *tabwriter.Writer, stks []*stock.Stock, precision i
 			export.PrintValue(stk.Low52Week, precision),
 			export.PrintValue(stk.BuyUnder(), precision),
 			strDYield,
+			precision,
+			stk.EPS,
 			export.PrintDate(strExDate),
 			export.PrintValue(stk.Change, precision),
 			export.PrintDate(stk.LastPriceUpdate),
@@ -161,7 +163,7 @@ func formatStocksDividendsToScreen(stks []*stock.Stock, sorting export.Sorting) 
 	noColor(w, "")
 
 	header := color.New(color.Bold, color.FgBlack).FprintlnFunc()
-	header(w, "#\t Stock\t Market\t Symbol\t Value\t D. Yield\t Ex Date\t Record Date\t Status\t Amount\t Change\t Last Price Update\t")
+	header(w, "#\t Stock\t Market\t Symbol\t Value\t D. Yield\t Ex Date\t Record Date\t Status\t Amount\t Change\t Updated At\t")
 
 	pColor := color.New(color.Bold, color.FgWhite).FprintlnFunc()
 	for i, stk := range sortStks {

@@ -54,6 +54,9 @@ func (h *updateStockPrice) updateStock(stk *stock.Stock) error {
 		}
 	}
 
+	stk.EPS = p.EPS
+	stk.PER = p.PER
+
 	if err := h.stockPersister.UpdatePrice(stk); err != nil {
 		return errors.Wrapf(err, "symbol : %s", stk.Symbol)
 	}
