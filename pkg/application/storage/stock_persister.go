@@ -149,3 +149,24 @@ func (p *stockPersister) execUpdateHighLow52WeekPrice(tx *sqlx.Tx, s *stock.Stoc
 
 	return nil
 }
+
+func (p *stockPersister) UpdatePriceVolatility(s *stock.Stock) error {
+	return transaction(p.db, func(tx *sqlx.Tx) error {
+		if err := p.execUpdatePriceVolatility(tx, s); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (p *stockPersister) execUpdatePriceVolatility(tx *sqlx.Tx, s *stock.Stock) error {
+	query := `UPDATE stock SET hv_20_day = $1, hv_52_week = $2, price_volatility_update = $3 WHERE id = $4`
+
+	_, err := tx.Exec(query, s.HV20Day, s.HV52Week, time.Now(), s.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -55,6 +55,8 @@ func (cmd *ApiCMD) Run(cliCtx *cli.Context) error {
 	//}
 	//
 
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//now := time.Now()
 	//wk52back := now.Add(-52 * 7 * 24 * time.Hour)
 	//
@@ -101,15 +103,30 @@ func (cmd *ApiCMD) Run(cliCtx *cli.Context) error {
 	//
 	//fmt.Println(prices)
 
-	//type yhaooSummary struct {
-	//	MarketCap string
-	//	PERatio   string
-	//	EPS       string
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// SCRAPE
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//type marketChameleon struct {
+	//	StockDividend struct {
+	//		NextExDate     string
+	//		Amount         string
+	//		ChangePrevYear string
+	//		ForwardYield   string
+	//	}
+	//	StockInfo struct {
+	//		Type     string
+	//		Sector   string
+	//		Industry string
+	//	}
+	//	StockVolatility struct {
+	//		HV20Day  string
+	//		HV52Week string
+	//	}
 	//}
 	//
-	//var ys yhaooSummary
+	//var mc marketChameleon
 	//
-	//resp, err := http.Get("https://finance.yahoo.com/quote/HEP?p=HEP")
+	//resp, err := http.Get(fmt.Sprintf("https://marketchameleon.com/Overview/%s/Dividends/", "CSCO"))
 	//if err != nil {
 	//	panic(err)
 	//}
@@ -122,8 +139,8 @@ func (cmd *ApiCMD) Run(cliCtx *cli.Context) error {
 	//// define a matcher
 	//matcher := func(n *html.Node) bool {
 	//	// must check for nil values
-	//	if n.DataAtom == atom.Div && scrape.Attr(n, "data-test") == "right-summary-table" {
-	//		if n.Parent.DataAtom == atom.Div && scrape.Attr(n.Parent, "id") == "quote-summary" {
+	//	if n.DataAtom == atom.Table && scrape.Attr(n, "class") == "mp_lightborder" {
+	//		if n.Parent.DataAtom == atom.Div && n.Parent.Parent.DataAtom == atom.Div && scrape.Attr(n.Parent.Parent, "class") == "symov_div_summary_outer" {
 	//			return true
 	//		}
 	//	}
@@ -131,27 +148,117 @@ func (cmd *ApiCMD) Run(cliCtx *cli.Context) error {
 	//	return false
 	//}
 	//
-	//rightSummaryTable, ok := scrape.Find(root, matcher)
+	//divMarketChameleonTable, ok := scrape.Find(root, matcher)
 	//if !ok {
-	//	return errors.New("EPS not found")
+	//	return errors.New("Dividend not found")
 	//}
 	//
-	//rows := scrape.FindAll(rightSummaryTable, scrape.ByTag(atom.Tr))
+	//// define a matcher
+	//matcher = func(n *html.Node) bool {
+	//	if n.DataAtom == atom.Td && n.Parent.DataAtom == atom.Tr && n.Parent.Parent.DataAtom == atom.Tbody {
+	//		return true
+	//	}
 	//
-	//for i, row := range rows {
+	//	return false
+	//}
+	//
+	//tds := scrape.FindAll(divMarketChameleonTable, matcher)
+	//
+	//for i, td := range tds {
 	//	switch i {
 	//	case 0:
-	//		ys.MarketCap = scrape.Text(row.FirstChild.NextSibling)
+	//		mc.StockDividend.NextExDate = scrape.Text(td)
+	//	case 1:
+	//		mc.StockDividend.Amount = scrape.Text(td)
 	//	case 2:
-	//		ys.PERatio = scrape.Text(row.FirstChild.NextSibling)
+	//		mc.StockDividend.ChangePrevYear = scrape.Text(td)
 	//	case 3:
-	//		ys.EPS = scrape.Text(row.FirstChild.NextSibling)
+	//		mc.StockDividend.ForwardYield = strings.Replace(scrape.Text(td), "%", "", 1)
 	//	}
 	//}
+	//
+	//resp, err = http.Get(fmt.Sprintf("https://marketchameleon.com/Overview/%s/", "CSCO"))
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//root, err = html.Parse(resp.Body)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//// define a matcher
+	//matcher = func(n *html.Node) bool {
+	//	// must check for nil values
+	//	if n.DataAtom == atom.Div && scrape.Attr(n, "class") == "symov_stat_box symov_info_box _c" {
+	//		return true
+	//	}
+	//
+	//	return false
+	//}
+	//
+	//divMarketChameleonInfoDiv, ok := scrape.Find(root, matcher)
+	//if !ok {
+	//	return errors.New("Stock info not found")
+	//}
+	//
+	//divs := scrape.FindAll(divMarketChameleonInfoDiv, scrape.ByClass("flex_container_between"))
+	//
+	//for i, div := range divs {
+	//	d, ok := scrape.Find(div, scrape.ByClass("datatag"))
+	//	if !ok {
+	//		continue
+	//	}
+	//
+	//	switch i {
+	//	case 0:
+	//		mc.StockInfo.Type = scrape.Text(d)
+	//	case 1:
+	//		mc.StockInfo.Sector = scrape.Text(d)
+	//	case 2:
+	//		mc.StockInfo.Industry = scrape.Text(d)
+	//	}
+	//}
+	//
+	//// define a matcher
+	//matcher = func(n *html.Node) bool {
+	//	if n.DataAtom == atom.Div && scrape.Attr(n, "class") == "symov_stat_box _c" {
+	//		if n.FirstChild != nil && n.FirstChild.NextSibling != nil && scrape.Text(n.FirstChild.NextSibling) == "Volatility" {
+	//			return true
+	//		}
+	//	}
+	//
+	//	return false
+	//}
+	//
+	//divMarketChameleonVolatilityDiv, ok := scrape.Find(root, matcher)
+	//if !ok {
+	//	return errors.New("Stock volatility not found")
+	//}
+	//
+	//divs = scrape.FindAll(divMarketChameleonVolatilityDiv, scrape.ByClass("flex_container_between"))
+	//
+	//for i, div := range divs {
+	//	d, ok := scrape.Find(div, scrape.ByClass("datatag"))
+	//	if !ok {
+	//		continue
+	//	}
+	//
+	//	switch i {
+	//	case 1:
+	//		mc.StockVolatility.HV20Day = scrape.Text(d)
+	//	case 2:
+	//		mc.StockVolatility.HV52Week = scrape.Text(d)
+	//	}
+	//}
+	//
+	//fmt.Printf("%+v\n", mc)
 
-	ps := service.NewStockPriceScrapeYahoo(cmd.ctx, "https://finance.yahoo.com/quote")
+	stk := stock.Stock{Symbol: "EXPE"}
 
-	p, err := ps.Price(&stock.Stock{Symbol: "EXPE"})
+	ps := service.NewYahooScrapeStockPrice(cmd.ctx, "https://finance.yahoo.com/quote")
+
+	p, err := ps.Price(&stk)
 	if err != nil {
 		fmt.Printf("%+v", err)
 
@@ -159,6 +266,28 @@ func (cmd *ApiCMD) Run(cliCtx *cli.Context) error {
 	}
 
 	fmt.Printf("%+v\n", p)
+
+	ss := service.NewStockSummaryMarketChameleon(cmd.ctx, "https://marketchameleon.com/Overview")
+
+	s, err := ss.Summary(&stk)
+	if err != nil {
+		fmt.Printf("%+v", err)
+
+		return err
+	}
+
+	fmt.Printf("%+v\n", s)
+
+	pvs := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, "https://marketchameleon.com/Overview")
+
+	pv, err := pvs.PriceVolatility(&stk)
+	if err != nil {
+		fmt.Printf("%+v", err)
+
+		return err
+	}
+
+	fmt.Printf("%+v\n", pv)
 
 	return nil
 }

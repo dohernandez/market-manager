@@ -83,8 +83,9 @@ func (cmd *BaseCMD) initCommandBus() *cbus.Bus {
 	ccClient := cc.NewClient(cmd.newHTTPClient("CURRENCY-CONVERTER", timeout), cmd.cache)
 
 	// SERVICE
-	//stockPrice := service.NewStockPrice(cmd.ctx, iexClient)
-	stockPriceScrapeYahoo := service.NewStockPriceScrapeYahoo(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
+	//stockPrice := service.NewBasicStockPrice(cmd.ctx, iexClient)
+	stockPriceScrapeYahoo := service.NewYahooScrapeStockPrice(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
+	stockPriceVolatilityMarketChameleon := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
 
 	// HANDLER
 	updateAllStockPriceHandler := handler.NewUpdateAllStockPrice(stockFinder, stockPriceScrapeYahoo, stockPersister)
@@ -93,6 +94,7 @@ func (cmd *BaseCMD) initCommandBus() *cbus.Bus {
 	// LISTENER
 	updateStockDividendYield := listener.NewUpdateStockDividendYield(stockDividendFinder, stockPersister)
 	updateWalletCapital := listener.NewUpdateWalletCapital(walletFinder, walletPersister, ccClient)
+	updateStockPriceVolatility := listener.NewUpdateStockPriceVolatility(stockPriceVolatilityMarketChameleon, stockPersister)
 
 	// COMMAND BUS
 	bus := cbus.Bus{}
@@ -102,12 +104,14 @@ func (cmd *BaseCMD) initCommandBus() *cbus.Bus {
 	bus.Handle(&updateAllStocksPrice, updateAllStockPriceHandler)
 	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateStockDividendYield)
 	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateWalletCapital)
+	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateStockPriceVolatility)
 
 	// Update one stock price
 	updateOneStocksPrice := command.UpdateOneStockPrice{}
 	bus.Handle(&updateOneStocksPrice, updateOneStockPrice)
 	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockDividendYield)
 	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateWalletCapital)
+	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockPriceVolatility)
 
 	return &bus
 }

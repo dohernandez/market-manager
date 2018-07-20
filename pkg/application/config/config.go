@@ -38,6 +38,7 @@ type Specification struct {
 		FinanceYahooBaseURL  string `envconfig:"FINANCE_YAHOO_BASEURL" default:"https://finance.yahoo.com"`
 		Query1YahooBaseURL   string `envconfig:"QUERY1_YAHOO_BASEURL" default:"https://query1.finance.yahoo.com"`
 		FinanceYahooQuoteURL string `envconfig:"FINANCE_YAHOO_QUOTE_URL" default:"https://finance.yahoo.com/quote"`
+		MarketChameleonURL   string `envconfig:"FINANCE_YAHOO_QUOTE_URL" default:"https://marketchameleon.com/Overview"`
 	}
 
 	Degiro struct {

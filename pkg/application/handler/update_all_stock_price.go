@@ -13,7 +13,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
-const UpdatePriceConcurrency = 10
+const updatePriceConcurrency = 10
 
 type updateAllStockPrice struct {
 	updateStockPrice
@@ -40,7 +40,7 @@ func (h *updateAllStockPrice) Handle(ctx context.Context, command cbus.Command) 
 		ustk []*stock.Stock
 	)
 
-	concurrency := UpdatePriceConcurrency
+	concurrency := updatePriceConcurrency
 	for _, stk := range stks {
 		wg.Add(1)
 		concurrency--

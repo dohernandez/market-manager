@@ -2,22 +2,17 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	"golang.org/x/net/html"
-
-	"fmt"
-
 	"github.com/yhat/scrape"
+	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
-
-	"strconv"
-
-	"strings"
-
-	"regexp"
 
 	"github.com/dohernandez/go-quote"
 	gf "github.com/dohernandez/googlefinance-client-go"
@@ -27,28 +22,24 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
-type StockPrice interface {
-	Price(stk *stock.Stock) (stock.Price, error)
-}
-
 // ----------------------------------------------------------------------------------------------------------------------
-// stockPrice Service
+// BasicStockPrice Service
 // ----------------------------------------------------------------------------------------------------------------------
 type (
-	stockPrice struct {
+	basicStockPrice struct {
 		ctx       context.Context
 		iexClient *iex.Client
 	}
 )
 
-func NewStockPrice(ctx context.Context, iexClient *iex.Client) *stockPrice {
-	return &stockPrice{
+func NewBasicStockPrice(ctx context.Context, iexClient *iex.Client) *basicStockPrice {
+	return &basicStockPrice{
 		ctx:       ctx,
 		iexClient: iexClient,
 	}
 }
 
-func (s *stockPrice) Price(stk *stock.Stock) (stock.Price, error) {
+func (s *basicStockPrice) Price(stk *stock.Stock) (stock.Price, error) {
 	method := "closedPriceFromYahoo"
 
 	p, err := s.closedPriceFromYahoo(stk)
@@ -78,7 +69,7 @@ func (s *stockPrice) Price(stk *stock.Stock) (stock.Price, error) {
 	return p, nil
 }
 
-func (s *stockPrice) closedPriceFromYahoo(stk *stock.Stock) (stock.Price, error) {
+func (s *basicStockPrice) closedPriceFromYahoo(stk *stock.Stock) (stock.Price, error) {
 	endDate := time.Now()
 	startDate := endDate.Add(-24 * time.Hour)
 
@@ -98,7 +89,7 @@ func (s *stockPrice) closedPriceFromYahoo(stk *stock.Stock) (stock.Price, error)
 	}, nil
 }
 
-func (s *stockPrice) closedPriceFromGoogle(stk *stock.Stock) (stock.Price, error) {
+func (s *basicStockPrice) closedPriceFromGoogle(stk *stock.Stock) (stock.Price, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -129,7 +120,7 @@ func (s *stockPrice) closedPriceFromGoogle(stk *stock.Stock) (stock.Price, error
 	}, nil
 }
 
-func (s *stockPrice) closedPriceFromIEXTrading(stk *stock.Stock) (stock.Price, error) {
+func (s *basicStockPrice) closedPriceFromIEXTrading(stk *stock.Stock) (stock.Price, error) {
 	q, err := s.iexClient.Quote.Get(stk.Symbol)
 	if err != nil {
 		return stock.Price{}, err
@@ -146,88 +137,55 @@ func (s *stockPrice) closedPriceFromIEXTrading(stk *stock.Stock) (stock.Price, e
 }
 
 // ----------------------------------------------------------------------------------------------------------------------
-// stockPriceScrapeYahoo Service
-// ----------------------------------------------------------------------------------------------------------------------
-type stockPriceScrape struct {
-	ctx context.Context
-	url string
-}
-
-// ----------------------------------------------------------------------------------------------------------------------
-// stockPriceScrapeYahoo Service
+// YahooScraperStockPrice Service
 // ----------------------------------------------------------------------------------------------------------------------
 type (
-	stockPriceScrapeYahoo struct {
-		stockPriceScrape
-	}
-
-	scrapeYahooSummary struct {
-		Close      float64
-		Open       float64
-		High       float64
-		Low        float64
-		Change     float64
-		Volume     int64
-		High52Week float64
-		Low52Week  float64
-		EPS        float64
-		PERatio    float64
+	yahooScraperStockPrice struct {
+		stockScrape
 	}
 )
 
-func NewStockPriceScrapeYahoo(ctx context.Context, url string) *stockPriceScrapeYahoo {
-	return &stockPriceScrapeYahoo{
-		stockPriceScrape: stockPriceScrape{
+func NewYahooScrapeStockPrice(ctx context.Context, url string) *yahooScraperStockPrice {
+	return &yahooScraperStockPrice{
+		stockScrape: stockScrape{
 			ctx: ctx,
 			url: url,
 		},
 	}
 }
 
-func (s *stockPriceScrapeYahoo) Price(stk *stock.Stock) (stock.Price, error) {
+func (s *yahooScraperStockPrice) Price(stk *stock.Stock) (stock.Price, error) {
 	url := fmt.Sprintf("%s/%s?p=%s", s.url, stk.Symbol, stk.Symbol)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		panic(err)
+		return stock.Price{}, err
 	}
 
 	root, err := html.Parse(resp.Body)
 	if err != nil {
-		panic(err)
-	}
-
-	var sYahooSummary scrapeYahooSummary
-	err = s.marshalQuoteHeaderInfo(root, &sYahooSummary)
-	if err != nil {
 		return stock.Price{}, err
 	}
-
-	err = s.marshalQuoteSummary(root, &sYahooSummary)
-	if err != nil {
-		return stock.Price{}, err
-	}
-	logger.FromContext(s.ctx).Debugf("got yahoo summary %+v from stock %s", sYahooSummary, stk.Symbol)
 
 	p := stock.Price{
-		Date:       time.Now(),
-		Close:      sYahooSummary.Close,
-		Open:       sYahooSummary.Open,
-		High:       sYahooSummary.High,
-		Low:        sYahooSummary.Low,
-		Volume:     sYahooSummary.Volume,
-		Change:     sYahooSummary.Change,
-		High52Week: sYahooSummary.High52Week,
-		Low52Week:  sYahooSummary.Low52Week,
-		EPS:        sYahooSummary.EPS,
-		PER:        sYahooSummary.PERatio,
+		Date: time.Now(),
+	}
+
+	err = s.marshalQuoteHeaderInfo(root, &p)
+	if err != nil {
+		return stock.Price{}, err
+	}
+
+	err = s.marshalQuoteSummary(root, &p)
+	if err != nil {
+		return stock.Price{}, err
 	}
 	logger.FromContext(s.ctx).Debugf("got price %+v from stock %s", p, stk.Symbol)
 
 	return p, nil
 }
 
-func (s *stockPriceScrapeYahoo) marshalQuoteHeaderInfo(root *html.Node, sYahooSummary *scrapeYahooSummary) error {
+func (s *yahooScraperStockPrice) marshalQuoteHeaderInfo(root *html.Node, p *stock.Price) error {
 	// define a matcher
 	matcherQuoteHeaderInfo := func(n *html.Node) bool {
 		if n.DataAtom == atom.Div && scrape.Attr(n, "id") == "quote-header-info" {
@@ -241,12 +199,12 @@ func (s *stockPriceScrapeYahoo) marshalQuoteHeaderInfo(root *html.Node, sYahooSu
 		return errors.New("Marshal quote header info. Quote header not found")
 	}
 
-	err := s.marshalQuoteHeaderInfoClosePrice(quoteHeaderInfoDiv, sYahooSummary)
+	err := s.marshalQuoteHeaderInfoClosePrice(quoteHeaderInfoDiv, p)
 	if err != nil {
 		return err
 	}
 
-	err = s.marshalQuoteHeaderInfoChangePrice(quoteHeaderInfoDiv, sYahooSummary)
+	err = s.marshalQuoteHeaderInfoChangePrice(quoteHeaderInfoDiv, p)
 	if err != nil {
 		return err
 	}
@@ -254,7 +212,7 @@ func (s *stockPriceScrapeYahoo) marshalQuoteHeaderInfo(root *html.Node, sYahooSu
 	return nil
 }
 
-func (s *stockPriceScrapeYahoo) marshalQuoteHeaderInfoClosePrice(root *html.Node, sYahooSummary *scrapeYahooSummary) error {
+func (s *yahooScraperStockPrice) marshalQuoteHeaderInfoClosePrice(root *html.Node, p *stock.Price) error {
 	// define a matcher
 	matcherQuoteClosedPrice := func(n *html.Node) bool {
 		if n.DataAtom == atom.Span && scrape.Attr(n, "data-reactid") == "21" {
@@ -269,12 +227,12 @@ func (s *stockPriceScrapeYahoo) marshalQuoteHeaderInfoClosePrice(root *html.Node
 		return errors.New("Marshal quote header info. Closed price not found")
 	}
 
-	sYahooSummary.Close, _ = strconv.ParseFloat(scrape.Text(quoteClosedPriceSpan), 64)
+	p.Close, _ = strconv.ParseFloat(scrape.Text(quoteClosedPriceSpan), 64)
 
 	return nil
 }
 
-func (s *stockPriceScrapeYahoo) marshalQuoteHeaderInfoChangePrice(root *html.Node, sYahooSummary *scrapeYahooSummary) error {
+func (s *yahooScraperStockPrice) marshalQuoteHeaderInfoChangePrice(root *html.Node, p *stock.Price) error {
 	// define a matcher
 	matcherQuoteChangePrice := func(n *html.Node) bool {
 		if n.DataAtom == atom.Span && scrape.Attr(n, "data-reactid") == "23" {
@@ -293,13 +251,13 @@ func (s *stockPriceScrapeYahoo) marshalQuoteHeaderInfoChangePrice(root *html.Nod
 	matches := re.FindStringSubmatch(scrape.Text(quoteChangePriceSpan))
 
 	if len(matches) > 0 {
-		sYahooSummary.Change, _ = strconv.ParseFloat(matches[1], 64)
+		p.Change, _ = strconv.ParseFloat(matches[1], 64)
 	}
 
 	return nil
 }
 
-func (s *stockPriceScrapeYahoo) marshalQuoteSummary(root *html.Node, sYahooSummary *scrapeYahooSummary) error {
+func (s *yahooScraperStockPrice) marshalQuoteSummary(root *html.Node, p *stock.Price) error {
 	// define a matcher for summary div
 	matcherQuoteSummary := func(n *html.Node) bool {
 		if n.DataAtom == atom.Div && scrape.Attr(n, "id") == "quote-summary" {
@@ -313,12 +271,12 @@ func (s *stockPriceScrapeYahoo) marshalQuoteSummary(root *html.Node, sYahooSumma
 		return errors.New("Price not found. Quote summary not found")
 	}
 
-	err := s.marshalQuoteSummaryLeftTable(quoteSummaryDiv, sYahooSummary)
+	err := s.marshalQuoteSummaryLeftTable(quoteSummaryDiv, p)
 	if err != nil {
 		return err
 	}
 
-	err = s.marshalQuoteSummaryRightTable(quoteSummaryDiv, sYahooSummary)
+	err = s.marshalQuoteSummaryRightTable(quoteSummaryDiv, p)
 	if err != nil {
 		return err
 	}
@@ -326,7 +284,7 @@ func (s *stockPriceScrapeYahoo) marshalQuoteSummary(root *html.Node, sYahooSumma
 	return nil
 }
 
-func (s *stockPriceScrapeYahoo) marshalQuoteSummaryLeftTable(root *html.Node, sYahooSummary *scrapeYahooSummary) error {
+func (s *yahooScraperStockPrice) marshalQuoteSummaryLeftTable(root *html.Node, p *stock.Price) error {
 	// define a matcher left table
 	matcher := func(n *html.Node) bool {
 		// must check for nil values
@@ -347,35 +305,35 @@ func (s *stockPriceScrapeYahoo) marshalQuoteSummaryLeftTable(root *html.Node, sY
 	for i, row := range rows {
 		switch i {
 		case 1:
-			sYahooSummary.Open, _ = strconv.ParseFloat(scrape.Text(row.FirstChild.NextSibling), 64)
+			p.Open, _ = strconv.ParseFloat(scrape.Text(row.FirstChild.NextSibling), 64)
 		case 4:
 			highLowDay := strings.Split(scrape.Text(row.FirstChild.NextSibling), " - ")
 
 			if len(highLowDay) == 2 {
-				sYahooSummary.Low, _ = strconv.ParseFloat(highLowDay[0], 64)
-				sYahooSummary.High, _ = strconv.ParseFloat(highLowDay[1], 64)
+				p.Low, _ = strconv.ParseFloat(highLowDay[0], 64)
+				p.High, _ = strconv.ParseFloat(highLowDay[1], 64)
 			}
 		case 5:
 			highLow52week := strings.Split(scrape.Text(row.FirstChild.NextSibling), " - ")
 
 			if len(highLow52week) == 2 {
-				sYahooSummary.Low52Week, _ = strconv.ParseFloat(highLow52week[0], 64)
-				sYahooSummary.High52Week, _ = strconv.ParseFloat(highLow52week[1], 64)
+				p.Low52Week, _ = strconv.ParseFloat(highLow52week[0], 64)
+				p.High52Week, _ = strconv.ParseFloat(highLow52week[1], 64)
 			}
 		case 6:
 			vStr := s.sanitizeVolume(scrape.Text(row.FirstChild.NextSibling))
-			sYahooSummary.Volume, _ = strconv.ParseInt(vStr, 10, 64)
+			p.Volume, _ = strconv.ParseInt(vStr, 10, 64)
 		}
 	}
 
 	return nil
 }
 
-func (s *stockPriceScrapeYahoo) sanitizeVolume(v string) string {
+func (s *yahooScraperStockPrice) sanitizeVolume(v string) string {
 	return strings.Replace(v, ",", "", 1)
 }
 
-func (s *stockPriceScrapeYahoo) marshalQuoteSummaryRightTable(root *html.Node, sYahooSummary *scrapeYahooSummary) error {
+func (s *yahooScraperStockPrice) marshalQuoteSummaryRightTable(root *html.Node, p *stock.Price) error {
 	// define a matcher left table
 	matcher := func(n *html.Node) bool {
 		// must check for nil values
@@ -396,9 +354,9 @@ func (s *stockPriceScrapeYahoo) marshalQuoteSummaryRightTable(root *html.Node, s
 	for i, row := range rows {
 		switch i {
 		case 2:
-			sYahooSummary.PERatio, _ = strconv.ParseFloat(scrape.Text(row.FirstChild.NextSibling), 64)
+			p.PER, _ = strconv.ParseFloat(scrape.Text(row.FirstChild.NextSibling), 64)
 		case 3:
-			sYahooSummary.EPS, _ = strconv.ParseFloat(scrape.Text(row.FirstChild.NextSibling), 64)
+			p.EPS, _ = strconv.ParseFloat(scrape.Text(row.FirstChild.NextSibling), 64)
 		}
 	}
 

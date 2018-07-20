@@ -17,6 +17,7 @@ type (
 		UpdatePrice(s *Stock) error
 		UpdateDividendYield(s *Stock) error
 		UpdateHighLow52WeekPrice(s *Stock) error
+		UpdatePriceVolatility(s *Stock) error
 	}
 
 	InfoFinder interface {

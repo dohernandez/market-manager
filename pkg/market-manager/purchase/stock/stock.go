@@ -22,24 +22,28 @@ type (
 
 	// Stock represents stock struct
 	Stock struct {
-		ID                  uuid.UUID
-		Market              *market.Market
-		Exchange            *exchange.Exchange
-		Name                string
-		Symbol              string
-		Value               mm.Value
-		Dividends           []dividend.StockDividend
-		DividendYield       float64
-		Change              mm.Value
-		LastPriceUpdate     time.Time
-		High52Week          mm.Value
-		Low52Week           mm.Value
-		HighLow52WeekUpdate time.Time
-		Type                *Info
-		Sector              *Info
-		Industry            *Info
-		EPS                 float64
-		PER                 float64
+		ID                    uuid.UUID
+		Market                *market.Market
+		Exchange              *exchange.Exchange
+		Name                  string
+		Symbol                string
+		Value                 mm.Value
+		Dividends             []dividend.StockDividend
+		DividendYield         float64
+		Change                mm.Value
+		LastPriceUpdate       time.Time
+		High52Week            mm.Value
+		Low52Week             mm.Value
+		HighLow52WeekUpdate   time.Time
+		Type                  *Info
+		Sector                *Info
+		Industry              *Info
+		EPS                   float64
+		PER                   float64
+		Description           string
+		PriceVolatilityUpdate time.Time
+		HV20Day               float64
+		HV52Week              float64
 	}
 
 	// Price represents stock's price struct
@@ -55,6 +59,21 @@ type (
 		Low52Week  float64
 		EPS        float64
 		PER        float64
+	}
+
+	// PriceVolatility represents stock's price volatility struct
+	PriceVolatility struct {
+		Date     time.Time
+		HV20Day  float64
+		HV52Week float64
+	}
+
+	// Summary represents stock's summary struct
+	Summary struct {
+		Description string
+		Type        string
+		Sector      string
+		Industry    string
 	}
 
 	// Price52WeekHighLow represents 52 week high -low stock's price struct
