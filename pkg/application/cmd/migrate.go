@@ -15,20 +15,20 @@ import (
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 )
 
-// MigrateCMD ...
-type MigrateCMD struct {
+// Migrate ...
+type Migrate struct {
 	*BaseCMD
 }
 
-// NewMigrateCMD constructs MigrateCMD
-func NewMigrateCMD(baseCMD *BaseCMD) *MigrateCMD {
-	return &MigrateCMD{
+// NewMigrateCMD constructs Migrate
+func NewMigrateCMD(baseCMD *BaseCMD) *Migrate {
+	return &Migrate{
 		BaseCMD: baseCMD,
 	}
 }
 
 // Run runs the application database migrations
-func (cmd *MigrateCMD) Run(cliCtx *cli.Context) error {
+func (cmd *Migrate) Run(cliCtx *cli.Context) error {
 	m, err := cmd.getMigrate()
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (cmd *MigrateCMD) Run(cliCtx *cli.Context) error {
 }
 
 // Up runs all the migrations
-func (cmd *MigrateCMD) Up(cliCtx *cli.Context) error {
+func (cmd *Migrate) Up(cliCtx *cli.Context) error {
 	m, err := cmd.getMigrate()
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func (cmd *MigrateCMD) Up(cliCtx *cli.Context) error {
 }
 
 // Down downs the migrations
-func (cmd *MigrateCMD) Down(cliCtx *cli.Context) error {
+func (cmd *Migrate) Down(cliCtx *cli.Context) error {
 	m, err := cmd.getMigrate()
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func (cmd *MigrateCMD) Down(cliCtx *cli.Context) error {
 	return cmd.checkMigrationError(context.TODO(), m.Down())
 }
 
-func (cmd *MigrateCMD) getMigrate() (*migrate.Migrate, error) {
+func (cmd *Migrate) getMigrate() (*migrate.Migrate, error) {
 	logger.FromContext(context.TODO()).WithFields(logrus.Fields{
 		"migrations_path": cmd.config.Database.MigrationsPath,
 	}).Info("Initializing migration")
@@ -80,7 +80,7 @@ func (cmd *MigrateCMD) getMigrate() (*migrate.Migrate, error) {
 	return m, errors.Wrap(err, "Initializing migrations failed")
 }
 
-func (cmd *MigrateCMD) checkMigrationError(ctx context.Context, err error) error {
+func (cmd *Migrate) checkMigrationError(ctx context.Context, err error) error {
 	if err == migrate.ErrNoChange {
 		logger.FromContext(ctx).Info("No new migrations to run")
 		return nil

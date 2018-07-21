@@ -13,18 +13,18 @@ import (
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 )
 
-// HTTPCMD holds the necessary data for its execution
-type HTTPCMD struct {
-	*BaseCMD
+// HTTP holds the necessary data for its execution
+type HTTP struct {
+	*Base
 }
 
-// NewHTTPCMD constructs HTTPCMD
-func NewHTTPCMD(baseCMD *BaseCMD) *HTTPCMD {
-	return &HTTPCMD{baseCMD}
+// NewHTTP constructs HTTP
+func NewHTTP(base *Base) *HTTP {
+	return &HTTP{base}
 }
 
 // Run ...
-func (cmd *HTTPCMD) Run(cliCtx *cli.Context) error {
+func (cmd *HTTP) Run(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -36,7 +36,7 @@ func (cmd *HTTPCMD) Run(cliCtx *cli.Context) error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", cmd.config.HTTP.Port), router)
 }
 
-func (cmd *HTTPCMD) newRouter(version string) *chi.Mux {
+func (cmd *HTTP) newRouter(version string) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(render.SetContentType(render.ContentTypeJSON))

@@ -47,13 +47,15 @@ func main() {
 
 	// Init command handlers
 	// TODO: Real ctx should be passed here
+	base := cmd.NewBase(context.TODO(), envConfig)
+
+	server := cmd.NewHTTP(base)
+	migrate := cmd.NewMigrate(base)
+
 	baseCMD := cmd.NewBaseCMD(context.TODO(), envConfig)
 	baseExportCMD := &cmd.BaseExportCMD{}
 	baseImportCMD := &cmd.BaseImportCMD{}
 
-	serverCMD := cmd.NewHTTPCMD(baseCMD)
-
-	migrateCMD := cmd.NewMigrateCMD(baseCMD)
 	purchaseCMD := cmd.NewPurchaseCMD(baseCMD, baseImportCMD, baseExportCMD)
 	bankingCMD := cmd.NewBankingCMD(baseCMD, baseImportCMD)
 	accountCMD := cmd.NewAccountCMD(baseCMD, baseImportCMD, baseExportCMD)
@@ -65,7 +67,7 @@ func main() {
 		{
 			Name:   "http",
 			Usage:  "Start REST API service",
-			Action: serverCMD.Run,
+			Action: server.Run,
 		},
 		//	{
 		//		Name:   "scheduler",
@@ -76,21 +78,21 @@ func main() {
 			Name:      "migrate",
 			Aliases:   []string{"m"},
 			Usage:     "Run database migrations to the specific version",
-			Action:    migrateCMD.Run,
+			Action:    migrate.Run,
 			ArgsUsage: "",
 			Subcommands: []cli.Command{
 				{
 					Name:      "up",
 					Aliases:   []string{"u"},
 					Usage:     "Up the database migrations",
-					Action:    migrateCMD.Up,
+					Action:    migrate.Up,
 					ArgsUsage: "",
 				},
 				{
 					Name:      "down",
 					Aliases:   []string{"d"},
 					Usage:     "Down the database migrations",
-					Action:    migrateCMD.Down,
+					Action:    migrate.Down,
 					ArgsUsage: "",
 				},
 			},
