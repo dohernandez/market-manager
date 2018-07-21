@@ -51,6 +51,7 @@ func main() {
 
 	server := cmd.NewHTTP(base)
 	migrate := cmd.NewMigrate(base)
+	cLine := cmd.NewCLI(base)
 
 	baseCMD := cmd.NewBaseCMD(context.TODO(), envConfig)
 	baseExportCMD := &cmd.BaseExportCMD{}
@@ -148,7 +149,7 @@ func main() {
 							Name:      "price",
 							Aliases:   []string{"p"},
 							Usage:     "Update stock price value based on the yahoo/google api",
-							Action:    purchaseCMD.UpdatePrice,
+							Action:    cLine.UpdatePrice,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

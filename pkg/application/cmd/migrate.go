@@ -17,13 +17,13 @@ import (
 
 // Migrate ...
 type Migrate struct {
-	*BaseCMD
+	*Base
 }
 
-// NewMigrateCMD constructs Migrate
-func NewMigrateCMD(baseCMD *BaseCMD) *Migrate {
+// NewMigrate constructs Migrate
+func NewMigrate(base *Base) *Migrate {
 	return &Migrate{
-		BaseCMD: baseCMD,
+		Base: base,
 	}
 }
 

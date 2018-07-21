@@ -10,8 +10,7 @@ import (
 
 	"strings"
 
-	app "github.com/dohernandez/market-manager/pkg/application"
-	"github.com/dohernandez/market-manager/pkg/application/command"
+	"github.com/dohernandez/market-manager/pkg/application"
 	exportPurchase "github.com/dohernandez/market-manager/pkg/application/export/purchase"
 	"github.com/dohernandez/market-manager/pkg/application/import"
 	"github.com/dohernandez/market-manager/pkg/application/import/purchase"
@@ -104,29 +103,6 @@ func (cmd *PurchaseCMD) getStockImport(cliCtx *cli.Context, importPath string) (
 	}
 
 	return ris, nil
-}
-
-func (cmd *PurchaseCMD) UpdatePrice(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
-	defer cancelCtx()
-
-	bus := cmd.initCommandBus()
-
-	if cliCtx.String("stock") == "" {
-		_, err := bus.ExecuteContext(ctx, &command.UpdateAllStocksPrice{})
-		if err != nil {
-			return err
-		}
-	} else {
-		_, err := bus.ExecuteContext(ctx, &command.UpdateOneStockPrice{Symbol: cliCtx.String("stock")})
-		if err != nil {
-			return err
-		}
-	}
-
-	logger.FromContext(ctx).Info("Update finished")
-
-	return nil
 }
 
 // UpdatePrice52week runs the application stock last price update
