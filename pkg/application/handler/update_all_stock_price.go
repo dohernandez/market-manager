@@ -5,77 +5,30 @@ import (
 
 	"github.com/gogolfing/cbus"
 
-	"sync"
-	"time"
-
-	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
-const updatePriceConcurrency = 10
-
 type updateAllStockPrice struct {
-	updateStockPrice
+	stockFinder stock.Finder
 }
 
-func NewUpdateAllStockPrice(stockFinder stock.Finder, stockPriceService service.StockPrice, stockPersister stock.Persister) *updateAllStockPrice {
+func NewUpdateAllStockPrice(stockFinder stock.Finder) *updateAllStockPrice {
 	return &updateAllStockPrice{
-		updateStockPrice: updateStockPrice{
-			stockFinder:       stockFinder,
-			stockPriceService: stockPriceService,
-			stockPersister:    stockPersister,
-		},
+		stockFinder: stockFinder,
 	}
 }
 
 func (h *updateAllStockPrice) Handle(ctx context.Context, command cbus.Command) (result interface{}, err error) {
 	stks, err := h.stockFinder.FindAll()
 	if err != nil {
+		logger.FromContext(ctx).Errorf(
+			"An error happen while finding all stock -> error [%s]",
+			err,
+		)
+
 		return nil, err
 	}
 
-	var (
-		wg   sync.WaitGroup
-		ustk []*stock.Stock
-	)
-
-	concurrency := updatePriceConcurrency
-	for _, stk := range stks {
-		wg.Add(1)
-		concurrency--
-
-		st := stk
-		go func() {
-			defer wg.Done()
-
-			err := h.updateStock(st)
-			if err != nil {
-				logger.FromContext(ctx).Errorf(
-					"An error happen while updating stocks price: stock [%s] -> error [%s]",
-					st.Symbol,
-					err,
-				)
-
-				concurrency++
-
-				return
-			}
-
-			ustk = append(ustk, st)
-
-			concurrency++
-		}()
-
-		for {
-			if concurrency != 0 {
-				break
-			}
-			time.Sleep(2 * time.Second)
-		}
-	}
-
-	wg.Wait()
-
-	return ustk, nil
+	return stks, nil
 }

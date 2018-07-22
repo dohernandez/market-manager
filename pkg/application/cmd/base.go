@@ -88,10 +88,12 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	stockPriceVolatilityMarketChameleon := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
 
 	// HANDLER
-	updateAllStockPriceHandler := handler.NewUpdateAllStockPrice(stockFinder, stockPriceScrapeYahoo, stockPersister)
-	updateOneStockPrice := handler.NewUpdateOneStockPrice(stockFinder, stockPriceScrapeYahoo, stockPersister)
+	updateAllStockPriceHandler := handler.NewUpdateAllStockPrice(stockFinder)
+	updateOneStockPrice := handler.NewUpdateOneStockPrice(stockFinder)
 
 	// LISTENER
+
+	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahoo, stockPersister)
 	updateStockDividendYield := listener.NewUpdateStockDividendYield(stockDividendFinder, stockPersister)
 	updateWalletCapital := listener.NewUpdateWalletCapital(walletFinder, walletPersister, ccClient)
 	updateStockPriceVolatility := listener.NewUpdateStockPriceVolatility(stockPriceVolatilityMarketChameleon, stockPersister)
@@ -102,6 +104,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// Update all stock price
 	updateAllStocksPrice := command.UpdateAllStocksPrice{}
 	bus.Handle(&updateAllStocksPrice, updateAllStockPriceHandler)
+	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateStockPrice)
 	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateStockDividendYield)
 	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateWalletCapital)
 	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateStockPriceVolatility)
@@ -109,6 +112,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// Update one stock price
 	updateOneStocksPrice := command.UpdateOneStockPrice{}
 	bus.Handle(&updateOneStocksPrice, updateOneStockPrice)
+	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockPrice)
 	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockDividendYield)
 	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateWalletCapital)
 	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockPriceVolatility)

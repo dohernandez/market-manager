@@ -58,4 +58,6 @@ func (l *updateStockDividendYield) OnEvent(ctx context.Context, event cbus.Event
 
 		l.stockPersister.UpdateDividendYield(stk)
 	}
+
+	logger.FromContext(ctx).Debug("Updated stocks dividend yield")
 }

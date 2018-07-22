@@ -46,7 +46,7 @@ func (l *updateStockPriceVolatility) OnEvent(ctx context.Context, event cbus.Eve
 			pv, err := l.stockPriceVolatilityService.PriceVolatility(st)
 			if err != nil {
 				logger.FromContext(ctx).Errorf(
-					"An error happen while updating stocks price volatility: stock [%s] -> error [%s]",
+					"An error happen while updating stocks price volatility: stock [%s] -\\u003e error [%s]",
 					stk.Symbol,
 					err,
 				)
@@ -73,4 +73,6 @@ func (l *updateStockPriceVolatility) OnEvent(ctx context.Context, event cbus.Eve
 	}
 
 	wg.Wait()
+
+	logger.FromContext(ctx).Debug("Updated stocks price volatility")
 }

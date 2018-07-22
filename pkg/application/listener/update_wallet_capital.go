@@ -70,4 +70,6 @@ func (l *updateWalletCapital) OnEvent(ctx context.Context, event cbus.Event) {
 			return
 		}
 	}
+
+	logger.FromContext(ctx).Debug("Updated wallet capital")
 }
