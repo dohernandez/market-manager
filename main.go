@@ -47,7 +47,13 @@ func main() {
 
 	// Init command handlers
 	// TODO: Real ctx should be passed here
-	base := cmd.NewBase(context.TODO(), envConfig)
+	ctx := context.TODO()
+	base := cmd.NewBase(ctx, envConfig)
+	logger.FromContext(ctx).Info("Initializing database connection")
+	err = base.InitDatabaseConnection()
+	if err != nil {
+		logger.FromContext(ctx).Fatal("Failed initializing database")
+	}
 
 	server := cmd.NewHTTP(base)
 	migrate := cmd.NewMigrate(base)
@@ -112,7 +118,7 @@ func main() {
 							Name:      "stock",
 							Aliases:   []string{"q"},
 							Usage:     "Import market stock from csv file",
-							Action:    purchaseCMD.ImportStock,
+							Action:    cLine.ImportStock,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

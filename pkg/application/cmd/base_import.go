@@ -6,39 +6,39 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/dohernandez/market-manager/pkg/application"
-	"github.com/dohernandez/market-manager/pkg/application/import"
+	"github.com/gogolfing/cbus"
+
+	"github.com/dohernandez/market-manager/pkg/application/util"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 )
 
 type (
-	// BaseImportCMD ...
-	BaseImportCMD struct {
-		*BaseCMD
+	// baseImport ...
+	baseImport struct {
+		resourceStorage util.ResourceStorage
 	}
 
-	//resourceImport struct {
-	//	filePath     string
-	//	resourceName string
-	//}
+	resourceImport struct {
+		filePath     string
+		resourceName string
+	}
 )
 
-func (cmd *BaseImportCMD) runImport(
+func (cmd *baseImport) runImport(
 	ctx context.Context,
-	c *app.Container,
+	bus *cbus.Bus,
 	resourceType string,
 	ris []resourceImport,
-	fn func(ctx context.Context, c *app.Container, ri resourceImport) error,
+	fn func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error,
 ) error {
-	is := c.ImportStorageInstance()
-	irs, err := is.FindAllByResource(resourceType)
+	irs, err := cmd.resourceStorage.FindAllByResource(resourceType)
 	if err != nil {
 		if err != mm.ErrNotFound {
 			return err
 		}
 
-		irs = []_import.Resource{}
+		irs = []util.Resource{}
 	}
 
 	for _, ri := range ris {
@@ -56,12 +56,12 @@ func (cmd *BaseImportCMD) runImport(
 		if !found {
 			logger.FromContext(ctx).Infof("Importing file %s", fileName)
 
-			if err := fn(ctx, c, ri); err != nil {
+			if err := fn(ctx, bus, ri); err != nil {
 				return err
 			}
 
-			ir := _import.NewResource(resourceType, fileName)
-			err := is.Persist(ir)
+			ir := util.NewResource(resourceType, fileName)
+			err := cmd.resourceStorage.Persist(ir)
 			if err != nil {
 				return err
 			}
@@ -73,7 +73,7 @@ func (cmd *BaseImportCMD) runImport(
 	return nil
 }
 
-func (cmd *BaseImportCMD) geResourceNameFromFilePath(file string) string {
+func (cmd *baseImport) geResourceNameFromFilePath(file string) string {
 	var dir = filepath.Dir(file)
 	var ext = filepath.Ext(file)
 

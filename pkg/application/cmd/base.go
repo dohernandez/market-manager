@@ -33,6 +33,7 @@ type (
 		ctx    context.Context
 		config *config.Specification
 		cache  *cache.Cache
+		DB     *sqlx.DB
 	}
 )
 
@@ -45,13 +46,15 @@ func NewBase(ctx context.Context, config *config.Specification) *Base {
 	}
 }
 
-func (cmd *Base) initDatabaseConnection() (*sqlx.DB, error) {
+func (cmd *Base) InitDatabaseConnection() error {
 	db, err := sqlx.Connect("postgres", cmd.config.Database.DSN)
 	if err != nil {
-		return nil, errors.Wrap(err, "Connecting to postgres")
+		return errors.Wrap(err, "Connecting to postgres")
 	}
 
-	return db, nil
+	cmd.DB = db
+
+	return nil
 }
 
 func (cmd *Base) Container(db *sqlx.DB) *app.Container {
@@ -60,20 +63,21 @@ func (cmd *Base) Container(db *sqlx.DB) *app.Container {
 
 func (cmd *Base) initCommandBus() *cbus.Bus {
 	// Database connection
-	logger.FromContext(cmd.ctx).Info("Initializing database connection")
-
-	db, err := sqlx.Connect("postgres", cmd.config.Database.DSN)
-	if err != nil {
-		logger.FromContext(cmd.ctx).WithError(err).Fatal("Failed initializing database")
+	if cmd.DB == nil {
+		logger.FromContext(cmd.ctx).Fatal("Database connection not initialized")
 	}
 
 	// STORAGE
-	stockFinder := storage.NewStockFinder(db)
-	stockDividendFinder := storage.NewStockDividendFinder(db)
-	walletFinder := storage.NewWalletFinder(db)
+	stockFinder := storage.NewStockFinder(cmd.DB)
+	stockDividendFinder := storage.NewStockDividendFinder(cmd.DB)
+	walletFinder := storage.NewWalletFinder(cmd.DB)
+	marketFinder := storage.NewMarketFinder(cmd.DB)
+	exchangeFinder := storage.NewExchangeFinder(cmd.DB)
+	stockInfoFinder := storage.NewStockInfoFinder(cmd.DB)
 
-	stockPersister := storage.NewStockPersister(db)
-	walletPersister := storage.NewWalletPersister(db)
+	stockPersister := storage.NewStockPersister(cmd.DB)
+	walletPersister := storage.NewWalletPersister(cmd.DB)
+	stockInfoPersister := storage.NewStockInfoPersister(cmd.DB)
 
 	// CLIENT
 	//timeout := time.Second * time.Duration(cmd.config.IEXTrading.Timeout)
@@ -88,11 +92,12 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	stockPriceVolatilityMarketChameleon := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
 
 	// HANDLER
+	importStocksHandler := handler.NewImportStock(marketFinder, exchangeFinder, stockInfoFinder, stockInfoPersister)
 	updateAllStockPriceHandler := handler.NewUpdateAllStockPrice(stockFinder)
 	updateOneStockPrice := handler.NewUpdateOneStockPrice(stockFinder)
 
 	// LISTENER
-
+	persisterStock := listener.NewPersisterStock(stockPersister)
 	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahoo, stockPersister)
 	updateStockDividendYield := listener.NewUpdateStockDividendYield(stockDividendFinder, stockPersister)
 	updateWalletCapital := listener.NewUpdateWalletCapital(walletFinder, walletPersister, ccClient)
@@ -100,6 +105,11 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 
 	// COMMAND BUS
 	bus := cbus.Bus{}
+
+	// Import stocks
+	importStock := command.ImportStock{}
+	bus.Handle(&importStock, importStocksHandler)
+	bus.ListenCommand(cbus.Complete, &importStock, persisterStock)
 
 	// Update all stock price
 	updateAllStocksPrice := command.UpdateAllStocksPrice{}
