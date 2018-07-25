@@ -64,7 +64,6 @@ func main() {
 	baseImportCMD := &cmd.BaseImportCMD{}
 
 	purchaseCMD := cmd.NewPurchaseCMD(baseCMD, baseImportCMD, baseExportCMD)
-	bankingCMD := cmd.NewBankingCMD(baseCMD, baseImportCMD)
 	accountCMD := cmd.NewAccountCMD(baseCMD, baseImportCMD, baseExportCMD)
 	apiCMD := cmd.NewApiCMD(baseCMD)
 	//

@@ -33,7 +33,7 @@ func NewImportTransfer(
 }
 
 func (h *importTransfer) Handle(ctx context.Context, command cbus.Command) (result interface{}, err error) {
-	filePath := command.(*appCommand.ImportStock).FilePath
+	filePath := command.(*appCommand.ImportTransfer).FilePath
 	r := util.NewCsvReader(filePath)
 
 	r.Open()

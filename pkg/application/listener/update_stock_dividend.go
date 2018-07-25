@@ -15,7 +15,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
-const updateDividendConcurrency = 10
+const updateDividendConcurrency = 15
 
 type updateStockDividend struct {
 	stockDividendPersister dividend.Persister
@@ -41,7 +41,7 @@ func (l *updateStockDividend) OnEvent(ctx context.Context, event cbus.Event) {
 
 	var wg sync.WaitGroup
 
-	concurrency := updatePriceConcurrency
+	concurrency := updateDividendConcurrency
 
 	for _, stk := range stks {
 		wg.Add(1)
@@ -99,5 +99,18 @@ func (l *updateStockDividend) OnEvent(ctx context.Context, event cbus.Event) {
 
 			concurrency++
 		}()
+
+		for {
+			if concurrency != 0 {
+				break
+			}
+
+			logger.FromContext(ctx).Errorf("Going to rest for %d seconds", 15)
+			time.Sleep(15 * time.Second)
+		}
 	}
+
+	wg.Wait()
+
+	logger.FromContext(ctx).Debug("Updated stock dividend")
 }
