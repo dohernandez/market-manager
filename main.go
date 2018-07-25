@@ -127,23 +127,6 @@ func main() {
 								},
 							},
 						},
-						{
-							Name:      "dividend",
-							Aliases:   []string{"s"},
-							Usage:     "Import market stock dividend from csv file",
-							Action:    purchaseCMD.ImportDividend,
-							ArgsUsage: "",
-							Flags: []cli.Flag{
-								cli.StringFlag{
-									Name:  "file, f",
-									Usage: "csv file to import",
-								},
-								cli.StringFlag{
-									Name:  "stock, s",
-									Usage: "Stock symbol (tricker) to update dividend.",
-								},
-							},
-						},
 					},
 				},
 				{
@@ -156,18 +139,6 @@ func main() {
 							Aliases:   []string{"p"},
 							Usage:     "Update stock price value based on the yahoo/google api",
 							Action:    cLine.UpdatePrice,
-							ArgsUsage: "",
-							Flags: []cli.Flag{
-								cli.StringFlag{
-									Name:  "stock, s",
-									Usage: "Stock symbol(tricker) to update price",
-								},
-							},
-						}, {
-							Name:      "highLow52week",
-							Aliases:   []string{"phl52w"},
-							Usage:     "Update high - Low 52 week stock price value based on the yahoo/google api",
-							Action:    purchaseCMD.UpdatePrice52week,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -273,7 +244,7 @@ func main() {
 						{
 							Name:      "wallet",
 							Aliases:   []string{"w"},
-							Action:    accountCMD.ImportWallet,
+							Action:    cLine.ImportWallet,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
