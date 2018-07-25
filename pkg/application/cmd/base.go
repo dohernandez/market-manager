@@ -78,6 +78,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	stockPersister := storage.NewStockPersister(cmd.DB)
 	walletPersister := storage.NewWalletPersister(cmd.DB)
 	stockInfoPersister := storage.NewStockInfoPersister(cmd.DB)
+	stockDividendPersister := storage.NewStockDividendPersister(cmd.DB)
 
 	// CLIENT
 	//timeout := time.Second * time.Duration(cmd.config.IEXTrading.Timeout)
@@ -88,28 +89,38 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 
 	// SERVICE
 	//stockPrice := service.NewBasicStockPrice(cmd.ctx, iexClient)
-	stockPriceScrapeYahoo := service.NewYahooScrapeStockPrice(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
-	stockPriceVolatilityMarketChameleon := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
+	stockPriceScrapeYahooService := service.NewYahooScrapeStockPrice(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
+	stockPriceVolatilityMarketChameleonService := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
+	stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
 
 	// HANDLER
 	importStocksHandler := handler.NewImportStock(marketFinder, exchangeFinder, stockInfoFinder, stockInfoPersister)
 	updateAllStockPriceHandler := handler.NewUpdateAllStockPrice(stockFinder)
 	updateOneStockPrice := handler.NewUpdateOneStockPrice(stockFinder)
+	updateAllStockDividendHandler := handler.NewUpdateAllStockDividend(stockFinder)
+	updateOneStockDividendHandler := handler.NewUpdateOneStockDividend(stockFinder)
 
 	// LISTENER
 	persisterStock := listener.NewPersisterStock(stockPersister)
-	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahoo, stockPersister)
+	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahooService, stockPersister)
 	updateStockDividendYield := listener.NewUpdateStockDividendYield(stockDividendFinder, stockPersister)
 	updateWalletCapital := listener.NewUpdateWalletCapital(walletFinder, walletPersister, ccClient)
-	updateStockPriceVolatility := listener.NewUpdateStockPriceVolatility(stockPriceVolatilityMarketChameleon, stockPersister)
+	updateStockPriceVolatility := listener.NewUpdateStockPriceVolatility(stockPriceVolatilityMarketChameleonService, stockPersister)
+	updateStockDividend := listener.NewUpdateStockDividend(stockDividendPersister, stockDividendMarketChameleonService)
 
 	// COMMAND BUS
 	bus := cbus.Bus{}
 
+	// USE CASES
 	// Import stocks
 	importStock := command.ImportStock{}
 	bus.Handle(&importStock, importStocksHandler)
 	bus.ListenCommand(cbus.Complete, &importStock, persisterStock)
+	bus.ListenCommand(cbus.Complete, &importStock, updateStockPrice)
+	bus.ListenCommand(cbus.Complete, &importStock, updateStockDividend)
+	bus.ListenCommand(cbus.Complete, &importStock, updateStockDividendYield)
+	bus.ListenCommand(cbus.Complete, &importStock, updateWalletCapital)
+	bus.ListenCommand(cbus.Complete, &importStock, updateStockPriceVolatility)
 
 	// Update all stock price
 	updateAllStocksPrice := command.UpdateAllStocksPrice{}
@@ -126,6 +137,18 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockDividendYield)
 	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateWalletCapital)
 	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockPriceVolatility)
+
+	// Update all stock dividends
+	updateAllStocksDividend := command.UpdateAllStockDividend{}
+	bus.Handle(&updateAllStocksDividend, updateAllStockDividendHandler)
+	bus.ListenCommand(cbus.Complete, &updateAllStocksDividend, updateStockDividend)
+	bus.ListenCommand(cbus.Complete, &updateAllStocksDividend, updateStockDividendYield)
+
+	// Update one stock dividends
+	updateOneStocksDividend := command.UpdateOneStockDividend{}
+	bus.Handle(&updateOneStocksDividend, updateOneStockDividendHandler)
+	bus.ListenCommand(cbus.Complete, &updateOneStocksDividend, updateStockDividend)
+	bus.ListenCommand(cbus.Complete, &updateOneStocksDividend, updateStockDividendYield)
 
 	return &bus
 }

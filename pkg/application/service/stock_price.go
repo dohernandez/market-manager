@@ -180,6 +180,7 @@ func (s *yahooScraperStockPrice) Price(stk *stock.Stock) (stock.Price, error) {
 	if err != nil {
 		return stock.Price{}, err
 	}
+
 	logger.FromContext(s.ctx).Debugf("got price %+v from stock %s", p, stk.Symbol)
 
 	return p, nil

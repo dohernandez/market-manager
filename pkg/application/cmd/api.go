@@ -5,6 +5,8 @@ import (
 
 	"github.com/urfave/cli"
 
+	"time"
+
 	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
@@ -254,33 +256,45 @@ func (cmd *ApiCMD) Run(cliCtx *cli.Context) error {
 	//
 	//fmt.Printf("%+v\n", mc)
 
-	stk := stock.Stock{Symbol: "EXPE"}
+	stk := stock.Stock{Symbol: "AXP"}
 
-	ps := service.NewYahooScrapeStockPrice(cmd.ctx, "https://finance.yahoo.com/quote")
+	//ps := service.NewYahooScrapeStockPrice(cmd.ctx, "https://finance.yahoo.com/quote")
+	//
+	//p, err := ps.Price(&stk)
+	//if err != nil {
+	//	fmt.Printf("%+v", err)
+	//
+	//	return err
+	//}
+	//
+	//fmt.Printf("%+v\n", p)
+	//
+	//ss := service.NewStockSummaryMarketChameleon(cmd.ctx, "https://marketchameleon.com/Overview")
+	//
+	//s, err := ss.Summary(&stk)
+	//if err != nil {
+	//	fmt.Printf("%+v", err)
+	//
+	//	return err
+	//}
+	//
+	//fmt.Printf("%+v\n", s)
+	//
+	//pvs := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, "https://marketchameleon.com/Overview")
+	//
+	//pv, err := pvs.PriceVolatility(&stk)
+	//if err != nil {
+	//	fmt.Printf("%+v", err)
+	//
+	//	return err
+	//}
+	//
+	//fmt.Printf("%+v\n", pv)
 
-	p, err := ps.Price(&stk)
-	if err != nil {
-		fmt.Printf("%+v", err)
+	pvs := service.NewStockDividendMarketChameleon(cmd.ctx, "https://marketchameleon.com/Overview")
+	shd, _ := time.Parse("2-Jan-2006", "1-Jan-2017")
 
-		return err
-	}
-
-	fmt.Printf("%+v\n", p)
-
-	ss := service.NewStockSummaryMarketChameleon(cmd.ctx, "https://marketchameleon.com/Overview")
-
-	s, err := ss.Summary(&stk)
-	if err != nil {
-		fmt.Printf("%+v", err)
-
-		return err
-	}
-
-	fmt.Printf("%+v\n", s)
-
-	pvs := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, "https://marketchameleon.com/Overview")
-
-	pv, err := pvs.PriceVolatility(&stk)
+	pv, err := pvs.Historical(&stk, shd)
 	if err != nil {
 		fmt.Printf("%+v", err)
 

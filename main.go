@@ -180,7 +180,7 @@ func main() {
 							Name:      "dividend",
 							Aliases:   []string{"d"},
 							Usage:     "Update stock dividend value based on the yahoo/iextrading api",
-							Action:    purchaseCMD.Dividend,
+							Action:    cLine.UpdateDividend,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

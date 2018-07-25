@@ -114,3 +114,28 @@ func (cmd *CLI) getStockImport(cliCtx *cli.Context, importPath string) ([]resour
 
 	return ris, nil
 }
+
+func (cmd *CLI) UpdateDividend(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	bus := cmd.initCommandBus()
+
+	if cliCtx.String("stock") == "" {
+		_, err := bus.ExecuteContext(ctx, &command.UpdateAllStockDividend{})
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := bus.ExecuteContext(ctx, &command.UpdateOneStockDividend{
+			Symbol: cliCtx.String("stock"),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	logger.FromContext(ctx).Info("Update finished")
+
+	return nil
+}

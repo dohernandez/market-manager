@@ -16,5 +16,7 @@ type (
 
 	Persister interface {
 		PersistAll(stockID uuid.UUID, ds []StockDividend) error
+		DeleteAllFromStatus(stockID uuid.UUID, status Status) error
+		DeleteAll(stockID uuid.UUID) error
 	}
 )

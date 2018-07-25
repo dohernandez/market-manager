@@ -78,3 +78,35 @@ func (p *stockDividendPersister) execInsert(tx *sqlx.Tx, stockID uuid.UUID, d di
 
 	return nil
 }
+
+func (p *stockDividendPersister) DeleteAllFromStatus(stockID uuid.UUID, status dividend.Status) error {
+	return transaction(p.db, func(tx *sqlx.Tx) error {
+		return p.execDeleteFromStatus(tx, stockID, status)
+	})
+}
+
+func (p *stockDividendPersister) execDeleteFromStatus(tx *sqlx.Tx, stockID uuid.UUID, status dividend.Status) error {
+	query := `DELETE FROM stock_dividend WHERE stock_id = $1 AND status = $2`
+	_, err := tx.Exec(query, stockID, status)
+	if err != nil {
+		return errors.Wrapf(err, "DELETE FROM stock_dividend WHERE stock_id = %s AND status = %s", stockID, status)
+	}
+
+	return nil
+}
+
+func (p *stockDividendPersister) DeleteAll(stockID uuid.UUID) error {
+	return transaction(p.db, func(tx *sqlx.Tx) error {
+		return p.execDelete(tx, stockID)
+	})
+}
+
+func (p *stockDividendPersister) execDelete(tx *sqlx.Tx, stockID uuid.UUID) error {
+	query := `DELETE FROM stock_dividend WHERE stock_id = $1`
+	_, err := tx.Exec(query, stockID)
+	if err != nil {
+		return errors.Wrapf(err, "DELETE FROM stock_dividend WHERE stock_id = %s", stockID)
+	}
+
+	return nil
+}
