@@ -139,3 +139,64 @@ func (cmd *CLI) UpdateDividend(cliCtx *cli.Context) error {
 
 	return nil
 }
+
+func (cmd *CLI) ImportTransfer(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	bus := cmd.initCommandBus()
+
+	ris, err := cmd.getTransferImport(cliCtx, cmd.config.Import.TransfersPath)
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	err = cmd.runImport(ctx, bus, "transfers", ris, func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error {
+		_, err := bus.ExecuteContext(ctx, &command.ImportTransfer{FilePath: ri.filePath})
+		if err != nil {
+			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
+		}
+
+		return nil
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	logger.FromContext(ctx).Info("Import finished")
+
+	return nil
+}
+
+func (cmd *CLI) getTransferImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
+	var ris []resourceImport
+
+	if cliCtx.String("file") != "" {
+		ris = append(ris, resourceImport{
+			filePath:     cliCtx.String("file"),
+			resourceName: "",
+		})
+	} else {
+		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			if filepath.Ext(path) == ".csv" {
+				filePath := path
+
+				ris = append(ris, resourceImport{
+					filePath:     filePath,
+					resourceName: "",
+				})
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return ris, nil
+}

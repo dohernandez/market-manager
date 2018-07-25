@@ -362,7 +362,7 @@ func main() {
 						{
 							Name:      "transfer",
 							Aliases:   []string{"t"},
-							Action:    bankingCMD.ImportTransfer,
+							Action:    cLine.ImportTransfer,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
