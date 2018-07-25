@@ -103,6 +103,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	updateOneStockDividendHandler := handler.NewUpdateOneStockDividend(stockFinder)
 	importTransferHandler := handler.NewImportTransfer(bankAccountFinder)
 	importWalletHandler := handler.NewImportWallet(bankAccountFinder)
+	importOperationHandler := handler.NewImportOperation(stockFinder)
 
 	// LISTENER
 	persisterStock := listener.NewPersisterStock(stockPersister)
@@ -113,6 +114,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	updateStockDividend := listener.NewUpdateStockDividend(stockDividendPersister, stockDividendMarketChameleonService)
 	persisterTransfer := listener.NewPersisterTransfer(transferPersister, walletFinder)
 	persisterWallet := listener.NewPersisterWallet(walletPersister)
+	persisterOperation := listener.NewPersisterOperation(walletFinder, stockFinder, walletPersister, ccClient)
 
 	// COMMAND BUS
 	bus := cbus.Bus{}
@@ -165,6 +167,11 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	importWallet := command.ImportWallet{}
 	bus.Handle(&importWallet, importWalletHandler)
 	bus.ListenCommand(cbus.Complete, &importWallet, persisterWallet)
+
+	// import operation
+	importOperation := command.ImportOperation{}
+	bus.Handle(&importOperation, importOperationHandler)
+	bus.ListenCommand(cbus.Complete, &importOperation, persisterOperation)
 
 	return &bus
 }

@@ -260,7 +260,7 @@ func main() {
 						{
 							Name:      "operation",
 							Aliases:   []string{"o"},
-							Action:    accountCMD.ImportOperation,
+							Action:    cLine.ImportOperation,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

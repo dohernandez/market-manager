@@ -213,7 +213,7 @@ func (cmd *CLI) ImportWallet(cliCtx *cli.Context) error {
 		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
 	}
 
-	err = cmd.runImport(ctx, bus, "transfers", wis, func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error {
+	err = cmd.runImport(ctx, bus, "wallets", wis, func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error {
 		_, err := bus.ExecuteContext(ctx, &command.ImportWallet{FilePath: ri.filePath, Name: ri.resourceName})
 		if err != nil {
 			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
@@ -290,4 +290,32 @@ func (cmd *CLI) getWalletImport(cliCtx *cli.Context, importPath string) ([]resou
 	}
 
 	return wis, nil
+}
+
+func (cmd *CLI) ImportOperation(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	bus := cmd.initCommandBus()
+
+	ois, err := cmd.getWalletImport(cliCtx, cmd.config.Import.AccountsPath)
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	err = cmd.runImport(ctx, bus, "accounts", ois, func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error {
+		_, err := bus.ExecuteContext(ctx, &command.ImportOperation{FilePath: ri.filePath, Wallet: ri.resourceName})
+		if err != nil {
+			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
+		}
+
+		return nil
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	logger.FromContext(ctx).Info("Import finished")
+
+	return nil
 }
