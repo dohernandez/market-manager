@@ -13,7 +13,6 @@ import (
 	"github.com/sony/gobreaker"
 
 	"github.com/dohernandez/market-manager/pkg/application/config"
-	"github.com/dohernandez/market-manager/pkg/application/import"
 	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/application/storage"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client"
@@ -47,8 +46,6 @@ type Container struct {
 	transferPersister      transfer.Persister
 	stockInfoPersister     stock.InfoPersister
 	stockInfoFinder        stock.InfoFinder
-
-	importStorage _import.Storage
 
 	iexClient *iex.Client
 	ccClient  *cc.Client
@@ -170,17 +167,6 @@ func (c *Container) stockInfoPersisterInstance() stock.InfoPersister {
 	}
 
 	return c.stockInfoPersister
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// STORAGE
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-func (c *Container) ImportStorageInstance() _import.Storage {
-	if c.importStorage == nil {
-		c.importStorage = storage.NewImportStorage(c.db)
-	}
-
-	return c.importStorage
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

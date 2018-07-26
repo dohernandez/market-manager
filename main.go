@@ -61,10 +61,9 @@ func main() {
 
 	baseCMD := cmd.NewBaseCMD(context.TODO(), envConfig)
 	baseExportCMD := &cmd.BaseExportCMD{}
-	baseImportCMD := &cmd.BaseImportCMD{}
 
-	purchaseCMD := cmd.NewPurchaseCMD(baseCMD, baseImportCMD, baseExportCMD)
-	accountCMD := cmd.NewAccountCMD(baseCMD, baseImportCMD, baseExportCMD)
+	purchaseCMD := cmd.NewPurchaseCMD(baseCMD, baseExportCMD)
+	accountCMD := cmd.NewAccountCMD(baseCMD, baseExportCMD)
 	apiCMD := cmd.NewApiCMD(baseCMD)
 	//
 	//schedulerCMD := command.NewSchedulerCMD(purchaseCMD)
