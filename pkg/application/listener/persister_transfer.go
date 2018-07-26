@@ -16,12 +16,14 @@ import (
 type persisterTransfer struct {
 	transferPersister transfer.Persister
 	walletFinder      wallet.Finder
+	walletPersister   wallet.Persister
 }
 
-func NewPersisterTransfer(transferPersister transfer.Persister, walletFinder wallet.Finder) *persisterTransfer {
+func NewPersisterTransfer(transferPersister transfer.Persister, walletFinder wallet.Finder, walletPersister wallet.Persister) *persisterTransfer {
 	return &persisterTransfer{
 		transferPersister: transferPersister,
 		walletFinder:      walletFinder,
+		walletPersister:   walletPersister,
 	}
 }
 
@@ -85,4 +87,6 @@ func (l *persisterTransfer) OnEvent(ctx context.Context, event cbus.Event) {
 
 		w.DecreaseInvestment(t.Amount)
 	}
+
+	l.walletPersister.UpdateAllAccounting(ws)
 }

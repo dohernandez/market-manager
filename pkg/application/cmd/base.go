@@ -112,7 +112,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	updateWalletCapital := listener.NewUpdateWalletCapital(walletFinder, walletPersister, ccClient)
 	updateStockPriceVolatility := listener.NewUpdateStockPriceVolatility(stockPriceVolatilityMarketChameleonService, stockPersister)
 	updateStockDividend := listener.NewUpdateStockDividend(stockDividendPersister, stockDividendMarketChameleonService)
-	persisterTransfer := listener.NewPersisterTransfer(transferPersister, walletFinder)
+	persisterTransfer := listener.NewPersisterTransfer(transferPersister, walletFinder, walletPersister)
 	persisterWallet := listener.NewPersisterWallet(walletPersister)
 	persisterOperation := listener.NewPersisterOperation(walletFinder, stockFinder, walletPersister, ccClient)
 
@@ -127,7 +127,6 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.ListenCommand(cbus.Complete, &importStock, updateStockPrice)
 	bus.ListenCommand(cbus.Complete, &importStock, updateStockDividend)
 	bus.ListenCommand(cbus.Complete, &importStock, updateStockDividendYield)
-	bus.ListenCommand(cbus.Complete, &importStock, updateWalletCapital)
 	bus.ListenCommand(cbus.Complete, &importStock, updateStockPriceVolatility)
 
 	// Update all stock price
