@@ -2,22 +2,16 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
-	"fmt"
-
-	"net/http"
-
-	"golang.org/x/net/html"
-
-	"github.com/yhat/scrape"
-	"golang.org/x/net/html/atom"
-
 	"github.com/pkg/errors"
-
-	"strings"
-
-	"strconv"
+	"github.com/yhat/scrape"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"

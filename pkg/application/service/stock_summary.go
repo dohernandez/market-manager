@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"golang.org/x/net/html"
-
 	"github.com/pkg/errors"
 	"github.com/yhat/scrape"
+	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"

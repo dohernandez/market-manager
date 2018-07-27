@@ -2,17 +2,15 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/yhat/scrape"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
-
-	"fmt"
-	"net/http"
-
-	"time"
 
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -37,7 +35,7 @@ func NewMarketChameleonStockPriceVolatility(ctx context.Context, url string) *ma
 }
 
 func (s *marketChameleonStockPriceVolatility) PriceVolatility(stk *stock.Stock) (stock.PriceVolatility, error) {
-	url := fmt.Sprintf("%s/%s?p=%s", s.url, stk.Symbol, stk.Symbol)
+	url := fmt.Sprintf("%s/%s", s.url, stk.Symbol)
 
 	resp, err := http.Get(url)
 	if err != nil {

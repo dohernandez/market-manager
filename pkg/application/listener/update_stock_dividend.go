@@ -2,12 +2,10 @@ package listener
 
 import (
 	"context"
-
-	"github.com/gogolfing/cbus"
-
+	"sync"
 	"time"
 
-	"sync"
+	"github.com/gogolfing/cbus"
 
 	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
@@ -107,6 +105,7 @@ func (l *updateStockDividend) OnEvent(ctx context.Context, event cbus.Event) {
 
 			logger.FromContext(ctx).Errorf("Going to rest for %d seconds", 15)
 			time.Sleep(15 * time.Second)
+			logger.FromContext(ctx).Errorf("Waking up after %d seconds sleeping", 15)
 		}
 	}
 

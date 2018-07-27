@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gogolfing/cbus"
-
 	"github.com/pkg/errors"
 
 	"github.com/dohernandez/market-manager/pkg/application/service"

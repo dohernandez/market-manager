@@ -2,31 +2,39 @@ package cmd
 
 import (
 	"context"
-
-	"github.com/urfave/cli"
-
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
+	"regexp"
 
 	"github.com/gogolfing/cbus"
+	"github.com/urfave/cli"
 
 	"github.com/dohernandez/market-manager/pkg/application/command"
+	"github.com/dohernandez/market-manager/pkg/application/render"
 	"github.com/dohernandez/market-manager/pkg/application/storage"
+	"github.com/dohernandez/market-manager/pkg/application/util"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
+	"github.com/dohernandez/market-manager/pkg/market-manager"
 )
 
-type CLI struct {
-	*Base
-	*baseImport
-}
+type (
+	resourceImport struct {
+		filePath     string
+		resourceName string
+	}
+
+	CLI struct {
+		*Base
+		resourceStorage util.ResourceStorage
+	}
+)
 
 func NewCLI(base *Base) *CLI {
 	return &CLI{
-		Base: base,
-		baseImport: &baseImport{
-			resourceStorage: storage.NewUtilImportStorage(base.DB),
-		},
+		Base:            base,
+		resourceStorage: storage.NewUtilImportStorage(base.DB),
 	}
 }
 
@@ -79,6 +87,66 @@ func (cmd *CLI) ImportStock(cliCtx *cli.Context) error {
 	logger.FromContext(ctx).Info("Import finished")
 
 	return nil
+}
+
+func (cmd *CLI) runImport(
+	ctx context.Context,
+	bus *cbus.Bus,
+	resourceType string,
+	ris []resourceImport,
+	fn func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error,
+) error {
+	irs, err := cmd.resourceStorage.FindAllByResource(resourceType)
+	if err != nil {
+		if err != mm.ErrNotFound {
+			return err
+		}
+
+		irs = []util.Resource{}
+	}
+
+	for _, ri := range ris {
+		fileName := path.Base(ri.filePath)
+
+		var found bool
+		for _, ir := range irs {
+			if ir.FileName == fileName {
+				found = true
+
+				break
+			}
+		}
+
+		if !found {
+			logger.FromContext(ctx).Infof("Importing file %s", fileName)
+
+			if err := fn(ctx, bus, ri); err != nil {
+				return err
+			}
+
+			ir := util.NewResource(resourceType, fileName)
+			err := cmd.resourceStorage.Persist(ir)
+			if err != nil {
+				return err
+			}
+
+			logger.FromContext(ctx).Infof("Imported file %s", fileName)
+		}
+	}
+
+	return nil
+}
+
+func (cmd *CLI) geResourceNameFromFilePath(file string) string {
+	var dir = filepath.Dir(file)
+	var ext = filepath.Ext(file)
+
+	name := file[len(dir)+1 : len(file)-len(ext)]
+
+	reg := regexp.MustCompile(`(^[0-9]+_)+(.*)`)
+	res := reg.ReplaceAllString(name, "${2}")
+
+	return res
 }
 
 func (cmd *CLI) getStockImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
@@ -318,4 +386,44 @@ func (cmd *CLI) ImportOperation(cliCtx *cli.Context) error {
 	logger.FromContext(ctx).Info("Import finished")
 
 	return nil
+}
+
+// List in csv format the wallet items from a wallet
+func (cmd *CLI) ExportStocks(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	bus := cmd.initCommandBus()
+
+	output, err := bus.ExecuteContext(ctx, &command.ListStocks{
+		Exchange: cliCtx.String("exchange"),
+		//Stock:    cliCtx.String("stock"),
+		GroupBy: util.GroupBy(cliCtx.String("group")),
+		Sorting: cmd.sortingFromCliCtx(cliCtx),
+	})
+	if err != nil {
+		return err
+	}
+
+	sls := render.NewScreenListStocks(2)
+	sls.Render(output)
+
+	return nil
+}
+
+func (cmd *CLI) sortingFromCliCtx(cliCtx *cli.Context) util.Sorting {
+	sortBy := util.SortByStock
+	orderBy := util.OrderDescending
+
+	if cliCtx.String("sort") != "" {
+		sortBy = util.SortBy(cliCtx.String("sort"))
+	}
+	if cliCtx.String("order") != "" {
+		orderBy = util.OrderBy(cliCtx.String("order"))
+	}
+
+	return util.Sorting{
+		By:    sortBy,
+		Order: orderBy,
+	}
 }

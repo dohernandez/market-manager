@@ -2,7 +2,6 @@ package bootstrap
 
 import (
 	"fmt"
-
 	"strings"
 
 	"github.com/DATA-DOG/godog"

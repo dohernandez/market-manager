@@ -3,9 +3,8 @@ package bootstrap
 import (
 	"fmt"
 	"log"
-	"strings"
-
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/DATA-DOG/godog"

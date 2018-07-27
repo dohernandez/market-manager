@@ -2,10 +2,9 @@ package handler
 
 import (
 	"context"
+	"io"
 
 	"github.com/gogolfing/cbus"
-
-	"io"
 
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/util"

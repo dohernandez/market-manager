@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -11,12 +13,7 @@ import (
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
 	"github.com/jmoiron/sqlx"
-
-	"fmt"
-
 	"github.com/kelseyhightower/envconfig"
-
-	"errors"
 
 	"github.com/dohernandez/market-manager/features/bootstrap"
 	"github.com/dohernandez/market-manager/pkg/application/config"

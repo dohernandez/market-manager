@@ -1,14 +1,10 @@
 package bootstrap
 
 import (
-	"net/http"
-
 	"fmt"
-
+	"net/http"
 	"regexp"
-
 	"strings"
-
 	"time"
 
 	"github.com/DATA-DOG/godog"

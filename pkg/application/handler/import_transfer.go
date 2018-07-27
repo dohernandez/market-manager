@@ -5,13 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	"github.com/gogolfing/cbus"
-
-	"time"
-
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/gogolfing/cbus"
 
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/util"

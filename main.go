@@ -168,7 +168,7 @@ func main() {
 						{
 							Name:      "stocks",
 							Aliases:   []string{"s"},
-							Action:    purchaseCMD.ExportStocks,
+							Action:    cLine.ExportStocks,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

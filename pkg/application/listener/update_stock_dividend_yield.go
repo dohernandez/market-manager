@@ -2,7 +2,6 @@ package listener
 
 import (
 	"context"
-
 	"time"
 
 	"github.com/gogolfing/cbus"

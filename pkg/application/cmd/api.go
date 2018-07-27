@@ -2,10 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/urfave/cli"
-
-	"time"
 
 	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"

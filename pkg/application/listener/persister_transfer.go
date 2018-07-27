@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/gogolfing/cbus"
-
 	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"

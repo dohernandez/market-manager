@@ -7,13 +7,12 @@ import (
 	"time"
 
 	"github.com/f2prateek/train"
+	"github.com/gogolfing/cbus"
 	"github.com/jmoiron/sqlx"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/sony/gobreaker"
-
-	"github.com/gogolfing/cbus"
 
 	"github.com/dohernandez/market-manager/pkg/application"
 	"github.com/dohernandez/market-manager/pkg/application/command"
@@ -104,6 +103,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	importTransferHandler := handler.NewImportTransfer(bankAccountFinder)
 	importWalletHandler := handler.NewImportWallet(bankAccountFinder)
 	importOperationHandler := handler.NewImportOperation(stockFinder)
+	listStockHandler := handler.NewListStock(stockFinder, stockDividendFinder)
 
 	// LISTENER
 	persisterStock := listener.NewPersisterStock(stockPersister)
@@ -171,6 +171,10 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	importOperation := command.ImportOperation{}
 	bus.Handle(&importOperation, importOperationHandler)
 	bus.ListenCommand(cbus.Complete, &importOperation, persisterOperation)
+
+	// List stocks
+	listStocks := command.ListStocks{}
+	bus.Handle(&listStocks, listStockHandler)
 
 	return &bus
 }
