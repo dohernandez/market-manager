@@ -19,13 +19,16 @@ import (
 
 type importWallet struct {
 	bankAccountFinder bank.Finder
+	walletPersister   wallet.Persister
 }
 
 func NewImportWallet(
 	bankAccountFinder bank.Finder,
+	walletPersister wallet.Persister,
 ) *importWallet {
 	return &importWallet{
 		bankAccountFinder: bankAccountFinder,
+		walletPersister:   walletPersister,
 	}
 }
 
@@ -64,6 +67,16 @@ func (h *importWallet) Handle(ctx context.Context, command cbus.Command) (result
 		}
 
 		ws = append(ws, w)
+	}
+
+	err = h.walletPersister.PersistAll(ws)
+	if err != nil {
+		logger.FromContext(ctx).Errorf(
+			"An error happen while persisting wallets -> error [%s]",
+			err,
+		)
+
+		return nil, err
 	}
 
 	return ws, nil

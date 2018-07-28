@@ -19,6 +19,7 @@ type importStock struct {
 	marketFinder       market.Finder
 	exchangeFinder     exchange.Finder
 	stockInfoFinder    stock.InfoFinder
+	stockPersister     stock.Persister
 	stockInfoPersister stock.InfoPersister
 
 	stockInfos map[string]*stock.Info
@@ -28,12 +29,14 @@ func NewImportStock(
 	marketFinder market.Finder,
 	exchangeFinder exchange.Finder,
 	stockInfoFinder stock.InfoFinder,
+	stockPersister stock.Persister,
 	stockInfoPersister stock.InfoPersister,
 ) *importStock {
 	return &importStock{
 		marketFinder:       marketFinder,
 		exchangeFinder:     exchangeFinder,
 		stockInfoFinder:    stockInfoFinder,
+		stockPersister:     stockPersister,
 		stockInfoPersister: stockInfoPersister,
 		stockInfos:         map[string]*stock.Info{},
 	}
@@ -85,6 +88,16 @@ func (h *importStock) Handle(ctx context.Context, command cbus.Command) (result 
 		ss = append(ss, stk)
 
 		logger.FromContext(ctx).Debugf("Added new stock [%+v]", stk)
+	}
+
+	err = h.stockPersister.PersistAll(ss)
+	if err != nil {
+		logger.FromContext(ctx).Errorf(
+			"An error happen while persisting stocks -> error [%s]",
+			err,
+		)
+
+		return nil, err
 	}
 
 	return ss, nil

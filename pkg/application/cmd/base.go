@@ -82,9 +82,6 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	transferPersister := storage.NewTransferPersister(cmd.DB)
 
 	// CLIENT
-	//timeout := time.Second * time.Duration(cmd.config.IEXTrading.Timeout)
-	//iexClient := iex.NewClient(cmd.newHTTPClient("IEX-TRADING", timeout))
-
 	timeout := time.Second * time.Duration(cmd.config.CurrencyConverter.Timeout)
 	ccClient := cc.NewClient(cmd.newHTTPClient("CURRENCY-CONVERTER", timeout), cmd.cache)
 
@@ -95,26 +92,22 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
 
 	// HANDLER
-	importStocksHandler := handler.NewImportStock(marketFinder, exchangeFinder, stockInfoFinder, stockInfoPersister)
+	importStocksHandler := handler.NewImportStock(marketFinder, exchangeFinder, stockInfoFinder, stockPersister, stockInfoPersister)
 	updateAllStockPriceHandler := handler.NewUpdateAllStockPrice(stockFinder)
 	updateOneStockPrice := handler.NewUpdateOneStockPrice(stockFinder)
 	updateAllStockDividendHandler := handler.NewUpdateAllStockDividend(stockFinder)
 	updateOneStockDividendHandler := handler.NewUpdateOneStockDividend(stockFinder)
-	importTransferHandler := handler.NewImportTransfer(bankAccountFinder)
-	importWalletHandler := handler.NewImportWallet(bankAccountFinder)
-	importOperationHandler := handler.NewImportOperation(stockFinder)
+	importTransferHandler := handler.NewImportTransfer(bankAccountFinder, transferPersister, walletFinder, walletPersister)
+	importWalletHandler := handler.NewImportWallet(bankAccountFinder, walletPersister)
+	importOperationHandler := handler.NewImportOperation(stockFinder, walletFinder, walletPersister, ccClient)
 	listStockHandler := handler.NewListStock(stockFinder, stockDividendFinder)
 
 	// LISTENER
-	persisterStock := listener.NewPersisterStock(stockPersister)
 	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahooService, stockPersister)
 	updateStockDividendYield := listener.NewUpdateStockDividendYield(stockDividendFinder, stockPersister)
 	updateWalletCapital := listener.NewUpdateWalletCapital(walletFinder, walletPersister, ccClient)
 	updateStockPriceVolatility := listener.NewUpdateStockPriceVolatility(stockPriceVolatilityMarketChameleonService, stockPersister)
 	updateStockDividend := listener.NewUpdateStockDividend(stockDividendPersister, stockDividendMarketChameleonService)
-	persisterTransfer := listener.NewPersisterTransfer(transferPersister, walletFinder, walletPersister)
-	persisterWallet := listener.NewPersisterWallet(walletPersister)
-	persisterOperation := listener.NewPersisterOperation(walletFinder, stockFinder, walletPersister, ccClient)
 
 	// COMMAND BUS
 	bus := cbus.Bus{}
@@ -123,7 +116,6 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// Import stocks
 	importStock := command.ImportStock{}
 	bus.Handle(&importStock, importStocksHandler)
-	bus.ListenCommand(cbus.AfterSuccess, &importStock, persisterStock)
 	bus.ListenCommand(cbus.AfterSuccess, &importStock, updateStockPrice)
 	bus.ListenCommand(cbus.AfterSuccess, &importStock, updateStockDividend)
 	bus.ListenCommand(cbus.AfterSuccess, &importStock, updateStockDividendYield)
@@ -160,17 +152,14 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// import transfer
 	importTransfer := command.ImportTransfer{}
 	bus.Handle(&importTransfer, importTransferHandler)
-	bus.ListenCommand(cbus.AfterSuccess, &importTransfer, persisterTransfer)
 
 	// import wallet
 	importWallet := command.ImportWallet{}
 	bus.Handle(&importWallet, importWalletHandler)
-	bus.ListenCommand(cbus.AfterSuccess, &importWallet, persisterWallet)
 
 	// import operation
 	importOperation := command.ImportOperation{}
 	bus.Handle(&importOperation, importOperationHandler)
-	bus.ListenCommand(cbus.AfterSuccess, &importOperation, persisterOperation)
 
 	// List stocks
 	listStocks := command.ListStocks{}
