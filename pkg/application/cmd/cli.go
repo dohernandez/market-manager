@@ -395,18 +395,19 @@ func (cmd *CLI) ExportStocks(cliCtx *cli.Context) error {
 
 	bus := cmd.initCommandBus()
 
-	output, err := bus.ExecuteContext(ctx, &command.ListStocks{
+	stks, err := bus.ExecuteContext(ctx, &command.ListStocks{
 		Exchange: cliCtx.String("exchange"),
-		//Stock:    cliCtx.String("stock"),
-		GroupBy: util.GroupBy(cliCtx.String("group")),
-		Sorting: cmd.sortingFromCliCtx(cliCtx),
 	})
 	if err != nil {
 		return err
 	}
 
 	sls := render.NewScreenListStocks(2)
-	sls.Render(output)
+	sls.Render(&render.OutputScreenListStocks{
+		Stocks:  stks.([]*render.StockOutput),
+		GroupBy: util.GroupBy(cliCtx.String("group")),
+		Sorting: cmd.sortingFromCliCtx(cliCtx),
+	})
 
 	return nil
 }

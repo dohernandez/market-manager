@@ -7,12 +7,75 @@ import (
 
 	"github.com/fatih/color"
 
+	"sort"
+
+	"time"
+
 	"github.com/dohernandez/market-manager/pkg/application/util"
 )
 
-type screenListStocks struct {
-	precision int
+const (
+	SortName   util.SortBy = "name"
+	SortDyield util.SortBy = "dyield"
+	SortExdate util.SortBy = "exdate"
+
+	ExDateMonth util.GroupBy = "exdate"
+)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// START Stocks Sort
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+type Stocks []*StockOutput
+
+func (s Stocks) Len() int      { return len(s) }
+func (s Stocks) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+// StocksByName implements sort.Interface by providing Less and using the Len and
+// Swap methods of the embedded wallet items value.
+type StocksByName struct {
+	Stocks
 }
+
+func (s StocksByName) Less(i, j int) bool {
+	return s.Stocks[i].Stock < s.Stocks[j].Stock
+}
+
+// StocksByDividendYield implements sort.Interface by providing Less and using the Len and
+// Swap methods of the embedded wallet items value.
+type StocksByDividendYield struct {
+	Stocks
+}
+
+func (s StocksByDividendYield) Less(i, j int) bool {
+	return s.Stocks[i].DYield < s.Stocks[j].DYield
+}
+
+// StocksByDividendYield implements sort.Interface by providing Less and using the Len and
+// Swap methods of the embedded wallet items value.
+type StocksByExDate struct {
+	Stocks
+}
+
+func (s StocksByExDate) Less(i, j int) bool {
+	return s.Stocks[i].ExDate.Before(s.Stocks[j].ExDate)
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// END Stocks Sort
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+type (
+	OutputScreenListStocks struct {
+		Stocks []*StockOutput
+
+		GroupBy util.GroupBy
+		Sorting util.Sorting
+	}
+
+	screenListStocks struct {
+		precision int
+	}
+)
 
 func NewScreenListStocks(precision int) *screenListStocks {
 	return &screenListStocks{
@@ -21,15 +84,74 @@ func NewScreenListStocks(precision int) *screenListStocks {
 }
 
 func (s *screenListStocks) Render(output interface{}) {
-	sOutput := output.([]*StockOutput)
+	sOutput := output.(*OutputScreenListStocks)
 
-	noColor := color.New(color.Reset).FprintlnFunc()
+	rstks := sOutput.Stocks
+	switch sOutput.Sorting.By {
+	case SortName:
+		sort.Sort(StocksByName{rstks})
+	case SortExdate:
+		sort.Sort(StocksByExDate{rstks})
+	case SortDyield:
+		sort.Sort(StocksByDividendYield{rstks})
+	}
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
 
-	noColor(tw, "")
-	s.renderStocks(tw, sOutput)
-	noColor(tw, "")
+	noColor := color.New(color.Reset).FprintlnFunc()
+
+	switch sOutput.GroupBy {
+	case ExDateMonth:
+		mrstks := map[string][]*StockOutput{}
+
+		for _, stk := range rstks {
+			var key string
+
+			if stk.ExDate.IsZero() {
+				key = ""
+			} else {
+				exDate := stk.ExDate
+				key = fmt.Sprintf("%s %d", exDate.Month(), exDate.Year())
+			}
+
+			mrstks[key] = append(mrstks[key], stk)
+		}
+
+		var keys []string
+		for key := range mrstks {
+			keys = append(keys, key)
+		}
+
+		sort.Slice(keys, func(i, j int) bool {
+			if keys[i] == "" {
+				return false
+			}
+
+			if keys[j] == "" {
+				return true
+			}
+
+			iDate, _ := time.Parse("January 2006", keys[i])
+			jDate, _ := time.Parse("January 2006", keys[j])
+
+			return iDate.Before(jDate)
+		})
+
+		noColor(tw, "")
+		for _, key := range keys {
+			if key != "" {
+				noColor(tw, "# ", key)
+				noColor(tw, "")
+			}
+
+			s.renderStocks(tw, mrstks[key])
+			noColor(tw, "")
+		}
+	default:
+		noColor(tw, "")
+		s.renderStocks(tw, rstks)
+		noColor(tw, "")
+	}
 
 	tw.Flush()
 }
