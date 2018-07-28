@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gogolfing/cbus"
-
 	"github.com/satori/go.uuid"
 
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"

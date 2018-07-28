@@ -2,11 +2,10 @@ package handler
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/gogolfing/cbus"
-
-	"strings"
 
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/render"

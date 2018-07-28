@@ -3,13 +3,11 @@ package render
 import (
 	"fmt"
 	"os"
+	"sort"
 	"text/tabwriter"
+	"time"
 
 	"github.com/fatih/color"
-
-	"sort"
-
-	"time"
 
 	"github.com/dohernandez/market-manager/pkg/application/util"
 )
@@ -30,33 +28,33 @@ type Stocks []*StockOutput
 func (s Stocks) Len() int      { return len(s) }
 func (s Stocks) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
-// StocksByName implements sort.Interface by providing Less and using the Len and
+// stocksByName implements sort.Interface by providing Less and using the Len and
 // Swap methods of the embedded wallet items value.
-type StocksByName struct {
+type stocksByName struct {
 	Stocks
 }
 
-func (s StocksByName) Less(i, j int) bool {
+func (s stocksByName) Less(i, j int) bool {
 	return s.Stocks[i].Stock < s.Stocks[j].Stock
 }
 
-// StocksByDividendYield implements sort.Interface by providing Less and using the Len and
+// stocksByDividendYield implements sort.Interface by providing Less and using the Len and
 // Swap methods of the embedded wallet items value.
-type StocksByDividendYield struct {
+type stocksByDividendYield struct {
 	Stocks
 }
 
-func (s StocksByDividendYield) Less(i, j int) bool {
+func (s stocksByDividendYield) Less(i, j int) bool {
 	return s.Stocks[i].DYield < s.Stocks[j].DYield
 }
 
-// StocksByDividendYield implements sort.Interface by providing Less and using the Len and
+// stocksByExDate implements sort.Interface by providing Less and using the Len and
 // Swap methods of the embedded wallet items value.
-type StocksByExDate struct {
+type stocksByExDate struct {
 	Stocks
 }
 
-func (s StocksByExDate) Less(i, j int) bool {
+func (s stocksByExDate) Less(i, j int) bool {
 	return s.Stocks[i].ExDate.Before(s.Stocks[j].ExDate)
 }
 
@@ -89,11 +87,11 @@ func (s *screenListStocks) Render(output interface{}) {
 	rstks := sOutput.Stocks
 	switch sOutput.Sorting.By {
 	case SortName:
-		sort.Sort(StocksByName{rstks})
+		sort.Sort(stocksByName{rstks})
 	case SortExdate:
-		sort.Sort(StocksByExDate{rstks})
+		sort.Sort(stocksByExDate{rstks})
 	case SortDyield:
-		sort.Sort(StocksByDividendYield{rstks})
+		sort.Sort(stocksByDividendYield{rstks})
 	}
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
@@ -139,10 +137,8 @@ func (s *screenListStocks) Render(output interface{}) {
 
 		noColor(tw, "")
 		for _, key := range keys {
-			if key != "" {
-				noColor(tw, "# ", key)
-				noColor(tw, "")
-			}
+			noColor(tw, "# ", key)
+			noColor(tw, "")
 
 			s.renderStocks(tw, mrstks[key])
 			noColor(tw, "")

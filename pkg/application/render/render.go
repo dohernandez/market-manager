@@ -30,4 +30,36 @@ type (
 
 		PriceWithHighLow int
 	}
+
+	WalletStockOutput struct {
+		StockOutput
+		Amount             int
+		Capital            mm.Value
+		Invested           mm.Value
+		Dividend           mm.Value
+		DividendPayed      mm.Value
+		PercentageWallet   float64
+		Buys               mm.Value
+		Sells              mm.Value
+		Benefits           mm.Value
+		PercentageBenefits float64
+		Change             mm.Value
+		WAPrice            mm.Value
+		WADYield           float64
+	}
+
+	WalletOutput struct {
+		Capital            mm.Value
+		Invested           mm.Value
+		Funds              mm.Value
+		FreeMargin         mm.Value
+		NetCapital         mm.Value
+		NetBenefits        mm.Value
+		PercentageBenefits float64
+		DividendPayed      mm.Value
+		DYield             float64
+		Connection         mm.Value
+		Interest           mm.Value
+		Commissions        mm.Value
+	}
 )
