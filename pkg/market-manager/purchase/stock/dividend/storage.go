@@ -11,7 +11,7 @@ type (
 		FindAllFormStock(stockID uuid.UUID) ([]StockDividend, error)
 		// Find the next dividend announce or projected for the stock
 		FindNextFromStock(stockID uuid.UUID, dt time.Time) (StockDividend, error)
-		FindDividendNextAnnounceProjectFromYearAndMonth(ID uuid.UUID, year, month int) (StockDividend, error)
+		FindUpcoming(ID uuid.UUID) (StockDividend, error)
 	}
 
 	Persister interface {

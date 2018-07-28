@@ -45,7 +45,7 @@ func (s *screenListStocks) renderStocks(tw *tabwriter.Writer, stks []*StockOutpu
 
 	for i, stk := range stks {
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f\t %.*f\t %s\t %s\t %s\t",
+			"%d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f\t %s\t %s\t %s\t",
 			i+1,
 			stk.Stock,
 			stk.Market,
@@ -54,8 +54,7 @@ func (s *screenListStocks) renderStocks(tw *tabwriter.Writer, stks []*StockOutpu
 			util.SPrintValue(stk.High52Week, s.precision),
 			util.SPrintValue(stk.Low52Week, s.precision),
 			util.SPrintValue(stk.BuyUnder, s.precision),
-			s.precision,
-			stk.DYield,
+			util.SPrintPercentage(stk.DYield, s.precision),
 			s.precision,
 			stk.EPS,
 			util.SPrintDate(stk.ExDate),

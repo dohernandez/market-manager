@@ -96,7 +96,11 @@ func (f *stockDividendFinder) hydrate(tuple dividendTuple) dividend.StockDividen
 	}
 }
 
-func (f *stockDividendFinder) FindDividendNextAnnounceProjectFromYearAndMonth(ID uuid.UUID, year, month int) (dividend.StockDividend, error) {
+func (f *stockDividendFinder) FindUpcoming(ID uuid.UUID) (dividend.StockDividend, error) {
+	now := time.Now()
+	year := now.Year()
+	month := int(now.Month())
+
 	var tuple dividendTuple
 
 	query := `
@@ -117,7 +121,7 @@ func (f *stockDividendFinder) FindDividendNextAnnounceProjectFromYearAndMonth(ID
 
 		return dividend.StockDividend{}, errors.Wrapf(
 			err,
-			"FindAllByDividendAnnounceProjectThisMonth with year: %q, month: %q",
+			"FindUpcoming with year: %q, month: %q",
 			strconv.Itoa(year),
 			strconv.Itoa(month),
 		)

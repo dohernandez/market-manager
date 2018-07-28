@@ -95,12 +95,8 @@ func (s *Purchase) Stocks() ([]*stock.Stock, error) {
 		return nil, err
 	}
 
-	now := time.Now()
-	year := now.Year()
-	month := int(now.Month())
-
 	for _, stk := range stks {
-		d, err := s.stockDividendFinder.FindDividendNextAnnounceProjectFromYearAndMonth(stk.ID, year, month)
+		d, err := s.stockDividendFinder.FindUpcoming(stk.ID)
 		if err != nil {
 			if err != mm.ErrNotFound {
 				return nil, err

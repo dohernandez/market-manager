@@ -23,6 +23,14 @@ func SPrintValue(value mm.Value, precision int) string {
 	return fmt.Sprintf("%.*f %s", precision, value.Amount, value.Currency)
 }
 
+func SPrintPercentage(value float64, precision int) string {
+	if value == 0 {
+		return ""
+	}
+
+	return fmt.Sprintf("%.*f%%", precision, value)
+}
+
 func SPrintDate(t time.Time) string {
 	if t.IsZero() {
 		return ""

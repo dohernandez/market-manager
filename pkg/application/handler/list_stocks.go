@@ -65,14 +65,10 @@ func (h *listStocks) Handle(ctx context.Context, command cbus.Command) (result i
 		}
 	}
 
-	now := time.Now()
-	year := now.Year()
-	month := int(now.Month())
-
 	for _, stk := range stks {
 		var exDate time.Time
 
-		d, err := h.stockDividendFinder.FindDividendNextAnnounceProjectFromYearAndMonth(stk.ID, year, month)
+		d, err := h.stockDividendFinder.FindUpcoming(stk.ID)
 		if err != nil {
 			if err != mm.ErrNotFound {
 				logger.FromContext(ctx).Errorf(
