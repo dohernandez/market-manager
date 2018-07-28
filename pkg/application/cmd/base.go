@@ -123,54 +123,54 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// Import stocks
 	importStock := command.ImportStock{}
 	bus.Handle(&importStock, importStocksHandler)
-	bus.ListenCommand(cbus.Complete, &importStock, persisterStock)
-	bus.ListenCommand(cbus.Complete, &importStock, updateStockPrice)
-	bus.ListenCommand(cbus.Complete, &importStock, updateStockDividend)
-	bus.ListenCommand(cbus.Complete, &importStock, updateStockDividendYield)
-	bus.ListenCommand(cbus.Complete, &importStock, updateStockPriceVolatility)
+	bus.ListenCommand(cbus.AfterSuccess, &importStock, persisterStock)
+	bus.ListenCommand(cbus.AfterSuccess, &importStock, updateStockPrice)
+	bus.ListenCommand(cbus.AfterSuccess, &importStock, updateStockDividend)
+	bus.ListenCommand(cbus.AfterSuccess, &importStock, updateStockDividendYield)
+	bus.ListenCommand(cbus.AfterSuccess, &importStock, updateStockPriceVolatility)
 
 	// Update all stock price
 	updateAllStocksPrice := command.UpdateAllStocksPrice{}
 	bus.Handle(&updateAllStocksPrice, updateAllStockPriceHandler)
-	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateStockPrice)
-	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateStockDividendYield)
-	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateWalletCapital)
-	bus.ListenCommand(cbus.Complete, &updateAllStocksPrice, updateStockPriceVolatility)
+	bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksPrice, updateStockPrice)
+	bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksPrice, updateStockDividendYield)
+	bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksPrice, updateWalletCapital)
+	bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksPrice, updateStockPriceVolatility)
 
 	// Update one stock price
 	updateOneStocksPrice := command.UpdateOneStockPrice{}
 	bus.Handle(&updateOneStocksPrice, updateOneStockPrice)
-	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockPrice)
-	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockDividendYield)
-	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateWalletCapital)
-	bus.ListenCommand(cbus.Complete, &updateOneStocksPrice, updateStockPriceVolatility)
+	bus.ListenCommand(cbus.AfterSuccess, &updateOneStocksPrice, updateStockPrice)
+	bus.ListenCommand(cbus.AfterSuccess, &updateOneStocksPrice, updateStockDividendYield)
+	bus.ListenCommand(cbus.AfterSuccess, &updateOneStocksPrice, updateWalletCapital)
+	bus.ListenCommand(cbus.AfterSuccess, &updateOneStocksPrice, updateStockPriceVolatility)
 
 	// Update all stock dividends
 	updateAllStocksDividend := command.UpdateAllStockDividend{}
 	bus.Handle(&updateAllStocksDividend, updateAllStockDividendHandler)
-	bus.ListenCommand(cbus.Complete, &updateAllStocksDividend, updateStockDividend)
-	bus.ListenCommand(cbus.Complete, &updateAllStocksDividend, updateStockDividendYield)
+	bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksDividend, updateStockDividend)
+	bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksDividend, updateStockDividendYield)
 
 	// Update one stock dividends
 	updateOneStocksDividend := command.UpdateOneStockDividend{}
 	bus.Handle(&updateOneStocksDividend, updateOneStockDividendHandler)
-	bus.ListenCommand(cbus.Complete, &updateOneStocksDividend, updateStockDividend)
-	bus.ListenCommand(cbus.Complete, &updateOneStocksDividend, updateStockDividendYield)
+	bus.ListenCommand(cbus.AfterSuccess, &updateOneStocksDividend, updateStockDividend)
+	bus.ListenCommand(cbus.AfterSuccess, &updateOneStocksDividend, updateStockDividendYield)
 
 	// import transfer
 	importTransfer := command.ImportTransfer{}
 	bus.Handle(&importTransfer, importTransferHandler)
-	bus.ListenCommand(cbus.Complete, &importTransfer, persisterTransfer)
+	bus.ListenCommand(cbus.AfterSuccess, &importTransfer, persisterTransfer)
 
 	// import wallet
 	importWallet := command.ImportWallet{}
 	bus.Handle(&importWallet, importWalletHandler)
-	bus.ListenCommand(cbus.Complete, &importWallet, persisterWallet)
+	bus.ListenCommand(cbus.AfterSuccess, &importWallet, persisterWallet)
 
 	// import operation
 	importOperation := command.ImportOperation{}
 	bus.Handle(&importOperation, importOperationHandler)
-	bus.ListenCommand(cbus.Complete, &importOperation, persisterOperation)
+	bus.ListenCommand(cbus.AfterSuccess, &importOperation, persisterOperation)
 
 	// List stocks
 	listStocks := command.ListStocks{}
