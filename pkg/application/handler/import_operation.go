@@ -59,21 +59,10 @@ func (h *importOperation) Handle(ctx context.Context, command cbus.Command) (res
 		return nil, errors.New("missing wallet name")
 	}
 
-	w, err := h.walletFinder.FindByName(wName)
+	w, err := h.LoadWalletWithActiveWalletItems(wName)
 	if err != nil {
 		logger.FromContext(ctx).Errorf(
 			"An error happen while loading wallet name [%s] -> error [%s]",
-			wName,
-			err,
-		)
-
-		return nil, err
-	}
-
-	err = h.LoadActiveWalletItems(w)
-	if err != nil {
-		logger.FromContext(ctx).Errorf(
-			"An error happen while loading wallet active items [%s] -> error [%s]",
 			wName,
 			err,
 		)
@@ -144,15 +133,15 @@ func (h *importOperation) Handle(ctx context.Context, command cbus.Command) (res
 	return os, nil
 }
 
-func (h *importOperation) LoadActiveWalletItems(w *wallet.Wallet) error {
-	err := h.walletFinder.LoadActiveItems(w)
+func (h *importOperation) LoadWalletWithActiveWalletItems(name string) (*wallet.Wallet, error) {
+	w, err := h.walletFinder.FindByName(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	cEURUSD, err := h.ccClient.Converter.Get()
+	err = h.walletFinder.LoadActiveItems(w)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, i := range w.Items {
@@ -160,14 +149,20 @@ func (h *importOperation) LoadActiveWalletItems(w *wallet.Wallet) error {
 		// https://medium.com/@trevor4e/learning-gos-concurrency-through-illustrations-8c4aff603b3
 		stk, err := h.stockFinder.FindByID(i.Stock.ID)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		i.CapitalRate = cEURUSD.EURUSD
 		i.Stock = stk
 	}
 
-	return nil
+	cEURUSD, err := h.ccClient.Converter.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	w.SetCapitalRate(cEURUSD.EURUSD)
+
+	return w, err
 }
 
 // parseDateString - parse a potentially partial date string to Time

@@ -12,6 +12,7 @@ type (
 		// Find the next dividend announce or projected for the stock
 		FindNextFromStock(stockID uuid.UUID, dt time.Time) (StockDividend, error)
 		FindUpcoming(ID uuid.UUID) (StockDividend, error)
+		FindAllDividendsFromThisYearAndMontOn(ID uuid.UUID, year, month int) ([]StockDividend, error)
 	}
 
 	Persister interface {

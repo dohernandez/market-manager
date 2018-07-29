@@ -41,7 +41,7 @@ type (
 		PercentageWallet   float64
 		Buys               mm.Value
 		Sells              mm.Value
-		Benefits           mm.Value
+		NetBenefits        mm.Value
 		PercentageBenefits float64
 		Change             mm.Value
 		WAPrice            mm.Value
@@ -49,17 +49,24 @@ type (
 	}
 
 	WalletOutput struct {
-		Capital            mm.Value
-		Invested           mm.Value
-		Funds              mm.Value
-		FreeMargin         mm.Value
-		NetCapital         mm.Value
-		NetBenefits        mm.Value
-		PercentageBenefits float64
-		DividendPayed      mm.Value
-		DYield             float64
-		Connection         mm.Value
-		Interest           mm.Value
-		Commissions        mm.Value
+		Capital                mm.Value
+		Invested               mm.Value
+		Funds                  mm.Value
+		FreeMargin             mm.Value
+		NetCapital             mm.Value
+		NetBenefits            mm.Value
+		PercentageBenefits     float64
+		DividendPayed          mm.Value
+		DividendMonthProjected mm.Value
+		DividendYearProjected  mm.Value
+		DYield                 float64
+		Connection             mm.Value
+		Interest               mm.Value
+		Commission             mm.Value
+	}
+
+	WalletDetailsOutput struct {
+		WalletOutput       WalletOutput
+		WalletStockOutputs []*WalletStockOutput
 	}
 )

@@ -63,7 +63,6 @@ func main() {
 	baseExportCMD := &cmd.BaseExportCMD{}
 
 	purchaseCMD := cmd.NewPurchaseCMD(baseCMD, baseExportCMD)
-	accountCMD := cmd.NewAccountCMD(baseCMD, baseExportCMD)
 	apiCMD := cmd.NewApiCMD(baseCMD)
 	//
 	//schedulerCMD := command.NewSchedulerCMD(purchaseCMD)
@@ -281,7 +280,7 @@ func main() {
 						{
 							Name:      "walletItems",
 							Aliases:   []string{"wi"},
-							Action:    accountCMD.ExportWalletItems,
+							Action:    cLine.ExportWalletDetails,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{

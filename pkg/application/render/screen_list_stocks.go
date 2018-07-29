@@ -155,7 +155,7 @@ func (s *screenListStocks) Render(output interface{}) {
 func (s *screenListStocks) renderStocks(tw *tabwriter.Writer, stks []*StockOutput) {
 	header := color.New(color.FgWhite).FprintlnFunc()
 
-	header(tw, "#\t Stock\t Market\t Symbol\t Value\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t EPS\t Ex Date\t Change\t Updated At\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Price\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t EPS\t Ex Date\t Change\t Updated At\t")
 
 	normal := color.New(color.FgWhite).FprintlnFunc()
 	overSell := color.New(color.FgGreen).FprintlnFunc()

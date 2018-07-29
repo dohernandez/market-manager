@@ -58,3 +58,11 @@ func PrintDateTime(t time.Time) string {
 
 	return t.Format("02 Jan 06 15:04")
 }
+
+func PrintPercentage(value float64, precision int) string {
+	if value == 0 {
+		return ""
+	}
+
+	return fmt.Sprintf("%.*f%%", precision, value)
+}
