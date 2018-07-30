@@ -10,20 +10,20 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
-// ApiCMD ...
-type ApiCMD struct {
-	*BaseCMD
+// API ...
+type API struct {
+	*Base
 }
 
-// NewApiCMD constructs ApiCMD
-func NewApiCMD(baseCMD *BaseCMD) *ApiCMD {
-	return &ApiCMD{
-		BaseCMD: baseCMD,
+// NewAPI constructs ApiCMD
+func NewAPI(baseCMD *Base) *API {
+	return &API{
+		Base: baseCMD,
 	}
 }
 
 // Run runs the application import data
-func (cmd *ApiCMD) Run(cliCtx *cli.Context) error {
+func (cmd *API) Run(cliCtx *cli.Context) error {
 	//ctx, cancelCtx := context.WithCancel(context.TODO())
 	//defer cancelCtx()
 	//

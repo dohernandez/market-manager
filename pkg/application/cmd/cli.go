@@ -495,14 +495,7 @@ func (cmd *CLI) ExportWalletDetails(cliCtx *cli.Context) error {
 
 	return nil
 
-	//ctx = context.WithValue(ctx, "wallet", cliCtx.String("wallet"))
 	//ctx = context.WithValue(ctx, "stock", cliCtx.String("stock"))
-	//ctx = context.WithValue(ctx, "sells", cliCtx.String("sells"))
-	//ctx = context.WithValue(ctx, "buys", cliCtx.String("buys"))
-	//sorting := cmd.sortingFromCliCtx(cliCtx)
-	//
-	//ex := exportAccount.NewExportWallet(ctx, sorting, cmd.config, c.AccountServiceInstance(), c.CurrencyConverterClientInstance())
-	//return cmd.runExport(ex)
 }
 
 func (cmd *CLI) getCommissionsToApplyStockOperation() (map[string]command.Commission, error) {

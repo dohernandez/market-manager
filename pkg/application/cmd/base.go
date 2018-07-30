@@ -14,7 +14,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/sony/gobreaker"
 
-	"github.com/dohernandez/market-manager/pkg/application"
 	"github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/config"
 	"github.com/dohernandez/market-manager/pkg/application/handler"
@@ -54,10 +53,6 @@ func (cmd *Base) InitDatabaseConnection() error {
 	cmd.DB = db
 
 	return nil
-}
-
-func (cmd *Base) Container(db *sqlx.DB) *app.Container {
-	return app.NewContainer(cmd.ctx, db, cmd.config, cmd.cache)
 }
 
 func (cmd *Base) initCommandBus() *cbus.Bus {

@@ -58,12 +58,7 @@ func main() {
 	server := cmd.NewHTTP(base)
 	migrate := cmd.NewMigrate(base)
 	cLine := cmd.NewCLI(base)
-
-	baseCMD := cmd.NewBaseCMD(context.TODO(), envConfig)
-	baseExportCMD := &cmd.BaseExportCMD{}
-
-	purchaseCMD := cmd.NewPurchaseCMD(baseCMD, baseExportCMD)
-	apiCMD := cmd.NewApiCMD(baseCMD)
+	api := cmd.NewAPI(base)
 	//
 	//schedulerCMD := command.NewSchedulerCMD(purchaseCMD)
 
@@ -196,34 +191,34 @@ func main() {
 								},
 							},
 						},
-						{
-							Name:      "stocksDividends",
-							Aliases:   []string{"sd"},
-							Action:    purchaseCMD.ExportStocksWithDividend,
-							ArgsUsage: "",
-							Flags: []cli.Flag{
-								cli.StringFlag{
-									Name:  "file, f",
-									Usage: "csv file to export",
-								},
-								cli.StringFlag{
-									Name:  "year, y",
-									Usage: "filter by year. Default current year",
-								},
-								cli.StringFlag{
-									Name:  "month, m",
-									Usage: "filter by month. Default current month",
-								},
-								cli.StringFlag{
-									Name:  "sort",
-									Usage: "Sort by (dyield, exdate, dividend) Default by dyield",
-								},
-								cli.StringFlag{
-									Name:  "order",
-									Usage: "Order (desc, asc) Default by desc",
-								},
-							},
-						},
+						//{
+						//	Name:      "stocksDividends",
+						//	Aliases:   []string{"sd"},
+						//	Action:    purchaseCMD.ExportStocksWithDividend,
+						//	ArgsUsage: "",
+						//	Flags: []cli.Flag{
+						//		cli.StringFlag{
+						//			Name:  "file, f",
+						//			Usage: "csv file to export",
+						//		},
+						//		cli.StringFlag{
+						//			Name:  "year, y",
+						//			Usage: "filter by year. Default current year",
+						//		},
+						//		cli.StringFlag{
+						//			Name:  "month, m",
+						//			Usage: "filter by month. Default current month",
+						//		},
+						//		cli.StringFlag{
+						//			Name:  "sort",
+						//			Usage: "Sort by (dyield, exdate, dividend) Default by dyield",
+						//		},
+						//		cli.StringFlag{
+						//			Name:  "order",
+						//			Usage: "Order (desc, asc) Default by desc",
+						//		},
+						//	},
+						//},
 					},
 				},
 			},
@@ -346,7 +341,7 @@ func main() {
 		{
 			Name:   "api",
 			Usage:  "Api test",
-			Action: apiCMD.Run,
+			Action: api.Run,
 		},
 	}
 
