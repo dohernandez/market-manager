@@ -11,35 +11,13 @@ import (
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type (
-	Commissions struct {
-		Commission struct {
-			Base struct {
-				Amount   float64
-				Currency string
-			}
-			Extra struct {
-				Amount   float64
-				Currency string
-				Apply    string
-			}
-			Maximum struct {
-				Amount   float64
-				Currency string
-			}
-		}
-
-		ChangeCommission struct {
-			Amount   float64
-			Currency string
-		}
-	}
-
 	walletDetails struct {
 		walletFinder   wallet.Finder
 		stockFinder    stock.Finder
@@ -66,7 +44,12 @@ func NewWalletDetails(
 }
 
 func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (result interface{}, err error) {
-	wName := command.(*appCommand.WalletDetails).Wallet
+	walletDetails := command.(*appCommand.WalletDetails)
+
+	wName := walletDetails.Wallet
+	sells := walletDetails.Sells
+	buys := walletDetails.Buys
+	commissions := walletDetails.Commissions
 
 	w, err := h.loadWalletWithActiveWalletItems(wName)
 	if err != nil {
@@ -77,6 +60,63 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 		)
 
 		return nil, err
+	}
+
+	if len(sells) > 0 {
+		for symbol, amount := range sells {
+			stk, err := h.stockFinder.FindBySymbol(symbol)
+			if err != nil {
+				logger.FromContext(ctx).Errorf(
+					"An error happen while loading sell stock symbol [%s] -> error [%s]",
+					wName,
+					err,
+				)
+
+				return nil, err
+			}
+
+			o := h.createOperation(stk, amount, operation.Sell, w.CurrentCapitalRate(), commissions)
+
+			w.AddOperation(o)
+		}
+	}
+
+	if len(buys) > 0 {
+		now := time.Now()
+		month := int(now.Month())
+		year := now.Year()
+
+		for symbol, amount := range buys {
+			stk, err := h.stockFinder.FindBySymbol(symbol)
+			if err != nil {
+				logger.FromContext(ctx).Errorf(
+					"An error happen while loading buys stock symbol [%s] -> error [%s]",
+					wName,
+					err,
+				)
+
+				return nil, err
+			}
+
+			o := h.createOperation(stk, amount, operation.Buy, w.CurrentCapitalRate(), commissions)
+
+			ds, err := h.dividendFinder.FindAllDividendsFromThisYearAndMontOn(stk.ID, year, month)
+			if err != nil {
+				if err != mm.ErrNotFound {
+					logger.FromContext(ctx).Errorf(
+						"An error happen while loading dividends for stock bought symbol [%s] -> error [%s]",
+						stk.Symbol,
+						err,
+					)
+
+					return nil, err
+				}
+			}
+
+			o.Stock.Dividends = ds
+
+			w.AddOperation(o)
+		}
 	}
 
 	wDProjectedGrossMonth := w.DividendProjectedNextMonth()
@@ -117,13 +157,12 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 		},
 	}
 
-	//WalletOutput struct {
-	//
-	//	DYield             float64
-	//}
-
 	var wSOutputs []*render.WalletStockOutput
 	for _, item := range w.Items {
+		if item.Amount == 0 {
+			continue
+		}
+
 		var (
 			exDate          time.Time
 			wADYield        float64
@@ -215,6 +254,12 @@ func (h *walletDetails) loadWalletWithActiveWalletItems(name string) (*wallet.Wa
 		}
 
 		ds, err := h.dividendFinder.FindAllDividendsFromThisYearAndMontOn(i.Stock.ID, year, month)
+		if err != nil {
+			if err != mm.ErrNotFound {
+				return nil, err
+			}
+		}
+
 		i.Stock.Dividends = ds
 	}
 
@@ -228,21 +273,42 @@ func (h *walletDetails) loadWalletWithActiveWalletItems(name string) (*wallet.Wa
 	return w, err
 }
 
-//func (h *walletDetails) sellStocksWallet(
-//	w *wallet.Wallet,
-//	stksSymbol map[string]int,
-//	pChangeCommissions map[string]mm.Value,
-//	commissions map[string]AppCommissions,
-//) error {
-//	for symbol, amount := range stksSymbol {
-//		stk, err := s.stockFinder.FindBySymbol(symbol)
-//		if err != nil {
-//			return err
-//		}
-//
-//		o := s.createOperation(stk, amount, operation.Sell, w.CurrentCapitalRate(), pChangeCommissions, commissions)
-//		w.AddOperation(o)
-//	}
-//
-//	return nil
-//}
+func (h *walletDetails) createOperation(
+	stk *stock.Stock,
+	amount int,
+	action operation.Action,
+	capitalRate float64,
+	commissions map[string]appCommand.Commission,
+) *operation.Operation {
+	pChange := mm.Value{
+		Amount:   capitalRate,
+		Currency: mm.Dollar,
+	}
+
+	now := time.Now()
+
+	oValue := mm.Value{
+		Amount:   stk.Value.Amount * float64(amount) / pChange.Amount,
+		Currency: mm.Euro,
+	}
+
+	var commission, pChangeCommission mm.Value
+	marketCommission, ok := commissions[stk.Exchange.Symbol]
+	if ok {
+		pChangeCommission.Amount = marketCommission.ChangeCommission.Amount
+		pChangeCommission.Currency = mm.Currency(marketCommission.ChangeCommission.Currency)
+
+		if stk.Exchange.Symbol == "NASDAQ" || stk.Exchange.Symbol == "NYSE" {
+			commission.Amount = marketCommission.Commission.Base.Amount
+			extra := marketCommission.Commission.Extra.Amount * float64(amount) / pChange.Amount
+
+			commission = commission.Increase(mm.Value{Amount: extra, Currency: mm.Euro})
+		} else {
+			panic("Commission to apply not defined")
+		}
+	}
+
+	o := operation.NewOperation(now, stk, action, amount, stk.Value, pChange, pChangeCommission, oValue, commission)
+
+	return o
+}

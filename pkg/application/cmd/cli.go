@@ -19,7 +19,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/dohernandez/market-manager/pkg/application/command"
-	"github.com/dohernandez/market-manager/pkg/application/handler"
 	"github.com/dohernandez/market-manager/pkg/application/render"
 	"github.com/dohernandez/market-manager/pkg/application/storage"
 	"github.com/dohernandez/market-manager/pkg/application/util"
@@ -472,10 +471,16 @@ func (cmd *CLI) ExportWalletDetails(cliCtx *cli.Context) error {
 		}
 	}
 
+	commissions, err := cmd.getCommissionsToApplyStockOperation()
+	if (len(sells) > 0 || len(buys) > 0) && err != nil {
+		return errors.Wrapf(err, "Can execute buys or sells without commissions")
+	}
+
 	wOutput, err := bus.ExecuteContext(ctx, &command.WalletDetails{
-		Wallet: cliCtx.String("wallet"),
-		Sells:  sells,
-		Buys:   buys,
+		Wallet:      cliCtx.String("wallet"),
+		Sells:       sells,
+		Buys:        buys,
+		Commissions: commissions,
 	})
 	if err != nil {
 		return err
@@ -500,8 +505,9 @@ func (cmd *CLI) ExportWalletDetails(cliCtx *cli.Context) error {
 	//return cmd.runExport(ex)
 }
 
-func (cmd *CLI) getCommissionsToApplyStockOperation() (commissions map[string]handler.Commissions, err error) {
+func (cmd *CLI) getCommissionsToApplyStockOperation() (map[string]command.Commission, error) {
 	exchanges := cmd.config.Degiro.Exchanges
+	commissions := map[string]command.Commission{}
 
 	// NASDAQ
 	cCommission, err := json.Marshal(exchanges.NASDAQ)
@@ -509,7 +515,7 @@ func (cmd *CLI) getCommissionsToApplyStockOperation() (commissions map[string]ha
 		return nil, errors.Wrapf(err, "Can not marshal config commission")
 	}
 
-	var commission handler.Commissions
+	var commission command.Commission
 	err = json.Unmarshal(cCommission, &commission)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Can not unmarshal config commission")
@@ -523,7 +529,7 @@ func (cmd *CLI) getCommissionsToApplyStockOperation() (commissions map[string]ha
 		return nil, errors.Wrapf(err, "Can not marshal config commission")
 	}
 
-	commission = handler.Commissions{}
+	commission = command.Commission{}
 	err = json.Unmarshal(cCommission, &commission)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Can not unmarshal config commission")
