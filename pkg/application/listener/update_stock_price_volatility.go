@@ -12,7 +12,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
-const updatePriceVolatilityConcurrency = 10
+const updatePriceVolatilityConcurrency = 15
 
 type updateStockPriceVolatility struct {
 	stockPriceVolatilityService service.StockPriceVolatility

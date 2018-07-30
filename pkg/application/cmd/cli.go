@@ -51,13 +51,18 @@ func (cmd *CLI) UpdatePrice(cliCtx *cli.Context) error {
 
 	bus := cmd.initCommandBus()
 
-	if cliCtx.String("stock") == "" {
-		_, err := bus.ExecuteContext(ctx, &command.UpdateAllStocksPrice{})
+	if cliCtx.String("stock") != "" {
+		_, err := bus.ExecuteContext(ctx, &command.UpdateOneStockPrice{Symbol: cliCtx.String("stock")})
+		if err != nil {
+			return err
+		}
+	} else if cliCtx.String("wallet") != "" {
+		_, err := bus.ExecuteContext(ctx, &command.UpdateWalletStocksPrice{Wallet: cliCtx.String("wallet")})
 		if err != nil {
 			return err
 		}
 	} else {
-		_, err := bus.ExecuteContext(ctx, &command.UpdateOneStockPrice{Symbol: cliCtx.String("stock")})
+		_, err := bus.ExecuteContext(ctx, &command.UpdateAllStocksPrice{})
 		if err != nil {
 			return err
 		}

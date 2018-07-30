@@ -6,6 +6,8 @@ import (
 
 	"github.com/gogolfing/cbus"
 
+	"errors"
+
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/render"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
@@ -47,6 +49,12 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	walletDetails := command.(*appCommand.WalletDetails)
 
 	wName := walletDetails.Wallet
+	if wName == "" {
+		logger.FromContext(ctx).Error("An error happen while loading wallet -> error [wallet can not be empty]")
+
+		return nil, errors.New("missing wallet name")
+	}
+
 	sells := walletDetails.Sells
 	buys := walletDetails.Buys
 	commissions := walletDetails.Commissions
