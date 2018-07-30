@@ -58,17 +58,16 @@ type (
 
 		GroupBy util.GroupBy
 		Sorting util.Sorting
+
+		Precision int
 	}
 
 	screenWalletDetails struct {
-		precision int
 	}
 )
 
-func NewScreenWalletDetails(precision int) *screenWalletDetails {
-	return &screenWalletDetails{
-		precision: precision,
-	}
+func NewScreenWalletDetails() *screenWalletDetails {
+	return &screenWalletDetails{}
 }
 
 func (s *screenWalletDetails) Render(output interface{}) {
@@ -76,6 +75,7 @@ func (s *screenWalletDetails) Render(output interface{}) {
 
 	walletStockOutputs := sOutput.WalletDetails.WalletStockOutputs
 	walletOutput := sOutput.WalletDetails.WalletOutput
+	precision := sOutput.Precision
 
 	switch sOutput.Sorting.By {
 	case WalletInvested:
@@ -89,21 +89,21 @@ func (s *screenWalletDetails) Render(output interface{}) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 
 	noColor(tw, "")
-	s.renderGeneral(tw, walletOutput)
+	s.renderGeneral(tw, walletOutput, precision)
 	noColor(tw, "")
-	s.renderItemStocks(tw, walletStockOutputs)
+	s.renderItemStocks(tw, walletStockOutputs, precision)
 	noColor(tw, "")
-	s.renderWalletDividendProjected(tw, walletOutput)
+	s.renderWalletDividendProjected(tw, walletOutput, precision)
 	noColor(tw, "")
-	s.renderStocksDividends(tw, walletStockOutputs)
+	s.renderStocksDividends(tw, walletStockOutputs, precision)
 	noColor(tw, "")
-	s.renderStocks(tw, walletStockOutputs)
+	s.renderStocks(tw, walletStockOutputs, precision)
 	noColor(tw, "")
 
 	tw.Flush()
 }
 
-func (s *screenWalletDetails) renderGeneral(tw *tabwriter.Writer, wOutput WalletOutput) {
+func (s *screenWalletDetails) renderGeneral(tw *tabwriter.Writer, wOutput WalletOutput, precision int) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "# General")
 	noColor(tw, "")
@@ -118,25 +118,25 @@ func (s *screenWalletDetails) renderGeneral(tw *tabwriter.Writer, wOutput Wallet
 
 	str := fmt.Sprintf(
 		"%s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t %s\t %s\t %s\t %s\t",
-		util.SPrintValue(wOutput.Invested, s.precision),
-		util.SPrintValue(wOutput.Capital, s.precision),
-		util.SPrintValue(wOutput.Funds, s.precision),
-		util.SPrintValue(wOutput.FreeMargin, s.precision),
-		util.SPrintValue(wOutput.NetCapital, s.precision),
-		util.SPrintValue(wOutput.NetBenefits, s.precision),
-		s.precision,
+		util.SPrintValue(wOutput.Invested, precision),
+		util.SPrintValue(wOutput.Capital, precision),
+		util.SPrintValue(wOutput.Funds, precision),
+		util.SPrintValue(wOutput.FreeMargin, precision),
+		util.SPrintValue(wOutput.NetCapital, precision),
+		util.SPrintValue(wOutput.NetBenefits, precision),
+		precision,
 		wOutput.PercentageBenefits,
-		util.SPrintValue(wOutput.DividendPayed, s.precision),
-		util.SPrintPercentage(wOutput.DividendYearYield, s.precision),
-		util.SPrintValue(wOutput.Connection, s.precision),
-		util.SPrintValue(wOutput.Interest, s.precision),
-		util.SPrintValue(wOutput.Commission, s.precision),
+		util.SPrintValue(wOutput.DividendPayed, precision),
+		util.SPrintPercentage(wOutput.DividendYearYield, precision),
+		util.SPrintValue(wOutput.Connection, precision),
+		util.SPrintValue(wOutput.Interest, precision),
+		util.SPrintValue(wOutput.Commission, precision),
 	)
 
 	pColor(tw, str)
 }
 
-func (s *screenWalletDetails) renderItemStocks(tw *tabwriter.Writer, wStocks []*WalletStockOutput) {
+func (s *screenWalletDetails) renderItemStocks(tw *tabwriter.Writer, wStocks []*WalletStockOutput, precision int) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "# Stocks")
 	noColor(tw, "")
@@ -155,17 +155,17 @@ func (s *screenWalletDetails) renderItemStocks(tw *tabwriter.Writer, wStocks []*
 			stk.Market,
 			stk.Symbol,
 			stk.Amount,
-			util.SPrintValue(stk.Capital, s.precision),
-			util.SPrintValue(stk.Invested, s.precision),
-			s.precision,
+			util.SPrintValue(stk.Capital, precision),
+			util.SPrintValue(stk.Invested, precision),
+			precision,
 			stk.PercentageWallet,
-			util.SPrintValue(stk.Dividend, s.precision),
-			util.SPrintValue(stk.Buys, s.precision),
-			util.SPrintValue(stk.Sells, s.precision),
-			util.SPrintValue(stk.NetBenefits, s.precision),
-			s.precision,
+			util.SPrintValue(stk.Dividend, precision),
+			util.SPrintValue(stk.Buys, precision),
+			util.SPrintValue(stk.Sells, precision),
+			util.SPrintValue(stk.NetBenefits, precision),
+			precision,
 			stk.PercentageBenefits,
-			util.SPrintValue(stk.Change, s.precision),
+			util.SPrintValue(stk.Change, precision),
 		)
 
 		if stk.PercentageBenefits > 0 {
@@ -176,7 +176,7 @@ func (s *screenWalletDetails) renderItemStocks(tw *tabwriter.Writer, wStocks []*
 	}
 }
 
-func (s *screenWalletDetails) renderWalletDividendProjected(tw *tabwriter.Writer, wOutput WalletOutput) {
+func (s *screenWalletDetails) renderWalletDividendProjected(tw *tabwriter.Writer, wOutput WalletOutput, precision int) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "# Dividend Projected")
 	noColor(tw, "")
@@ -190,15 +190,15 @@ func (s *screenWalletDetails) renderWalletDividendProjected(tw *tabwriter.Writer
 	inNormal(tw, fmt.Sprintf(
 		"%s\t %s\t %s\t          %d\t %s\t %s\t",
 		now.Month(),
-		util.SPrintValue(wOutput.DividendMonthProjected, s.precision),
-		util.SPrintPercentage(wOutput.DividendMonthYield, s.precision),
+		util.SPrintValue(wOutput.DividendMonthProjected, precision),
+		util.SPrintPercentage(wOutput.DividendMonthYield, precision),
 		now.Year(),
-		util.SPrintValue(wOutput.DividendYearProjected, s.precision),
-		util.SPrintPercentage(wOutput.DividendYearYield, s.precision),
+		util.SPrintValue(wOutput.DividendYearProjected, precision),
+		util.SPrintPercentage(wOutput.DividendYearYield, precision),
 	))
 }
 
-func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStocks []*WalletStockOutput) {
+func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStocks []*WalletStockOutput, precision int) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "# Stocks Dividends")
 	noColor(tw, "")
@@ -219,13 +219,13 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 			stk.Market,
 			stk.Symbol,
 			stk.Amount,
-			util.SPrintValue(stk.Value, s.precision),
-			util.SPrintValue(stk.WAPrice, s.precision),
+			util.SPrintValue(stk.Value, precision),
+			util.SPrintValue(stk.WAPrice, precision),
 			util.SPrintDate(stk.ExDate),
 			util.SPrintInitialDividendStatus(stk.DividendStatus),
-			util.SPrintValue(stk.Dividend, s.precision),
-			util.SPrintPercentage(stk.DYield, s.precision),
-			util.SPrintPercentage(stk.WADYield, s.precision),
+			util.SPrintValue(stk.Dividend, precision),
+			util.SPrintPercentage(stk.DYield, precision),
+			util.SPrintPercentage(stk.WADYield, precision),
 			util.SPrintDateTime(stk.UpdatedAt),
 		)
 
@@ -237,7 +237,7 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 	}
 }
 
-func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*WalletStockOutput) {
+func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*WalletStockOutput, precision int) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 	noColor(tw, "# Stocks")
 	noColor(tw, "")
@@ -257,14 +257,14 @@ func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*Wall
 			stk.Market,
 			stk.Symbol,
 			stk.Amount,
-			util.SPrintValue(stk.Value, s.precision),
-			util.SPrintValue(stk.WAPrice, s.precision),
-			util.SPrintValue(stk.High52Week, s.precision),
-			util.SPrintValue(stk.Low52Week, s.precision),
-			util.SPrintValue(stk.BuyUnder, s.precision),
-			s.precision,
+			util.SPrintValue(stk.Value, precision),
+			util.SPrintValue(stk.WAPrice, precision),
+			util.SPrintValue(stk.High52Week, precision),
+			util.SPrintValue(stk.Low52Week, precision),
+			util.SPrintValue(stk.BuyUnder, precision),
+			precision,
 			stk.EPS,
-			util.SPrintValue(stk.Change, s.precision),
+			util.SPrintValue(stk.Change, precision),
 			util.SPrintDate(stk.UpdatedAt),
 		)
 

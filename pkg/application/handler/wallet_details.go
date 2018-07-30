@@ -16,13 +16,38 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
-type walletDetails struct {
-	walletFinder   wallet.Finder
-	stockFinder    stock.Finder
-	dividendFinder dividend.Finder
-	ccClient       *cc.Client
-	retention      float64
-}
+type (
+	Commissions struct {
+		Commission struct {
+			Base struct {
+				Amount   float64
+				Currency string
+			}
+			Extra struct {
+				Amount   float64
+				Currency string
+				Apply    string
+			}
+			Maximum struct {
+				Amount   float64
+				Currency string
+			}
+		}
+
+		ChangeCommission struct {
+			Amount   float64
+			Currency string
+		}
+	}
+
+	walletDetails struct {
+		walletFinder   wallet.Finder
+		stockFinder    stock.Finder
+		dividendFinder dividend.Finder
+		ccClient       *cc.Client
+		retention      float64
+	}
+)
 
 func NewWalletDetails(
 	walletFinder wallet.Finder,
@@ -43,7 +68,7 @@ func NewWalletDetails(
 func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (result interface{}, err error) {
 	wName := command.(*appCommand.WalletDetails).Wallet
 
-	w, err := h.LoadWalletWithActiveWalletItems(wName)
+	w, err := h.loadWalletWithActiveWalletItems(wName)
 	if err != nil {
 		logger.FromContext(ctx).Errorf(
 			"An error happen while loading wallet [%s] -> error [%s]",
@@ -159,7 +184,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	return wDetailsOutput, err
 }
 
-func (h *walletDetails) LoadWalletWithActiveWalletItems(name string) (*wallet.Wallet, error) {
+func (h *walletDetails) loadWalletWithActiveWalletItems(name string) (*wallet.Wallet, error) {
 	w, err := h.walletFinder.FindByName(name)
 	if err != nil {
 		return nil, err
@@ -202,3 +227,22 @@ func (h *walletDetails) LoadWalletWithActiveWalletItems(name string) (*wallet.Wa
 
 	return w, err
 }
+
+//func (h *walletDetails) sellStocksWallet(
+//	w *wallet.Wallet,
+//	stksSymbol map[string]int,
+//	pChangeCommissions map[string]mm.Value,
+//	commissions map[string]AppCommissions,
+//) error {
+//	for symbol, amount := range stksSymbol {
+//		stk, err := s.stockFinder.FindBySymbol(symbol)
+//		if err != nil {
+//			return err
+//		}
+//
+//		o := s.createOperation(stk, amount, operation.Sell, w.CurrentCapitalRate(), pChangeCommissions, commissions)
+//		w.AddOperation(o)
+//	}
+//
+//	return nil
+//}

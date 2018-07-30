@@ -11,7 +11,15 @@ import (
 	"github.com/gogolfing/cbus"
 	"github.com/urfave/cli"
 
+	"strconv"
+	"strings"
+
+	"encoding/json"
+
+	"github.com/pkg/errors"
+
 	"github.com/dohernandez/market-manager/pkg/application/command"
+	"github.com/dohernandez/market-manager/pkg/application/handler"
 	"github.com/dohernandez/market-manager/pkg/application/render"
 	"github.com/dohernandez/market-manager/pkg/application/storage"
 	"github.com/dohernandez/market-manager/pkg/application/util"
@@ -440,17 +448,44 @@ func (cmd *CLI) ExportWalletDetails(cliCtx *cli.Context) error {
 
 	bus := cmd.initCommandBus()
 
+	sells := map[string]int{}
+	strSells := cliCtx.String("sells")
+	if strSells != "" {
+		sSells := strings.Split(strSells, ",")
+
+		for _, sSell := range sSells {
+			sa := strings.Split(sSell, ":")
+			a, _ := strconv.Atoi(sa[1])
+			sells[sa[0]] = a
+		}
+	}
+
+	buys := map[string]int{}
+	strBuys := cliCtx.String("buys")
+	if strBuys != "" {
+		sBuys := strings.Split(strBuys, ",")
+
+		for _, sBuy := range sBuys {
+			ba := strings.Split(sBuy, ":")
+			a, _ := strconv.Atoi(ba[1])
+			buys[ba[0]] = a
+		}
+	}
+
 	wOutput, err := bus.ExecuteContext(ctx, &command.WalletDetails{
 		Wallet: cliCtx.String("wallet"),
+		Sells:  sells,
+		Buys:   buys,
 	})
 	if err != nil {
 		return err
 	}
 
-	sls := render.NewScreenWalletDetails(2)
+	sls := render.NewScreenWalletDetails()
 	sls.Render(&render.OutputScreenWalletDetails{
 		WalletDetails: wOutput.(render.WalletDetailsOutput),
 		Sorting:       cmd.sortingFromCliCtx(cliCtx),
+		Precision:     2,
 	})
 
 	return nil
@@ -463,4 +498,38 @@ func (cmd *CLI) ExportWalletDetails(cliCtx *cli.Context) error {
 	//
 	//ex := exportAccount.NewExportWallet(ctx, sorting, cmd.config, c.AccountServiceInstance(), c.CurrencyConverterClientInstance())
 	//return cmd.runExport(ex)
+}
+
+func (cmd *CLI) getCommissionsToApplyStockOperation() (commissions map[string]handler.Commissions, err error) {
+	exchanges := cmd.config.Degiro.Exchanges
+
+	// NASDAQ
+	cCommission, err := json.Marshal(exchanges.NASDAQ)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Can not marshal config commission")
+	}
+
+	var commission handler.Commissions
+	err = json.Unmarshal(cCommission, &commission)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Can not unmarshal config commission")
+	}
+
+	commissions["NASDAQ"] = commission
+
+	// NYSE
+	cCommission, err = json.Marshal(exchanges.NYSE)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Can not marshal config commission")
+	}
+
+	commission = handler.Commissions{}
+	err = json.Unmarshal(cCommission, &commission)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Can not unmarshal config commission")
+	}
+
+	commissions["NASDAQ"] = commission
+
+	return commissions, err
 }
