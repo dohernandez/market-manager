@@ -61,12 +61,16 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 		Currency: wDProjectedGrossMonth.Currency,
 	})
 
+	dividendMonthYield := wDProjectedMonth.Amount * 100 / w.Invested.Amount
+
 	wDProjectedGrossYear := w.DividendProjectedNextYear()
 
 	wDProjectedYear := wDProjectedGrossYear.Decrease(mm.Value{
 		Amount:   h.retention * wDProjectedGrossYear.Amount / 100,
 		Currency: wDProjectedGrossYear.Currency,
 	})
+
+	dividendYearYield := wDProjectedYear.Amount * 100 / w.Invested.Amount
 
 	wDetailsOutput := render.WalletDetailsOutput{
 		WalletOutput: render.WalletOutput{
@@ -79,11 +83,12 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			PercentageBenefits:     w.PercentageBenefits(),
 			DividendPayed:          w.Dividend,
 			DividendMonthProjected: wDProjectedMonth,
+			DividendMonthYield:     dividendMonthYield,
 			DividendYearProjected:  wDProjectedYear,
-
-			Connection: w.Connection,
-			Interest:   w.Interest,
-			Commission: w.Commission,
+			DividendYearYield:      dividendYearYield,
+			Connection:             w.Connection,
+			Interest:               w.Interest,
+			Commission:             w.Commission,
 		},
 	}
 
@@ -95,9 +100,10 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	var wSOutputs []*render.WalletStockOutput
 	for _, item := range w.Items {
 		var (
-			exDate   time.Time
-			wADYield float64
-			dividend mm.Value
+			exDate          time.Time
+			wADYield        float64
+			sDividend       mm.Value
+			sDividendStatus dividend.Status
 		)
 
 		wAPrice := item.WeightedAveragePrice()
@@ -107,32 +113,35 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			exDate = d.ExDate
 
 			if d.Amount.Amount > 0 {
-				dividend = d.Amount
+				sDividend = d.Amount
 				wADYield = d.Amount.Amount * 4 / wAPrice.Amount * 100
+
+				sDividendStatus = d.Status
 			}
 		}
 
 		wSOutputs = append(wSOutputs, &render.WalletStockOutput{
 			StockOutput: render.StockOutput{
-				Stock:      item.Stock.Name,
-				Market:     item.Stock.Exchange.Symbol,
-				Symbol:     item.Stock.Symbol,
-				Value:      item.Stock.Value,
-				High52Week: item.Stock.High52Week,
-				Low52Week:  item.Stock.Low52Week,
-				BuyUnder:   item.Stock.BuyUnder(),
-				ExDate:     exDate,
-				DYield:     item.Stock.DividendYield,
-				EPS:        item.Stock.EPS,
-				Change:     item.Stock.Change,
-				UpdatedAt:  item.Stock.LastPriceUpdate,
+				Stock:          item.Stock.Name,
+				Market:         item.Stock.Exchange.Symbol,
+				Symbol:         item.Stock.Symbol,
+				Value:          item.Stock.Value,
+				High52Week:     item.Stock.High52Week,
+				Low52Week:      item.Stock.Low52Week,
+				BuyUnder:       item.Stock.BuyUnder(),
+				ExDate:         exDate,
+				Dividend:       sDividend,
+				DYield:         item.Stock.DividendYield,
+				DividendStatus: sDividendStatus,
+				EPS:            item.Stock.EPS,
+				Change:         item.Stock.Change,
+				UpdatedAt:      item.Stock.LastPriceUpdate,
 
 				PriceWithHighLow: item.Stock.ComparePriceWithHighLow(),
 			},
 			Amount:             item.Amount,
 			Capital:            item.Capital(),
 			Invested:           item.Invested,
-			Dividend:           dividend,
 			DividendPayed:      item.Dividend,
 			PercentageWallet:   item.PercentageInvestedRepresented(w.Capital.Amount),
 			Buys:               item.Buys,

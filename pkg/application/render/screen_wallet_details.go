@@ -116,10 +116,8 @@ func (s *screenWalletDetails) renderGeneral(tw *tabwriter.Writer, wOutput Wallet
 		pColor = color.New(color.FgRed).FprintlnFunc()
 	}
 
-	var wDYield float64
-
 	str := fmt.Sprintf(
-		"%s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t %.*f%%\t %s\t %s\t %s\t",
+		"%s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t %s\t %s\t %s\t %s\t",
 		util.SPrintValue(wOutput.Invested, s.precision),
 		util.SPrintValue(wOutput.Capital, s.precision),
 		util.SPrintValue(wOutput.Funds, s.precision),
@@ -129,8 +127,7 @@ func (s *screenWalletDetails) renderGeneral(tw *tabwriter.Writer, wOutput Wallet
 		s.precision,
 		wOutput.PercentageBenefits,
 		util.SPrintValue(wOutput.DividendPayed, s.precision),
-		s.precision,
-		wDYield,
+		util.SPrintPercentage(wOutput.DividendYearYield, s.precision),
 		util.SPrintValue(wOutput.Connection, s.precision),
 		util.SPrintValue(wOutput.Interest, s.precision),
 		util.SPrintValue(wOutput.Commission, s.precision),
@@ -185,15 +182,19 @@ func (s *screenWalletDetails) renderWalletDividendProjected(tw *tabwriter.Writer
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "Month\t Dividend\t")
+	header(tw, "Month\t Dividend\t D. Yield\t          Year\t Dividend\t D. Yield\t")
 
 	now := time.Now()
 
 	inNormal := color.New(color.FgWhite).FprintlnFunc()
 	inNormal(tw, fmt.Sprintf(
-		"%s\t %s\t",
+		"%s\t %s\t %s\t          %d\t %s\t %s\t",
 		now.Month(),
 		util.SPrintValue(wOutput.DividendMonthProjected, s.precision),
+		util.SPrintPercentage(wOutput.DividendMonthYield, s.precision),
+		now.Year(),
+		util.SPrintValue(wOutput.DividendYearProjected, s.precision),
+		util.SPrintPercentage(wOutput.DividendYearYield, s.precision),
 	))
 }
 
@@ -212,7 +213,7 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 
 	for i, stk := range wStocks {
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t",
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s %s\t %s\t %s\t %s\t %s\t",
 			i+1,
 			stk.Stock,
 			stk.Market,
@@ -221,6 +222,7 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 			util.SPrintValue(stk.Value, s.precision),
 			util.SPrintValue(stk.WAPrice, s.precision),
 			util.SPrintDate(stk.ExDate),
+			util.SPrintInitialDividendStatus(stk.DividendStatus),
 			util.SPrintValue(stk.Dividend, s.precision),
 			util.SPrintPercentage(stk.DYield, s.precision),
 			util.SPrintPercentage(stk.WADYield, s.precision),

@@ -216,7 +216,7 @@ func main() {
 								},
 								cli.StringFlag{
 									Name:  "sort",
-									Usage: "Sort by (dyield, exdate) Default by dyield",
+									Usage: "Sort by (dyield, exdate, dividend) Default by dyield",
 								},
 								cli.StringFlag{
 									Name:  "order",

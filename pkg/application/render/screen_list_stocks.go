@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	SortName   util.SortBy = "name"
-	SortDyield util.SortBy = "dyield"
-	SortExdate util.SortBy = "exdate"
+	SortName     util.SortBy = "name"
+	SortDyield   util.SortBy = "dyield"
+	SortDividend util.SortBy = "dividend"
+	SortExdate   util.SortBy = "exdate"
 
 	ExDateMonth util.GroupBy = "exdate"
 )
@@ -58,6 +59,16 @@ func (s stocksByExDate) Less(i, j int) bool {
 	return s.Stocks[i].ExDate.Before(s.Stocks[j].ExDate)
 }
 
+// stocksByDividend implements sort.Interface by providing Less and using the Len and
+// Swap methods of the embedded wallet items value.
+type stocksByDividend struct {
+	Stocks
+}
+
+func (s stocksByDividend) Less(i, j int) bool {
+	return s.Stocks[i].Dividend.Amount < s.Stocks[j].Dividend.Amount
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // END Stocks Sort
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,6 +103,8 @@ func (s *screenListStocks) Render(output interface{}) {
 		sort.Sort(stocksByExDate{rstks})
 	case SortDyield:
 		sort.Sort(stocksByDividendYield{rstks})
+	case SortDividend:
+		sort.Sort(stocksByDividend{rstks})
 	}
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.Debug)
@@ -155,7 +168,7 @@ func (s *screenListStocks) Render(output interface{}) {
 func (s *screenListStocks) renderStocks(tw *tabwriter.Writer, stks []*StockOutput) {
 	header := color.New(color.FgWhite).FprintlnFunc()
 
-	header(tw, "#\t Stock\t Market\t Symbol\t Price\t High 52wk\t Low 52wk\t Buy Under\t D. Yield\t EPS\t Ex Date\t Change\t Updated At\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Price\t High 52wk\t Low 52wk\t Buy Under\t Dividend\t  D. Yield\t EPS\t Ex Date\t Change\t")
 
 	normal := color.New(color.FgWhite).FprintlnFunc()
 	overSell := color.New(color.FgGreen).FprintlnFunc()
@@ -163,7 +176,7 @@ func (s *screenListStocks) renderStocks(tw *tabwriter.Writer, stks []*StockOutpu
 
 	for i, stk := range stks {
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f\t %s\t %s\t %s\t",
+			"%d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f\t %s %s\t %s\t",
 			i+1,
 			stk.Stock,
 			stk.Market,
@@ -172,12 +185,13 @@ func (s *screenListStocks) renderStocks(tw *tabwriter.Writer, stks []*StockOutpu
 			util.SPrintValue(stk.High52Week, s.precision),
 			util.SPrintValue(stk.Low52Week, s.precision),
 			util.SPrintValue(stk.BuyUnder, s.precision),
+			util.SPrintValue(stk.Dividend, s.precision),
 			util.SPrintPercentage(stk.DYield, s.precision),
 			s.precision,
 			stk.EPS,
 			util.SPrintDate(stk.ExDate),
+			util.SPrintInitialDividendStatus(stk.DividendStatus),
 			util.SPrintValue(stk.Change, s.precision),
-			util.SPrintDate(stk.UpdatedAt),
 		)
 
 		switch stk.PriceWithHighLow {

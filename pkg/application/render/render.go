@@ -6,6 +6,7 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type (
@@ -14,19 +15,21 @@ type (
 	}
 
 	StockOutput struct {
-		ID         uuid.UUID
-		Stock      string
-		Market     string
-		Symbol     string
-		Value      mm.Value
-		High52Week mm.Value
-		Low52Week  mm.Value
-		BuyUnder   mm.Value
-		DYield     float64
-		EPS        float64
-		ExDate     time.Time
-		Change     mm.Value
-		UpdatedAt  time.Time
+		ID             uuid.UUID
+		Stock          string
+		Market         string
+		Symbol         string
+		Value          mm.Value
+		High52Week     mm.Value
+		Low52Week      mm.Value
+		BuyUnder       mm.Value
+		Dividend       mm.Value
+		DYield         float64
+		DividendStatus dividend.Status
+		EPS            float64
+		ExDate         time.Time
+		Change         mm.Value
+		UpdatedAt      time.Time
 
 		PriceWithHighLow int
 	}
@@ -36,7 +39,6 @@ type (
 		Amount             int
 		Capital            mm.Value
 		Invested           mm.Value
-		Dividend           mm.Value
 		DividendPayed      mm.Value
 		PercentageWallet   float64
 		Buys               mm.Value
@@ -58,8 +60,9 @@ type (
 		PercentageBenefits     float64
 		DividendPayed          mm.Value
 		DividendMonthProjected mm.Value
+		DividendMonthYield     float64
 		DividendYearProjected  mm.Value
-		DYield                 float64
+		DividendYearYield      float64
 		Connection             mm.Value
 		Interest               mm.Value
 		Commission             mm.Value

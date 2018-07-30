@@ -85,18 +85,20 @@ func (h *listStocks) Handle(ctx context.Context, command cbus.Command) (result i
 		}
 
 		rstks = append(rstks, &render.StockOutput{
-			Stock:      stk.Name,
-			Market:     stk.Exchange.Symbol,
-			Symbol:     stk.Symbol,
-			Value:      stk.Value,
-			High52Week: stk.High52Week,
-			Low52Week:  stk.Low52Week,
-			BuyUnder:   stk.BuyUnder(),
-			ExDate:     exDate,
-			DYield:     stk.DividendYield,
-			EPS:        stk.EPS,
-			Change:     stk.Change,
-			UpdatedAt:  stk.LastPriceUpdate,
+			Stock:          stk.Name,
+			Market:         stk.Exchange.Symbol,
+			Symbol:         stk.Symbol,
+			Value:          stk.Value,
+			High52Week:     stk.High52Week,
+			Low52Week:      stk.Low52Week,
+			BuyUnder:       stk.BuyUnder(),
+			ExDate:         exDate,
+			Dividend:       d.Amount,
+			DividendStatus: d.Status,
+			DYield:         stk.DividendYield,
+			EPS:            stk.EPS,
+			Change:         stk.Change,
+			UpdatedAt:      stk.LastPriceUpdate,
 
 			PriceWithHighLow: stk.ComparePriceWithHighLow(),
 		})

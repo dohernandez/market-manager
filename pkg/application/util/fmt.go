@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 func SPrintValue(value mm.Value, precision int) string {
@@ -45,4 +46,16 @@ func SPrintDateTime(t time.Time) string {
 	}
 
 	return t.Format("02 Jan 06 15:04")
+}
+
+func SPrintInitialDividendStatus(dst dividend.Status) string {
+	if dst == dividend.Announced {
+		return "(A)"
+	}
+
+	if dst == dividend.Payed {
+		return "(P)"
+	}
+
+	return ""
 }
