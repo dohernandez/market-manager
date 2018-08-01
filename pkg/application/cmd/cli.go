@@ -24,6 +24,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/application/util"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 )
 
 type (
@@ -442,7 +443,7 @@ func (cmd *CLI) sortingFromCliCtx(cliCtx *cli.Context) util.Sorting {
 }
 
 // ExportWalletDetails List in csv format or print into screen the wallet details
-func (cmd *CLI) ExportWalletDetails(cliCtx *cli.Context) error {
+func (cmd *CLI) ExportWallet(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -481,11 +482,23 @@ func (cmd *CLI) ExportWalletDetails(cliCtx *cli.Context) error {
 		return errors.Wrapf(err, "Can execute buys or sells without commissions")
 	}
 
+	var status operation.Status
+	fmt.Println(cliCtx.String("status"))
+	switch cliCtx.String("status") {
+	case "inactive":
+		status = operation.Inactive
+	case "all":
+		status = operation.All
+	default:
+		status = operation.Active
+	}
+
 	wOutput, err := bus.ExecuteContext(ctx, &command.WalletDetails{
 		Wallet:      cliCtx.String("wallet"),
 		Sells:       sells,
 		Buys:        buys,
 		Commissions: commissions,
+		Status:      status,
 	})
 	if err != nil {
 		return err
@@ -533,7 +546,7 @@ func (cmd *CLI) getCommissionsToApplyStockOperation() (map[string]command.Commis
 		return nil, errors.Wrapf(err, "Can not unmarshal config commission")
 	}
 
-	commissions["NASDAQ"] = commission
+	commissions["NYSE"] = commission
 
 	return commissions, err
 }

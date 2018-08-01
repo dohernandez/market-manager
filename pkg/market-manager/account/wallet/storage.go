@@ -11,6 +11,8 @@ type (
 		FindByBankAccount(ba *bank.Account) (*Wallet, error)
 		FindWithItemByStock(stk *stock.Stock) ([]*Wallet, error)
 		LoadActiveItems(w *Wallet) error
+		LoadInactiveItems(w *Wallet) error
+		LoadAllItems(w *Wallet) error
 		LoadItemByStock(w *Wallet, stk *stock.Stock) error
 		LoadItemOperations(i *Item) error
 	}

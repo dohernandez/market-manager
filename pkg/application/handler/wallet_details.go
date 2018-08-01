@@ -58,8 +58,9 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	sells := walletDetails.Sells
 	buys := walletDetails.Buys
 	commissions := walletDetails.Commissions
+	status := walletDetails.Status
 
-	w, err := h.loadWalletWithActiveWalletItems(wName)
+	w, err := h.loadWalletWithWalletItems(wName, status)
 	if err != nil {
 		logger.FromContext(ctx).Errorf(
 			"An error happen while loading wallet [%s] -> error [%s]",
@@ -125,6 +126,15 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 
 			w.AddOperation(o)
 		}
+
+		if w.FreeMargin().Amount < 0 {
+			logger.FromContext(ctx).Errorf(
+				"An error happen there is not enough funds to execute the buys wallet [%s]",
+				wName,
+			)
+
+			return nil, errors.New("not enough funds to execute the buys")
+		}
 	}
 
 	wDProjectedGrossMonth := w.DividendProjectedNextMonth()
@@ -167,7 +177,11 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 
 	var wSOutputs []*render.WalletStockOutput
 	for _, item := range w.Items {
-		if item.Amount == 0 {
+		if status == operation.Active && item.Amount == 0 {
+			continue
+		}
+
+		if status == operation.Inactive && item.Amount != 0 {
 			continue
 		}
 
@@ -176,6 +190,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			wADYield        float64
 			sDividend       mm.Value
 			sDividendStatus dividend.Status
+			dividendToPay   mm.Value
 		)
 
 		wAPrice := item.WeightedAveragePrice()
@@ -189,6 +204,16 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 				wADYield = d.Amount.Amount * 4 / wAPrice.Amount * 100
 
 				sDividendStatus = d.Status
+
+				dividendToPayGross := mm.Value{
+					Amount:   float64(item.Amount) * d.Amount.Amount,
+					Currency: mm.Dollar,
+				}
+
+				dividendToPay = mm.Value{
+					Amount:   (dividendToPayGross.Amount - (h.retention * dividendToPayGross.Amount / 100)) / w.CurrentCapitalRate(),
+					Currency: mm.Euro,
+				}
 			}
 		}
 
@@ -208,6 +233,8 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 				EPS:            item.Stock.EPS,
 				Change:         item.Stock.Change,
 				UpdatedAt:      item.Stock.LastPriceUpdate,
+				HV52Week:       item.Stock.HV52Week,
+				HV20Day:        item.Stock.HV20Day,
 
 				PriceWithHighLow: item.Stock.ComparePriceWithHighLow(),
 			},
@@ -215,6 +242,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			Capital:            item.Capital(),
 			Invested:           item.Invested,
 			DividendPayed:      item.Dividend,
+			DividendToPay:      dividendToPay,
 			PercentageWallet:   item.PercentageInvestedRepresented(w.Capital.Amount),
 			Buys:               item.Buys,
 			Sells:              item.Sells,
@@ -231,13 +259,20 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	return wDetailsOutput, err
 }
 
-func (h *walletDetails) loadWalletWithActiveWalletItems(name string) (*wallet.Wallet, error) {
+func (h *walletDetails) loadWalletWithWalletItems(name string, status operation.Status) (*wallet.Wallet, error) {
 	w, err := h.walletFinder.FindByName(name)
 	if err != nil {
 		return nil, err
 	}
 
-	err = h.walletFinder.LoadActiveItems(w)
+	switch status {
+	case operation.Inactive:
+		err = h.walletFinder.LoadInactiveItems(w)
+	case operation.All:
+		err = h.walletFinder.LoadAllItems(w)
+	default:
+		err = h.walletFinder.LoadActiveItems(w)
+	}
 	if err != nil {
 		return nil, err
 	}

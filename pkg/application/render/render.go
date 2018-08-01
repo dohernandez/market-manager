@@ -30,6 +30,8 @@ type (
 		ExDate         time.Time
 		Change         mm.Value
 		UpdatedAt      time.Time
+		HV52Week       float64
+		HV20Day        float64
 
 		PriceWithHighLow int
 	}
@@ -40,6 +42,7 @@ type (
 		Capital            mm.Value
 		Invested           mm.Value
 		DividendPayed      mm.Value
+		DividendToPay      mm.Value
 		PercentageWallet   float64
 		Buys               mm.Value
 		Sells              mm.Value

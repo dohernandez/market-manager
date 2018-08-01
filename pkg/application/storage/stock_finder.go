@@ -32,6 +32,8 @@ type (
 		HighLow52WeekUpdate time.Time `db:"high_low_52_week_update"`
 		EPS                 string    `db:"eps"`
 		PER                 string    `db:"per"`
+		HV20Day             string    `db:"hv_20_day"`
+		HV52Week            string    `db:"hv_52_week"`
 
 		MarketID          uuid.UUID `db:"market_id"`
 		MarketName        string    `db:"market_name"`
@@ -104,6 +106,8 @@ func (f *stockFinder) selectStockColumns() []string {
 		"e.symbol AS exchange_symbol",
 		"s.eps",
 		"s.per",
+		"s.hv_20_day",
+		"s.hv_52_week",
 	}
 }
 
@@ -111,6 +115,8 @@ func (f *stockFinder) hydrate(tuple *stockTuple) *stock.Stock {
 	dy, _ := strconv.ParseFloat(tuple.DividendYield, 64)
 	eps, _ := strconv.ParseFloat(tuple.EPS, 64)
 	per, _ := strconv.ParseFloat(tuple.PER, 64)
+	hv52week, _ := strconv.ParseFloat(tuple.HV52Week, 64)
+	hv20day, _ := strconv.ParseFloat(tuple.HV20Day, 64)
 
 	return &stock.Stock{
 		ID: tuple.ID,
@@ -135,6 +141,8 @@ func (f *stockFinder) hydrate(tuple *stockTuple) *stock.Stock {
 		HighLow52WeekUpdate: tuple.HighLow52WeekUpdate,
 		EPS:                 eps,
 		PER:                 per,
+		HV52Week:            hv52week,
+		HV20Day:             hv20day,
 	}
 }
 

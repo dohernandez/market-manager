@@ -12,6 +12,8 @@ import (
 type (
 	Action string
 
+	Status string
+
 	Operation struct {
 		ID     uuid.UUID
 		Date   time.Time
@@ -33,6 +35,10 @@ const (
 	Connectivity Action = "connectivity"
 	Dividend     Action = "dividend"
 	Interest     Action = "interest"
+
+	Active   Status = "open"
+	Inactive Status = "close"
+	All      Status = "all"
 )
 
 func NewOperation(

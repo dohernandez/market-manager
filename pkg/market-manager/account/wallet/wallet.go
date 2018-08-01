@@ -151,11 +151,15 @@ func (i *Item) WeightedAveragePrice() mm.Value {
 		}
 	}
 
-	wAveragePrice := asPrice / float64(i.Amount)
-	return mm.Value{
-		Amount:   wAveragePrice,
+	wAPrice := mm.Value{
 		Currency: mm.ExchangeCurrency(eSymbol),
 	}
+
+	if i.Amount > 0 {
+		wAPrice.Amount = asPrice / float64(i.Amount)
+	}
+
+	return wAPrice
 }
 
 func (i *Item) PercentageInvestedRepresented(invested float64) float64 {

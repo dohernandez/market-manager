@@ -277,9 +277,9 @@ func main() {
 					Usage:   "Export to csv file",
 					Subcommands: []cli.Command{
 						{
-							Name:      "walletItems",
+							Name:      "wallet",
 							Aliases:   []string{"wi"},
-							Action:    cLine.ExportWalletDetails,
+							Action:    cLine.ExportWallet,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -289,6 +289,10 @@ func main() {
 								cli.StringFlag{
 									Name:  "wallet, w",
 									Usage: "Wallet name",
+								},
+								cli.StringFlag{
+									Name:  "status, st",
+									Usage: "wallet operation status (active, inactive, all) Default by active",
 								},
 								cli.StringFlag{
 									Name:  "stock, s",

@@ -1,5 +1,7 @@
 package command
 
+import "github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
+
 type (
 	Commission struct {
 		Commission struct {
@@ -31,5 +33,7 @@ type (
 		Buys  map[string]int
 
 		Commissions map[string]Commission
+
+		Status operation.Status
 	}
 )

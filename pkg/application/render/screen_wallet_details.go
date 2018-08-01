@@ -149,7 +149,7 @@ func (s *screenWalletDetails) renderItemStocks(tw *tabwriter.Writer, wStocks []*
 
 	for i, stk := range wStocks {
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %.*f%%\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t",
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t",
 			i+1,
 			stk.Stock,
 			stk.Market,
@@ -157,9 +157,8 @@ func (s *screenWalletDetails) renderItemStocks(tw *tabwriter.Writer, wStocks []*
 			stk.Amount,
 			util.SPrintValue(stk.Capital, precision),
 			util.SPrintValue(stk.Invested, precision),
-			precision,
-			stk.PercentageWallet,
-			util.SPrintValue(stk.Dividend, precision),
+			util.SPrintPercentage(stk.PercentageWallet, precision),
+			util.SPrintValue(stk.DividendPayed, precision),
 			util.SPrintValue(stk.Buys, precision),
 			util.SPrintValue(stk.Sells, precision),
 			util.SPrintValue(stk.NetBenefits, precision),
@@ -204,7 +203,7 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t Updated At\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t D. Yield\t WA D. Yield\t D. Pay\t")
 
 	inNormal := color.New(color.FgWhite).FprintlnFunc()
 	inHeightLight := color.New(color.FgYellow).FprintlnFunc()
@@ -226,7 +225,7 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 			util.SPrintValue(stk.Dividend, precision),
 			util.SPrintPercentage(stk.DYield, precision),
 			util.SPrintPercentage(stk.WADYield, precision),
-			util.SPrintDateTime(stk.UpdatedAt),
+			util.SPrintValue(stk.DividendToPay, precision),
 		)
 
 		if stk.ExDate.Month() == now.Month() && stk.ExDate.Year() == now.Year() {
@@ -243,7 +242,7 @@ func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*Wall
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t High 52wk\t Low 52wk\t Buy Under\t EPS\t Change\t Updated At\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t High 52wk\t Low 52wk\t HV 52wk\t HV 20day\t Buy Under\t EPS\t Change\t")
 
 	normal := color.New(color.FgWhite).FprintlnFunc()
 	overSell := color.New(color.FgGreen).FprintlnFunc()
@@ -251,7 +250,7 @@ func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*Wall
 
 	for i, stk := range wStocks {
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %.*f\t %s\t %s\t",
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %.*f\t %.*f\t %s\t %.*f\t %s\t",
 			i+1,
 			stk.Stock,
 			stk.Market,
@@ -261,11 +260,14 @@ func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*Wall
 			util.SPrintValue(stk.WAPrice, precision),
 			util.SPrintValue(stk.High52Week, precision),
 			util.SPrintValue(stk.Low52Week, precision),
+			precision,
+			stk.HV52Week,
+			precision,
+			stk.HV20Day,
 			util.SPrintValue(stk.BuyUnder, precision),
 			precision,
 			stk.EPS,
 			util.SPrintValue(stk.Change, precision),
-			util.SPrintDate(stk.UpdatedAt),
 		)
 
 		switch stk.PriceWithHighLow {
