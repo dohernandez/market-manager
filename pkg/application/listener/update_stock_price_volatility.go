@@ -45,7 +45,7 @@ func (l *updateStockPriceVolatility) OnEvent(ctx context.Context, event cbus.Eve
 			if err != nil {
 				logger.FromContext(ctx).Errorf(
 					"An error happen while updating stocks price volatility: stock [%s] -\\u003e error [%s]",
-					stk.Symbol,
+					st.Symbol,
 					err,
 				)
 
@@ -67,9 +67,9 @@ func (l *updateStockPriceVolatility) OnEvent(ctx context.Context, event cbus.Eve
 				break
 			}
 
-			logger.FromContext(ctx).Errorf("Going to rest for %d seconds", 15)
+			logger.FromContext(ctx).Infof("Going to rest for %d seconds", 15)
 			time.Sleep(15 * time.Second)
-			logger.FromContext(ctx).Errorf("Waking up after %d seconds sleeping", 15)
+			logger.FromContext(ctx).Infof("Waking up after %d seconds sleeping", 15)
 		}
 	}
 

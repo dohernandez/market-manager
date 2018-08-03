@@ -52,6 +52,12 @@ func (s *stockDividendMarketChameleon) NextFuture(stk *stock.Stock) (dividend.St
 		return dividend.StockDividend{}, err
 	}
 
+	if resp.StatusCode == http.StatusForbidden {
+		return dividend.StockDividend{}, errors.New(
+			"marketChameleon said: You do not have permission to view this directory or page using the credentials that you supplied.",
+		)
+	}
+
 	root, err := html.Parse(resp.Body)
 	if err != nil {
 		return dividend.StockDividend{}, err
@@ -176,6 +182,12 @@ func (s *stockDividendMarketChameleon) Future(stk *stock.Stock) ([]dividend.Stoc
 		return nil, err
 	}
 
+	if resp.StatusCode == http.StatusForbidden {
+		return nil, errors.New(
+			"marketChameleon said: You do not have permission to view this directory or page using the credentials that you supplied.",
+		)
+	}
+
 	root, err := html.Parse(resp.Body)
 	if err != nil {
 		return nil, err
@@ -217,6 +229,12 @@ func (s *stockDividendMarketChameleon) Historical(stk *stock.Stock, fromDate tim
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode == http.StatusForbidden {
+		return nil, errors.New(
+			"marketChameleon said: You do not have permission to view this directory or page using the credentials that you supplied.",
+		)
 	}
 
 	root, err := html.Parse(resp.Body)

@@ -58,6 +58,7 @@ func main() {
 	server := cmd.NewHTTP(base)
 	migrate := cmd.NewMigrate(base)
 	cLine := cmd.NewCLI(base)
+	scraper := cmd.NewScraper(base)
 	api := cmd.NewAPI(base)
 	//
 	//schedulerCMD := command.NewSchedulerCMD(purchaseCMD)
@@ -350,6 +351,17 @@ func main() {
 			Name:   "api",
 			Usage:  "Api test",
 			Action: api.Run,
+		},
+		{
+			Name:  "scrape",
+			Usage: "Scrape commands",
+			Subcommands: []cli.Command{
+				{
+					Name:   "dividend-calculator",
+					Usage:  "Dividend report from the list of stock given on the url http://www.dividend-calculator.com/dividend-growth-stocks-list.php",
+					Action: scraper.DividendGrowthStocks,
+				},
+			},
 		},
 	}
 

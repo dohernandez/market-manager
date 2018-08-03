@@ -328,7 +328,7 @@ func (w *Wallet) DividendProjectedNextMonth() mm.Value {
 
 func (w *Wallet) Margin() mm.Value {
 	netCapital := w.NetCapital()
-	margin := netCapital.Amount * 49 / 100
+	margin := netCapital.Amount * 48 / 100
 
 	return mm.Value{
 		Amount:   margin,

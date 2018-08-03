@@ -42,6 +42,12 @@ func (s *marketChameleonStockPriceVolatility) PriceVolatility(stk *stock.Stock) 
 		return stock.PriceVolatility{}, err
 	}
 
+	if resp.StatusCode == http.StatusForbidden {
+		return stock.PriceVolatility{}, errors.New(
+			"marketChameleon said: You do not have permission to view this directory or page using the credentials that you supplied.",
+		)
+	}
+
 	root, err := html.Parse(resp.Body)
 	if err != nil {
 		return stock.PriceVolatility{}, err

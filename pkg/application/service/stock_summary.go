@@ -40,6 +40,12 @@ func (s *stockSummaryMarketChameleon) Summary(stk *stock.Stock) (stock.Summary, 
 		return stock.Summary{}, err
 	}
 
+	if resp.StatusCode == http.StatusForbidden {
+		return stock.Summary{}, errors.New(
+			"marketChameleon said: You do not have permission to view this directory or page using the credentials that you supplied.",
+		)
+	}
+
 	root, err := html.Parse(resp.Body)
 	if err != nil {
 		return stock.Summary{}, err
