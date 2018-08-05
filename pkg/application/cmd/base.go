@@ -159,6 +159,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// import operation
 	importOperation := command.ImportOperation{}
 	bus.Handle(&importOperation, importOperationHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &importOperation, updateWalletCapital)
 
 	// List stocks
 	listStocks := command.ListStocks{}
