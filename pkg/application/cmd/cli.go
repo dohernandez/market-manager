@@ -483,7 +483,6 @@ func (cmd *CLI) ExportWallet(cliCtx *cli.Context) error {
 	}
 
 	var status operation.Status
-	fmt.Println(cliCtx.String("status"))
 	switch cliCtx.String("status") {
 	case "inactive":
 		status = operation.Inactive
@@ -504,16 +503,26 @@ func (cmd *CLI) ExportWallet(cliCtx *cli.Context) error {
 		return err
 	}
 
-	sls := render.NewScreenWalletDetails()
-	sls.Render(&render.OutputScreenWalletDetails{
+	rOutput := render.OutputScreenWalletDetails{
 		WalletDetails: wOutput.(render.WalletDetailsOutput),
 		Sorting:       cmd.sortingFromCliCtx(cliCtx),
 		Precision:     2,
-	})
+	}
+
+	if cliCtx.String("stock") != "" {
+		sls := render.NewScreenWalletStockDetails(cmd.ctx)
+		sls.Render(&render.OutputScreenWalletStockDetails{
+			OutputScreenWalletDetails: rOutput,
+			Stock: cliCtx.String("stock"),
+		})
+
+		return nil
+	}
+
+	sls := render.NewScreenWalletDetails()
+	sls.Render(&rOutput)
 
 	return nil
-
-	//ctx = context.WithValue(ctx, "stock", cliCtx.String("stock"))
 }
 
 func (cmd *CLI) getCommissionsToApplyStockOperation() (map[string]command.Commission, error) {
@@ -549,4 +558,27 @@ func (cmd *CLI) getCommissionsToApplyStockOperation() (map[string]command.Commis
 	commissions["NYSE"] = commission
 
 	return commissions, err
+}
+
+// ReloadWallet reload the wallet operation
+func (cmd *CLI) ReloadWallet(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	if cliCtx.String("wallet") == "" {
+		logger.FromContext(ctx).Fatal("Missing wallet name")
+	}
+
+	bus := cmd.initCommandBus()
+
+	_, err := bus.ExecuteContext(ctx, &command.ReloadWallet{
+		Wallet: cliCtx.String("wallet"),
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed reloading wallet")
+	}
+
+	logger.FromContext(ctx).Info("Reloading finished")
+
+	return nil
 }

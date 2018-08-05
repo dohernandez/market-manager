@@ -319,6 +319,18 @@ func main() {
 						},
 					},
 				},
+				{
+					Name:    "reload",
+					Aliases: []string{"r"},
+					Usage:   "Reload wallet",
+					Action:  cLine.ReloadWallet,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "wallet, w",
+							Usage: "wallet to reload",
+						},
+					},
+				},
 			},
 		},
 		{

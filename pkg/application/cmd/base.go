@@ -69,6 +69,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	exchangeFinder := storage.NewExchangeFinder(cmd.DB)
 	stockInfoFinder := storage.NewStockInfoFinder(cmd.DB)
 	bankAccountFinder := storage.NewBankAccountFinder(cmd.DB)
+	walletReload := storage.NewWalletReload(cmd.DB)
 
 	stockPersister := storage.NewStockPersister(cmd.DB)
 	walletPersister := storage.NewWalletPersister(cmd.DB)
@@ -98,6 +99,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	listStockHandler := handler.NewListStock(stockFinder, stockDividendFinder)
 	walletDetailsHandler := handler.NewWalletDetails(walletFinder, stockFinder, stockDividendFinder, ccClient, cmd.config.Degiro.Retention)
 	updateWalletStocksPriceHandler := handler.NewUpdateWalletStocksPrice(walletFinder, stockFinder)
+	reloadWalletHandler := handler.NewReloadWallet(walletFinder, walletReload)
 
 	// LISTENER
 	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahooService, stockPersister)
@@ -173,6 +175,9 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockDividendYield)
 	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateWalletCapital)
 	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockPriceVolatility)
+
+	//Reload wallet
+	bus.Handle(&command.ReloadWallet{}, reloadWalletHandler)
 
 	return &bus
 }
