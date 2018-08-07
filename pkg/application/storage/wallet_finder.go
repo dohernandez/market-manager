@@ -10,6 +10,7 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account/trade"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -86,6 +87,7 @@ func (f *walletFinder) hydrateWallet(tuple *walletTuple) *wallet.Wallet {
 		Commission:   mm.ValueEuroFromString(tuple.Commission),
 		Connection:   mm.ValueEuroFromString(tuple.Connection),
 		Interest:     mm.ValueEuroFromString(tuple.Interest),
+		Trades:       map[int]*trade.Trade{},
 	}
 }
 

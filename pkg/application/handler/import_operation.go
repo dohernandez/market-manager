@@ -118,6 +118,11 @@ func (h *importOperation) Handle(ctx context.Context, command cbus.Command) (res
 
 		os = append(os, o)
 		w.AddOperation(o)
+
+		if line[0] != "" {
+			n, _ := strconv.Atoi(line[0])
+			w.AddTrade(n, o)
+		}
 	}
 
 	err = h.walletPersister.PersistOperations(w)

@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS trade_operation;
+DROP TABLE IF EXISTS trade;
+DROP TYPE IF EXISTS tstatus;

@@ -86,7 +86,7 @@ func (o *Operation) FinalPricePaid() mm.Value {
 	p := o.Price
 	if o.Price.Currency == mm.Dollar {
 		p = mm.Value{
-			Amount:   o.Price.Amount * o.PriceChange.Amount,
+			Amount:   o.Price.Amount * o.PriceChange.Amount * float64(o.Amount),
 			Currency: mm.Euro,
 		}
 	}

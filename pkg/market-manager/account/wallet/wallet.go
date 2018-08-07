@@ -8,6 +8,7 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account/trade"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
@@ -186,6 +187,8 @@ type Wallet struct {
 
 	// Rate currency conversion
 	capitalRate float64
+
+	Trades map[int]*trade.Trade
 }
 
 func NewWallet(name, url string) *Wallet {
@@ -195,6 +198,7 @@ func NewWallet(name, url string) *Wallet {
 		URL:          url,
 		BankAccounts: map[uuid.UUID]*bank.Account{},
 		Items:        map[uuid.UUID]*Item{},
+		Trades:       map[int]*trade.Trade{},
 	}
 }
 
@@ -211,6 +215,7 @@ func (w *Wallet) AddBankAccount(ba *bank.Account) error {
 func (w *Wallet) AddOperation(o *operation.Operation) {
 	w.Operations = append(w.Operations, o)
 
+	// Getting the wallet item
 	wi, ok := w.Items[o.Stock.ID]
 	if !ok {
 		if o.Stock.ID != uuid.Nil {
@@ -366,4 +371,23 @@ func (w *Wallet) DividendProjectedNextYear() mm.Value {
 		Amount:   dividends,
 		Currency: mm.Euro,
 	}
+}
+
+func (w *Wallet) AddTrade(n int, o *operation.Operation) {
+	if o.Action == operation.Buy {
+		t := trade.NewTrade(n)
+
+		w.Trades[n] = t
+
+		t.Open(o)
+
+		return
+	}
+
+	t, ok := w.Trades[n]
+	if !ok {
+		return
+	}
+
+	t.Sold(o)
 }

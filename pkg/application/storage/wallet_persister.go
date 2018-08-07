@@ -25,6 +25,18 @@ func (p *walletPersister) PersistAll(ws []*wallet.Wallet) error {
 			if err := p.execInsert(tx, w); err != nil {
 				return err
 			}
+
+			if err := p.execBankAccountInsert(tx, w); err != nil {
+				return err
+			}
+
+			if err := p.execOperationInsert(tx, w); err != nil {
+				return err
+			}
+
+			if err := p.execWalletItemInsert(tx, w); err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -39,12 +51,7 @@ func (p *walletPersister) execInsert(tx *sqlx.Tx, w *wallet.Wallet) error {
 		return err
 	}
 
-	err = p.execBankAccountInsert(tx, w)
-	if err != nil {
-		return err
-	}
-
-	return p.execOperationInsert(tx, w)
+	return nil
 }
 
 func (p *walletPersister) execBankAccountInsert(tx *sqlx.Tx, w *wallet.Wallet) error {
@@ -96,7 +103,7 @@ func (p *walletPersister) execOperationInsert(tx *sqlx.Tx, w *wallet.Wallet) err
 		}
 	}
 
-	return p.execWalletItemInsert(tx, w)
+	return nil
 }
 
 func (p *walletPersister) execWalletItemInsert(tx *sqlx.Tx, w *wallet.Wallet) error {
@@ -137,6 +144,10 @@ func (p *walletPersister) PersistOperations(w *wallet.Wallet) error {
 			return err
 		}
 
+		if err := p.execWalletItemInsert(tx, w); err != nil {
+			return err
+		}
+
 		if err := p.execUpdateItemCapital(tx, w); err != nil {
 			return err
 		}
@@ -145,7 +156,15 @@ func (p *walletPersister) PersistOperations(w *wallet.Wallet) error {
 			return err
 		}
 
-		return p.execUpdateAccounting(tx, w)
+		if err := p.execUpdateAccounting(tx, w); err != nil {
+			return err
+		}
+
+		if err := p.execUpdateTrade(tx, w); err != nil {
+			return err
+		}
+
+		return nil
 	})
 }
 
@@ -218,4 +237,67 @@ func (p *walletPersister) execUpdateCapital(tx *sqlx.Tx, w *wallet.Wallet) error
 	_, err := tx.Exec(query, w.ID, w.ID)
 
 	return err
+}
+
+func (p *walletPersister) execUpdateTrade(tx *sqlx.Tx, w *wallet.Wallet) error {
+	query := `INSERT INTO trade(
+				id,
+				number,
+				stock_id,
+				wallet_id,
+				opened_at,
+				buys,
+				buy_amount,
+				amount,
+				status,
+				sells,
+				sell_amount,
+				dividend,
+				closed_at,
+				capital,
+				net
+			  ) 
+			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+			  ON CONFLICT (id) DO UPDATE
+			  SET amount = excluded.amount,
+				  sells = excluded.sells,
+				  sell_amount = excluded.sell_amount,
+				  dividend = excluded.dividend,
+				  closed_at = excluded.closed_at,
+				  capital = excluded.capital,
+				  net = excluded.net`
+
+	queryOperation := `INSERT INTO trade_operation(trade_id, operation_id) VALUES ($1, $2)
+						ON CONFLICT (trade_id, operation_id) DO NOTHING`
+
+	for _, t := range w.Trades {
+		if _, err := tx.Exec(
+			query,
+			t.ID,
+			t.Number,
+			t.Stock.ID,
+			w.ID,
+			t.OpenedAt,
+			t.Buys.Amount,
+			t.BuysAmount,
+			t.Amount,
+			t.Status,
+			t.Sells.Amount,
+			t.SellsAmount,
+			t.Dividend.Amount,
+			t.ClosedAt,
+			t.CloseCapital.Amount,
+			t.CloseNet.Amount,
+		); err != nil {
+			return err
+		}
+
+		for _, o := range t.Operations {
+			if _, err := tx.Exec(queryOperation, t.ID, o.ID); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

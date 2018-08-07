@@ -217,6 +217,30 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			}
 		}
 
+		var sOperations []*render.OperationOutput
+
+		for _, o := range item.Operations {
+			if o.Action == operation.Buy {
+				sOperations = append(sOperations, &render.OperationOutput{
+					Stock:  o.Stock.Name,
+					Market: o.Stock.Exchange.Symbol,
+					Symbol: o.Stock.Symbol,
+					Enter: struct {
+						Amount int
+						Kurs   mm.Value
+						Total  mm.Value
+					}{
+						Amount: o.Amount,
+						Kurs: mm.Value{
+							Amount:   o.Price.Amount / o.PriceChange.Amount,
+							Currency: mm.Euro,
+						},
+						Total: o.Value,
+					},
+				})
+			}
+		}
+
 		wSOutputs = append(wSOutputs, &render.WalletStockOutput{
 			StockOutput: render.StockOutput{
 				Stock:          item.Stock.Name,
@@ -251,6 +275,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			Change:             item.Change(),
 			WAPrice:            wAPrice,
 			WADYield:           wADYield,
+			Operations:         sOperations,
 		})
 	}
 
