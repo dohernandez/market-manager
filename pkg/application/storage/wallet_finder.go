@@ -8,6 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
+	"time"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/trade"
@@ -45,6 +47,24 @@ type (
 		CapitalRate float64   `db:"capital_rate"`
 		StockID     uuid.UUID `db:"stock_id"`
 		WalletID    uuid.UUID `db:"wallet_id"`
+	}
+
+	walletTradeTuple struct {
+		ID           uuid.UUID `db:"id"`
+		Number       int       `db:"number"`
+		OpenedAt     time.Time `db:"opened_at"`
+		Buys         string    `db:"buys"`
+		BuysAmount   float64   `db:"buy_amount"`
+		ClosedAt     time.Time `db:"closed_at"`
+		Sells        string    `db:"sells"`
+		SellsAmount  float64   `db:"sell_amount"`
+		Amount       float64   `db:"amount"`
+		Dividend     string    `db:"dividend"`
+		Status       string    `db:"status"`
+		CloseCapital string    `db:"capital"`
+		CloseNet     string    `db:"net"`
+		StockID      uuid.UUID `db:"stock_id"`
+		WalletID     uuid.UUID `db:"wallet_id"`
 	}
 )
 
@@ -192,6 +212,7 @@ func (f *walletFinder) hydrateWalletItem(tuple *walletItemTuple) (*wallet.Item, 
 		Buys:        mm.ValueEuroFromString(tuple.Buys),
 		Sells:       mm.ValueEuroFromString(tuple.Sells),
 		CapitalRate: tuple.CapitalRate,
+		Trades:      map[int]*trade.Trade{},
 	}
 
 	return &i, nil
@@ -302,4 +323,70 @@ func (f *walletFinder) LoadAllItems(w *wallet.Wallet) error {
 	}
 
 	return nil
+}
+
+func (f *walletFinder) LoadActiveTrades(w *wallet.Wallet) error {
+	var tuples []walletTradeTuple
+
+	query := `SELECT * FROM trade WHERE wallet_id = $1 ORDER BY opened_at`
+
+	err := sqlx.Select(f.db, &tuples, query, w.ID)
+	if err != nil {
+		return errors.Wrapf(err, "Select trades from wallet %q", w.ID)
+	}
+
+	for _, tuple := range tuples {
+		t, err := f.hydrateWalletTrade(&tuple)
+		if err != nil {
+			return errors.Wrapf(err, "Hydrate trades from wallet %q", w.ID)
+		}
+
+		// Sync stock between item and tuple.
+		// The idea is that both struct use the same stock pointer
+		item, ok := w.Items[t.Stock.ID]
+		if !ok {
+			//return errors.Errorf(
+			//	"Hydrate trade wallet %q from wallet %q. Wallet item for stock %s is not loaded",
+			//	trade.Open,
+			//	w.ID,
+			//	t.Stock.ID,
+			//)
+			continue
+		}
+
+		t.Stock = item.Stock
+
+		item.Trades[t.Number] = t
+		w.Trades[t.Number] = t
+	}
+
+	return nil
+}
+
+func (f *walletFinder) hydrateWalletTrade(tuple *walletTradeTuple) (*trade.Trade, error) {
+	t := trade.Trade{
+		ID:     tuple.ID,
+		Number: tuple.Number,
+		Stock: &stock.Stock{
+			ID: tuple.StockID,
+		},
+
+		OpenedAt:   tuple.OpenedAt,
+		Buys:       mm.ValueEuroFromString(tuple.Buys),
+		BuysAmount: tuple.BuysAmount,
+
+		ClosedAt:    tuple.ClosedAt,
+		Sells:       mm.ValueEuroFromString(tuple.Sells),
+		SellsAmount: tuple.SellsAmount,
+
+		Amount: tuple.Amount,
+
+		Dividend: mm.ValueEuroFromString(tuple.Dividend),
+		Status:   trade.Status(tuple.Status),
+
+		CloseCapital: mm.ValueEuroFromString(tuple.CloseCapital),
+		CloseNet:     mm.ValueEuroFromString(tuple.CloseNet),
+	}
+
+	return &t, nil
 }

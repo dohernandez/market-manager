@@ -36,23 +36,32 @@ type (
 		PriceWithHighLow int
 	}
 
-	OperationOutput struct {
+	TradeOutput struct {
 		ID     uuid.UUID
 		Stock  string
 		Market string
 		Symbol string
 
 		Enter struct {
-			Amount int
+			Amount float64
 			Kurs   mm.Value
 			Total  mm.Value
 		}
 
+		Position struct {
+			Amount   float64
+			Dividend mm.Value
+			Capital  mm.Value
+		}
+
 		Exit struct {
-			Amount int
+			Amount float64
 			Kurs   mm.Value
 			Total  mm.Value
 		}
+
+		Net               mm.Value
+		BenefitPercentage float64
 
 		IsProfitable bool
 	}
@@ -72,7 +81,7 @@ type (
 		Change             mm.Value
 		WAPrice            mm.Value
 		WADYield           float64
-		Operations         []*OperationOutput
+		Trades             []*TradeOutput
 	}
 
 	WalletOutput struct {

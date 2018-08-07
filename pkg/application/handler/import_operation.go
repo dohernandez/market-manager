@@ -59,7 +59,7 @@ func (h *importOperation) Handle(ctx context.Context, command cbus.Command) (res
 		return nil, errors.New("missing wallet name")
 	}
 
-	w, err := h.LoadWalletWithActiveWalletItems(wName)
+	w, err := h.LoadWalletWithActiveWalletItemsAndActiveWalletTrades(wName)
 	if err != nil {
 		logger.FromContext(ctx).Errorf(
 			"An error happen while loading wallet name [%s] -> error [%s]",
@@ -122,6 +122,8 @@ func (h *importOperation) Handle(ctx context.Context, command cbus.Command) (res
 		if line[0] != "" {
 			n, _ := strconv.Atoi(line[0])
 			w.AddTrade(n, o)
+		} else if action == operation.Dividend {
+			w.AddTrade(0, o)
 		}
 	}
 
@@ -138,14 +140,17 @@ func (h *importOperation) Handle(ctx context.Context, command cbus.Command) (res
 	return os, nil
 }
 
-func (h *importOperation) LoadWalletWithActiveWalletItems(name string) (*wallet.Wallet, error) {
+func (h *importOperation) LoadWalletWithActiveWalletItemsAndActiveWalletTrades(name string) (*wallet.Wallet, error) {
 	w, err := h.walletFinder.FindByName(name)
 	if err != nil {
 		return nil, err
 	}
 
-	err = h.walletFinder.LoadActiveItems(w)
-	if err != nil {
+	if err = h.walletFinder.LoadActiveItems(w); err != nil {
+		return nil, err
+	}
+
+	if err = h.walletFinder.LoadActiveTrades(w); err != nil {
 		return nil, err
 	}
 
@@ -157,7 +162,9 @@ func (h *importOperation) LoadWalletWithActiveWalletItems(name string) (*wallet.
 			return nil, err
 		}
 
-		i.Stock = stk
+		// I like to keep the address but change the content to keep,
+		// trade and item pointing to the same stock
+		*i.Stock = *stk
 	}
 
 	cEURUSD, err := h.ccClient.Converter.Get()

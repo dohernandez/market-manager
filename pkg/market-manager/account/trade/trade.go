@@ -35,6 +35,9 @@ type (
 
 		Stock      *stock.Stock
 		Operations []*operation.Operation
+
+		// Rate currency conversion
+		CapitalRate float64
 	}
 )
 
@@ -69,7 +72,8 @@ func (t *Trade) Capital() mm.Value {
 	}
 
 	capital := mm.Value{
-		Amount: t.Stock.Value.Amount * t.Amount,
+		Amount:   t.Stock.Value.Amount * t.Amount / t.CapitalRate,
+		Currency: mm.Euro,
 	}
 
 	return capital
@@ -87,6 +91,12 @@ func (t *Trade) Net() mm.Value {
 	return net
 }
 
+func (t *Trade) BenefitPercentage() float64 {
+	net := t.Net()
+
+	return net.Amount * 100 / t.Buys.Amount
+}
+
 func (t *Trade) Sold(op *operation.Operation) {
 	t.Operations = append(t.Operations, op)
 
@@ -98,6 +108,15 @@ func (t *Trade) Sold(op *operation.Operation) {
 	if t.Amount == 0 {
 		t.closeTrade(op.Date)
 	}
+}
+
+func (t *Trade) Bought(op *operation.Operation) {
+	t.Operations = append(t.Operations, op)
+
+	t.Buys = t.Buys.Increase(op.FinalPricePaid())
+
+	t.BuysAmount += float64(op.Amount)
+	t.Amount = t.BuysAmount - t.SellsAmount
 }
 
 func (t *Trade) Close(op *operation.Operation) {

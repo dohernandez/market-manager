@@ -60,7 +60,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	commissions := walletDetails.Commissions
 	status := walletDetails.Status
 
-	w, err := h.loadWalletWithWalletItems(wName, status)
+	w, err := h.loadWalletWithWalletItemsAndWalletTrades(wName, status)
 	if err != nil {
 		logger.FromContext(ctx).Errorf(
 			"An error happen while loading wallet [%s] -> error [%s]",
@@ -217,28 +217,39 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			}
 		}
 
-		var sOperations []*render.OperationOutput
+		var sTrades []*render.TradeOutput
 
-		for _, o := range item.Operations {
-			if o.Action == operation.Buy {
-				sOperations = append(sOperations, &render.OperationOutput{
-					Stock:  o.Stock.Name,
-					Market: o.Stock.Exchange.Symbol,
-					Symbol: o.Stock.Symbol,
-					Enter: struct {
-						Amount int
-						Kurs   mm.Value
-						Total  mm.Value
-					}{
-						Amount: o.Amount,
-						Kurs: mm.Value{
-							Amount:   o.Price.Amount / o.PriceChange.Amount,
-							Currency: mm.Euro,
-						},
-						Total: o.Value,
-					},
-				})
+		for _, t := range item.Trades {
+			var isProfitable bool
+
+			if t.Net().Amount > 0 {
+				isProfitable = true
 			}
+
+			sTrades = append(sTrades, &render.TradeOutput{
+				Stock:  t.Stock.Name,
+				Market: t.Stock.Exchange.Symbol,
+				Symbol: t.Stock.Symbol,
+				Enter: struct {
+					Amount float64
+					Kurs   mm.Value
+					Total  mm.Value
+				}{Amount: t.BuysAmount, Kurs: mm.Value{}, Total: t.Buys},
+				Position: struct {
+					Amount   float64
+					Dividend mm.Value
+					Capital  mm.Value
+				}{Amount: t.Amount, Dividend: t.Dividend, Capital: t.Capital()},
+				Exit: struct {
+					Amount float64
+					Kurs   mm.Value
+					Total  mm.Value
+				}{Amount: t.SellsAmount, Kurs: mm.Value{}, Total: t.Sells},
+
+				BenefitPercentage: t.BenefitPercentage(),
+				Net:               t.Net(),
+				IsProfitable:      isProfitable,
+			})
 		}
 
 		wSOutputs = append(wSOutputs, &render.WalletStockOutput{
@@ -275,7 +286,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			Change:             item.Change(),
 			WAPrice:            wAPrice,
 			WADYield:           wADYield,
-			Operations:         sOperations,
+			Trades:             sTrades,
 		})
 	}
 
@@ -284,7 +295,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	return wDetailsOutput, err
 }
 
-func (h *walletDetails) loadWalletWithWalletItems(name string, status operation.Status) (*wallet.Wallet, error) {
+func (h *walletDetails) loadWalletWithWalletItemsAndWalletTrades(name string, status operation.Status) (*wallet.Wallet, error) {
 	w, err := h.walletFinder.FindByName(name)
 	if err != nil {
 		return nil, err
@@ -292,13 +303,20 @@ func (h *walletDetails) loadWalletWithWalletItems(name string, status operation.
 
 	switch status {
 	case operation.Inactive:
-		err = h.walletFinder.LoadInactiveItems(w)
+		if err = h.walletFinder.LoadInactiveItems(w); err != nil {
+			return nil, err
+		}
 	case operation.All:
-		err = h.walletFinder.LoadAllItems(w)
+		if err = h.walletFinder.LoadAllItems(w); err != nil {
+			return nil, err
+		}
 	default:
-		err = h.walletFinder.LoadActiveItems(w)
+		if err = h.walletFinder.LoadActiveItems(w); err != nil {
+			return nil, err
+		}
 	}
-	if err != nil {
+
+	if err = h.walletFinder.LoadActiveTrades(w); err != nil {
 		return nil, err
 	}
 
@@ -314,7 +332,9 @@ func (h *walletDetails) loadWalletWithWalletItems(name string, status operation.
 			return nil, err
 		}
 
-		i.Stock = stk
+		// I like to keep the address but change the content to keep,
+		// trade and item pointing to the same stock
+		*i.Stock = *stk
 
 		err = h.walletFinder.LoadItemOperations(i)
 		if err != nil {

@@ -6,6 +6,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
+	"fmt"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/trade"
@@ -23,6 +25,7 @@ type Item struct {
 	Sells       mm.Value
 	CapitalRate float64
 	Operations  []*operation.Operation
+	Trades      map[int]*trade.Trade
 }
 
 func NewItem(stock *stock.Stock) *Item {
@@ -33,6 +36,7 @@ func NewItem(stock *stock.Stock) *Item {
 		Dividend: mm.Value{},
 		Buys:     mm.Value{},
 		Sells:    mm.Value{},
+		Trades:   map[int]*trade.Trade{},
 	}
 }
 
@@ -300,6 +304,10 @@ func (w *Wallet) SetCapitalRate(capitalRate float64) {
 	for _, item := range w.Items {
 		item.CapitalRate = capitalRate
 	}
+
+	for _, t := range w.Trades {
+		t.CapitalRate = capitalRate
+	}
 }
 
 func (w *Wallet) CurrentCapitalRate() float64 {
@@ -373,21 +381,77 @@ func (w *Wallet) DividendProjectedNextYear() mm.Value {
 	}
 }
 
-func (w *Wallet) AddTrade(n int, o *operation.Operation) {
+func (w *Wallet) AddTrade(n int, o *operation.Operation) error {
+	t, ok := w.Trades[n]
+
 	if o.Action == operation.Buy {
-		t := trade.NewTrade(n)
+		if !ok {
+			t := trade.NewTrade(n)
+			t.Open(o)
 
-		w.Trades[n] = t
+			w.Trades[n] = t
 
-		t.Open(o)
+			item, ok := w.Items[o.Stock.ID]
+			if !ok {
+				return errors.Errorf(
+					"Adding dividend to trade wallet %q. Wallet item for stock %s is not loaded",
+					w.ID,
+					o.Stock.ID,
+				)
+			}
 
-		return
+			item.Trades[n] = t
+		} else {
+			t.Bought(o)
+		}
+
+		return nil
+	} else if o.Action == operation.Dividend {
+		fmt.Printf("Adding dividend to trades open for stock [%s:%s]\n", o.Stock.Market.Name, o.Stock.Symbol)
+		item, ok := w.Items[o.Stock.ID]
+		if !ok {
+			return errors.Errorf(
+				"Adding dividend to trade wallet %q. Wallet item for stock %s is not loaded",
+				w.ID,
+				o.Stock.ID,
+			)
+		}
+
+		dividendPayPerStock := o.FinalPricePaid().Amount / float64(item.Amount)
+
+		for k, t := range item.Trades {
+			if t.Status == trade.Close {
+				continue
+			}
+
+			dPerTrade := mm.Value{
+				Amount:   dividendPayPerStock * t.Amount,
+				Currency: mm.Euro,
+			}
+
+			t.PayedDividend(dPerTrade)
+
+			fmt.Printf(
+				"Added dividend %.2f to trade open for stock [%s:%s] at %s\n",
+				dPerTrade.Amount,
+				o.Stock.Market.Name,
+				o.Stock.Symbol,
+				t.OpenedAt,
+			)
+
+			item.Trades[k] = t
+		}
 	}
 
-	t, ok := w.Trades[n]
 	if !ok {
-		return
+		return errors.Errorf(
+			"Trade wallet %q not found in wallet %q",
+			n,
+			w.ID,
+		)
 	}
 
 	t.Sold(o)
+
+	return nil
 }
