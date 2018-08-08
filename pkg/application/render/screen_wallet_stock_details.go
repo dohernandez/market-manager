@@ -92,7 +92,6 @@ func (s *screenStockWalletDetails) renderTrades(tw *tabwriter.Writer, wStocks []
 	profitable := color.New(color.FgGreen).FprintlnFunc()
 	notProfitable := color.New(color.FgRed).FprintlnFunc()
 
-	fmt.Printf("%s amount trades %d\n", wStocks[0].Stock, len(wStocks[0].Trades))
 	for i, t := range wStocks[0].Trades {
 		str := fmt.Sprintf(
 			"%d\t %s\t %s\t %s\t %0.f\t %s\t %s\t %.0f\t %s\t %s\t %.0f\t %s\t %s\t %s\t %s\t",

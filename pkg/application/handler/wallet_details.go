@@ -234,7 +234,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 					Amount float64
 					Kurs   mm.Value
 					Total  mm.Value
-				}{Amount: t.BuysAmount, Kurs: mm.Value{}, Total: t.Buys},
+				}{Amount: t.BuyAmount, Kurs: t.WeightedAverageBuyPrice(), Total: t.Buys},
 				Position: struct {
 					Amount   float64
 					Dividend mm.Value
@@ -244,7 +244,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 					Amount float64
 					Kurs   mm.Value
 					Total  mm.Value
-				}{Amount: t.SellsAmount, Kurs: mm.Value{}, Total: t.Sells},
+				}{Amount: t.SellAmount, Kurs: t.WeightedAverageSellPrice(), Total: t.Sells},
 
 				BenefitPercentage: t.BenefitPercentage(),
 				Net:               t.Net(),
@@ -349,6 +349,11 @@ func (h *walletDetails) loadWalletWithWalletItemsAndWalletTrades(name string, st
 		}
 
 		i.Stock.Dividends = ds
+
+		err = h.walletFinder.LoadTradeItemOperations(i)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	cEURUSD, err := h.ccClient.Converter.Get()

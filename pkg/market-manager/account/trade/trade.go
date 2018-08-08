@@ -17,13 +17,13 @@ type (
 		ID     uuid.UUID
 		Number int
 
-		OpenedAt   time.Time
-		Buys       mm.Value
-		BuysAmount float64
+		OpenedAt  time.Time
+		Buys      mm.Value
+		BuyAmount float64
 
-		ClosedAt    time.Time
-		Sells       mm.Value
-		SellsAmount float64
+		ClosedAt   time.Time
+		Sells      mm.Value
+		SellAmount float64
 
 		Amount   float64
 		Dividend mm.Value
@@ -56,10 +56,12 @@ func NewTrade(number int) *Trade {
 }
 
 func (t *Trade) Open(op *operation.Operation) {
+	t.Operations = append(t.Operations, op)
+
 	amount := float64(op.Amount)
 
 	t.OpenedAt = op.Date
-	t.BuysAmount = amount
+	t.BuyAmount = amount
 	t.Amount = amount
 	t.Buys = op.FinalPricePaid()
 	t.Status = Open
@@ -102,8 +104,8 @@ func (t *Trade) Sold(op *operation.Operation) {
 
 	t.Sells = t.Sells.Increase(op.FinalPricePaid())
 
-	t.SellsAmount += float64(op.Amount)
-	t.Amount = t.BuysAmount - t.SellsAmount
+	t.SellAmount += float64(op.Amount)
+	t.Amount = t.BuyAmount - t.SellAmount
 
 	if t.Amount == 0 {
 		t.closeTrade(op.Date)
@@ -115,19 +117,18 @@ func (t *Trade) Bought(op *operation.Operation) {
 
 	t.Buys = t.Buys.Increase(op.FinalPricePaid())
 
-	t.BuysAmount += float64(op.Amount)
-	t.Amount = t.BuysAmount - t.SellsAmount
+	t.BuyAmount += float64(op.Amount)
+	t.Amount = t.BuyAmount - t.SellAmount
 }
 
 func (t *Trade) Close(op *operation.Operation) {
 	t.Operations = append(t.Operations, op)
 
 	t.Sells = t.Sells.Increase(op.FinalPricePaid())
-	t.SellsAmount += float64(op.Amount)
+	t.SellAmount += float64(op.Amount)
 	t.Amount = 0
 
 	t.closeTrade(op.Date)
-
 }
 
 func (t *Trade) closeTrade(closeAt time.Time) {
@@ -142,4 +143,46 @@ func (t *Trade) closeTrade(closeAt time.Time) {
 
 func (t *Trade) PayedDividend(d mm.Value) {
 	t.Dividend = t.Dividend.Increase(d)
+}
+
+func (t *Trade) WeightedAverageBuyPrice() mm.Value {
+	return t.weightedAveragePrice(operation.Buy)
+}
+
+func (t *Trade) weightedAveragePrice(action operation.Action) mm.Value {
+	var asPrice float64
+
+	eSymbol := t.Stock.Exchange.Symbol
+
+	for _, o := range t.Operations {
+		if o.Action != action {
+			continue
+		}
+
+		commissions := o.Commission.Increase(o.PriceChangeCommission)
+
+		sPrice := o.Price.Amount * float64(o.Amount)
+
+		if mm.ExchangeCurrency(eSymbol) == mm.Dollar {
+			sPrice = sPrice + commissions.Amount*o.PriceChange.Amount
+		} else {
+			sPrice = sPrice + commissions.Amount
+		}
+
+		asPrice = asPrice + sPrice
+	}
+
+	wAPrice := mm.Value{
+		Currency: mm.ExchangeCurrency(eSymbol),
+	}
+
+	if t.BuyAmount > 0 {
+		wAPrice.Amount = asPrice / float64(t.BuyAmount)
+	}
+
+	return wAPrice
+}
+
+func (t *Trade) WeightedAverageSellPrice() mm.Value {
+	return t.weightedAveragePrice(operation.Sell)
 }

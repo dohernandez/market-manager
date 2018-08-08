@@ -240,7 +240,7 @@ func (p *walletPersister) execUpdateCapital(tx *sqlx.Tx, w *wallet.Wallet) error
 }
 
 func (p *walletPersister) execUpdateTrade(tx *sqlx.Tx, w *wallet.Wallet) error {
-	query := `INSERT INTO trade(
+	queryTrade := `INSERT INTO trade(
 				id,
 				number,
 				stock_id,
@@ -268,23 +268,23 @@ func (p *walletPersister) execUpdateTrade(tx *sqlx.Tx, w *wallet.Wallet) error {
 				  net = excluded.net,
 				  status = excluded.status`
 
-	//queryOperation := `INSERT INTO trade_operation(trade_id, operation_id) VALUES ($1, $2)
-	//					ON CONFLICT (trade_id, operation_id) DO NOTHING`
+	queryOperation := `INSERT INTO trade_operation(trade_id, operation_id) VALUES ($1, $2)
+					   ON CONFLICT DO NOTHING`
 
 	for _, t := range w.Trades {
 		if _, err := tx.Exec(
-			query,
+			queryTrade,
 			t.ID,
 			t.Number,
 			t.Stock.ID,
 			w.ID,
 			t.OpenedAt,
 			t.Buys.Amount,
-			t.BuysAmount,
+			t.BuyAmount,
 			t.Amount,
 			t.Status,
 			t.Sells.Amount,
-			t.SellsAmount,
+			t.SellAmount,
 			t.Dividend.Amount,
 			t.ClosedAt,
 			t.CloseCapital.Amount,
@@ -293,11 +293,11 @@ func (p *walletPersister) execUpdateTrade(tx *sqlx.Tx, w *wallet.Wallet) error {
 			return err
 		}
 
-		//for _, o := range t.Operations {
-		//	if _, err := tx.Exec(queryOperation, t.ID, o.ID); err != nil {
-		//		return err
-		//	}
-		//}
+		for _, o := range t.Operations {
+			if _, err := tx.Exec(queryOperation, t.ID, o.ID); err != nil {
+				continue
+			}
+		}
 	}
 
 	return nil

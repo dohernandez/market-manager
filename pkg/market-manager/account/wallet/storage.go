@@ -16,6 +16,7 @@ type (
 		LoadItemByStock(w *Wallet, stk *stock.Stock) error
 		LoadItemOperations(i *Item) error
 		LoadActiveTrades(w *Wallet) error
+		LoadTradeItemOperations(i *Item) error
 	}
 
 	Persister interface {

@@ -371,13 +371,13 @@ func (f *walletFinder) hydrateWalletTrade(tuple *walletTradeTuple) (*trade.Trade
 			ID: tuple.StockID,
 		},
 
-		OpenedAt:   tuple.OpenedAt,
-		Buys:       mm.ValueEuroFromString(tuple.Buys),
-		BuysAmount: tuple.BuysAmount,
+		OpenedAt:  tuple.OpenedAt,
+		Buys:      mm.ValueEuroFromString(tuple.Buys),
+		BuyAmount: tuple.BuysAmount,
 
-		ClosedAt:    tuple.ClosedAt,
-		Sells:       mm.ValueEuroFromString(tuple.Sells),
-		SellsAmount: tuple.SellsAmount,
+		ClosedAt:   tuple.ClosedAt,
+		Sells:      mm.ValueEuroFromString(tuple.Sells),
+		SellAmount: tuple.SellsAmount,
 
 		Amount: tuple.Amount,
 
@@ -389,4 +389,36 @@ func (f *walletFinder) hydrateWalletTrade(tuple *walletTradeTuple) (*trade.Trade
 	}
 
 	return &t, nil
+}
+
+func (f *walletFinder) LoadTradeItemOperations(i *wallet.Item) error {
+	query := `SELECT operation_id FROM trade_operation WHERE trade_id = $1`
+
+	for k, t := range i.Trades {
+		var oIDs []uuid.UUID
+
+		err := sqlx.Select(f.db, &oIDs, query, t.ID)
+		if err != nil {
+			return errors.Wrapf(
+				err,
+				"Select trade item operations from item %q trade %q",
+				i.ID,
+				t.ID,
+			)
+		}
+
+		for _, oID := range oIDs {
+			for _, o := range i.Operations {
+				if o.ID == oID {
+					t.Operations = append(t.Operations, o)
+
+					break
+				}
+			}
+		}
+
+		i.Trades[k] = t
+	}
+
+	return nil
 }

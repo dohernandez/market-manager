@@ -6,8 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
-	"fmt"
-
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/trade"
@@ -341,7 +339,7 @@ func (w *Wallet) DividendProjectedNextMonth() mm.Value {
 
 func (w *Wallet) Margin() mm.Value {
 	netCapital := w.NetCapital()
-	margin := netCapital.Amount * 48 / 100
+	margin := netCapital.Amount * 49 / 100
 
 	return mm.Value{
 		Amount:   margin,
@@ -407,7 +405,6 @@ func (w *Wallet) AddTrade(n int, o *operation.Operation) error {
 
 		return nil
 	} else if o.Action == operation.Dividend {
-		fmt.Printf("Adding dividend to trades open for stock [%s:%s]\n", o.Stock.Market.Name, o.Stock.Symbol)
 		item, ok := w.Items[o.Stock.ID]
 		if !ok {
 			return errors.Errorf(
@@ -430,14 +427,6 @@ func (w *Wallet) AddTrade(n int, o *operation.Operation) error {
 			}
 
 			t.PayedDividend(dPerTrade)
-
-			fmt.Printf(
-				"Added dividend %.2f to trade open for stock [%s:%s] at %s\n",
-				dPerTrade.Amount,
-				o.Stock.Market.Name,
-				o.Stock.Symbol,
-				t.OpenedAt,
-			)
 
 			item.Trades[k] = t
 		}

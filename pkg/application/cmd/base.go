@@ -175,7 +175,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockPrice)
 	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockDividendYield)
 	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateWalletCapital)
-	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockPriceVolatility)
+	//bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockPriceVolatility)
 
 	//Reload wallet
 	bus.Handle(&command.ReloadWallet{}, reloadWalletHandler)
