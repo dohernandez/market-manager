@@ -21,10 +21,11 @@ type Specification struct {
 		Port    int    `envconfig:"HTTP_PORT" default:"8000"`
 	}
 	Import struct {
-		AccountsPath  string `envconfig:"ACCOUNTS_PATH" default:"resources/import/accounts"`
-		StocksPath    string `envconfig:"STOCKS_PATH" default:"resources/import/stocks"`
-		TransfersPath string `envconfig:"TRANSFERS_PATH" default:"resources/import/transfers"`
-		WalletsPath   string `envconfig:"WALLETS_PATH" default:"resources/import/wallets"`
+		AccountsPath   string `envconfig:"ACCOUNTS_PATH" default:"resources/import/accounts"`
+		StocksPath     string `envconfig:"STOCKS_PATH" default:"resources/import/stocks"`
+		TransfersPath  string `envconfig:"TRANSFERS_PATH" default:"resources/import/transfers"`
+		WalletsPath    string `envconfig:"WALLETS_PATH" default:"resources/import/wallets"`
+		RetentionsPath string `envconfig:"RETENTIONS_PATH" default:"resources/import/retentions"`
 	}
 
 	IEXTrading struct {

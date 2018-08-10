@@ -14,16 +14,17 @@ import (
 )
 
 type Item struct {
-	ID          uuid.UUID
-	Stock       *stock.Stock
-	Amount      int
-	Invested    mm.Value
-	Dividend    mm.Value
-	Buys        mm.Value
-	Sells       mm.Value
-	CapitalRate float64
-	Operations  []*operation.Operation
-	Trades      map[int]*trade.Trade
+	ID                uuid.UUID
+	Stock             *stock.Stock
+	Amount            int
+	Invested          mm.Value
+	Dividend          mm.Value
+	Buys              mm.Value
+	Sells             mm.Value
+	CapitalRate       float64
+	Operations        []*operation.Operation
+	Trades            map[int]*trade.Trade
+	DividendRetention mm.Value
 }
 
 func NewItem(stock *stock.Stock) *Item {

@@ -12,6 +12,7 @@ resources/import/accounts/
 resources/import/dividends/
 resources/import/transfers/
 resources/import/wallets/
+resources/import/retentions/
 
 !resources/import/*/.gitkeep
 

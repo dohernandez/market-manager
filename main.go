@@ -270,6 +270,22 @@ func main() {
 								},
 							},
 						},
+						{
+							Name:      "stock-retention",
+							Aliases:   []string{"sr"},
+							Action:    cLine.ImportStockRetention,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to import",
+								},
+								cli.StringFlag{
+									Name:  "wallet, w",
+									Usage: "Wallet name",
+								},
+							},
+						},
 					},
 				},
 				{

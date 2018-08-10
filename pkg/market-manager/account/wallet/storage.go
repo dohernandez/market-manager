@@ -24,5 +24,6 @@ type (
 		PersistOperations(w *Wallet) error
 		UpdateAllAccounting(ws []*Wallet) error
 		UpdateAllItemsCapital(ws []*Wallet) error
+		UpdateRetentions(w *Wallet) error
 	}
 )

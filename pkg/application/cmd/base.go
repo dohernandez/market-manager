@@ -100,6 +100,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	walletDetailsHandler := handler.NewWalletDetails(walletFinder, stockFinder, stockDividendFinder, ccClient, cmd.config.Degiro.Retention)
 	updateWalletStocksPriceHandler := handler.NewUpdateWalletStocksPrice(walletFinder, stockFinder)
 	reloadWalletHandler := handler.NewReloadWallet(walletFinder, walletReload)
+	importRetentionHandler := handler.NewImportRetention(stockFinder, walletFinder, walletPersister)
 
 	// LISTENER
 	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahooService, stockPersister)
@@ -179,6 +180,10 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 
 	//Reload wallet
 	bus.Handle(&command.ReloadWallet{}, reloadWalletHandler)
+
+	// import retention
+	importRetention := command.ImportRetention{}
+	bus.Handle(&importRetention, importRetentionHandler)
 
 	return &bus
 }

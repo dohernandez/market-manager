@@ -3,6 +3,8 @@ package storage
 import (
 	"github.com/jmoiron/sqlx"
 
+	"time"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 )
 
@@ -297,6 +299,47 @@ func (p *walletPersister) execUpdateTrade(tx *sqlx.Tx, w *wallet.Wallet) error {
 			if _, err := tx.Exec(queryOperation, t.ID, o.ID); err != nil {
 				continue
 			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateRetentions Insert the dividend retention for an stock base on the wallet operator.
+func (p *walletPersister) UpdateRetentions(w *wallet.Wallet) error {
+	return transaction(p.db, func(tx *sqlx.Tx) error {
+		if err := p.execUpdateItemStockRetention(tx, w); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (p *walletPersister) execUpdateItemStockRetention(tx *sqlx.Tx, w *wallet.Wallet) error {
+	query := `
+		INSERT INTO wallet_stock_dividend_retention(
+			wallet_id,
+			stock_id, 
+			retention, 
+			date
+		) VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT DO UPDATE
+		retention = excluded.retention,
+		date = excluded.date
+	`
+
+	now := time.Now()
+	for _, i := range w.Items {
+		_, err := tx.Exec(
+			query,
+			w.ID,
+			i.Stock.ID,
+			i.DividendRetention.Amount,
+			now,
+		)
+		if err != nil {
+			return err
 		}
 	}
 

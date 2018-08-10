@@ -582,3 +582,31 @@ func (cmd *CLI) ReloadWallet(cliCtx *cli.Context) error {
 
 	return nil
 }
+
+func (cmd *CLI) ImportStockRetention(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	bus := cmd.initCommandBus()
+
+	ois, err := cmd.getWalletImport(cliCtx, cmd.config.Import.RetentionsPath)
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	err = cmd.runImport(ctx, bus, "retentions", ois, func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error {
+		_, err := bus.ExecuteContext(ctx, &command.ImportRetention{FilePath: ri.filePath, Wallet: ri.resourceName})
+		if err != nil {
+			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
+		}
+
+		return nil
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+	}
+
+	logger.FromContext(ctx).Info("Import finished")
+
+	return nil
+}
