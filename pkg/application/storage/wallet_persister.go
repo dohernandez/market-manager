@@ -323,23 +323,22 @@ func (p *walletPersister) execUpdateItemStockRetention(tx *sqlx.Tx, w *wallet.Wa
 			stock_id, 
 			retention, 
 			date
-		) VALUES ($1, $2, $3, $4, $5)
-		ON CONFLICT DO UPDATE
-		retention = excluded.retention,
-		date = excluded.date
+		) VALUES ($1, $2, $3, $4)
 	`
 
 	now := time.Now()
 	for _, i := range w.Items {
-		_, err := tx.Exec(
-			query,
-			w.ID,
-			i.Stock.ID,
-			i.DividendRetention.Amount,
-			now,
-		)
-		if err != nil {
-			return err
+		if i.DividendRetention.Amount > 0 {
+			_, err := tx.Exec(
+				query,
+				w.ID,
+				i.Stock.ID,
+				i.DividendRetention.Amount,
+				now,
+			)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

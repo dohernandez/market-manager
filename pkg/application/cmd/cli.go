@@ -587,6 +587,10 @@ func (cmd *CLI) ImportStockRetention(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
+	if cliCtx.String("wallet") == "" {
+		logger.FromContext(ctx).Fatal("Missing wallet name")
+	}
+
 	bus := cmd.initCommandBus()
 
 	ois, err := cmd.getWalletImport(cliCtx, cmd.config.Import.RetentionsPath)
