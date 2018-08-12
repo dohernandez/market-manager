@@ -218,7 +218,7 @@ func (f *walletFinder) hydrateWalletItem(tuple *walletItemTuple) (*wallet.Item, 
 		Sells:             mm.ValueEuroFromString(tuple.Sells),
 		CapitalRate:       tuple.CapitalRate,
 		Trades:            map[int]*trade.Trade{},
-		DividendRetention: mm.ValueEuroFromString(tuple.DividendRetention),
+		DividendRetention: mm.ValueDollarFromString(tuple.DividendRetention),
 	}
 
 	return &i, nil

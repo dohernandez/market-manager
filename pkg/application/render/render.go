@@ -15,24 +15,25 @@ type (
 	}
 
 	StockOutput struct {
-		ID                uuid.UUID
-		Stock             string
-		Market            string
-		Symbol            string
-		Value             mm.Value
-		High52Week        mm.Value
-		Low52Week         mm.Value
-		BuyUnder          mm.Value
-		Dividend          mm.Value
-		DividendRetention mm.Value
-		DYield            float64
-		DividendStatus    dividend.Status
-		EPS               float64
-		ExDate            time.Time
-		Change            mm.Value
-		UpdatedAt         time.Time
-		HV52Week          float64
-		HV20Day           float64
+		ID                  uuid.UUID
+		Stock               string
+		Market              string
+		Symbol              string
+		Value               mm.Value
+		High52Week          mm.Value
+		Low52Week           mm.Value
+		BuyUnder            mm.Value
+		Dividend            mm.Value
+		DividendRetention   mm.Value
+		PercentageRetention float64
+		DYield              float64
+		DividendStatus      dividend.Status
+		EPS                 float64
+		ExDate              time.Time
+		Change              mm.Value
+		UpdatedAt           time.Time
+		HV52Week            float64
+		HV20Day             float64
 
 		PriceWithHighLow int
 	}
@@ -85,22 +86,28 @@ type (
 		Trades             []*TradeOutput
 	}
 
+	WalletDividendProjected struct {
+		Month     string
+		Projected mm.Value
+		Yield     float64
+	}
+
 	WalletOutput struct {
-		Capital                mm.Value
-		Invested               mm.Value
-		Funds                  mm.Value
-		FreeMargin             mm.Value
-		NetCapital             mm.Value
-		NetBenefits            mm.Value
-		PercentageBenefits     float64
-		DividendPayed          mm.Value
-		DividendMonthProjected mm.Value
-		DividendMonthYield     float64
-		DividendYearProjected  mm.Value
-		DividendYearYield      float64
-		Connection             mm.Value
-		Interest               mm.Value
-		Commission             mm.Value
+		Capital               mm.Value
+		Invested              mm.Value
+		Funds                 mm.Value
+		FreeMargin            mm.Value
+		NetCapital            mm.Value
+		NetBenefits           mm.Value
+		PercentageBenefits    float64
+		DividendPayed         mm.Value
+		DividendYearProjected mm.Value
+		DividendYearYield     float64
+		Connection            mm.Value
+		Interest              mm.Value
+		Commission            mm.Value
+
+		DividendProjected []WalletDividendProjected
 	}
 
 	WalletDetailsOutput struct {

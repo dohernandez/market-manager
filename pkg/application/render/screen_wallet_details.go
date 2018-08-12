@@ -181,16 +181,22 @@ func (s *screenWalletDetails) renderWalletDividendProjected(tw *tabwriter.Writer
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "Month\t Dividend\t D. Yield\t          Year\t Dividend\t D. Yield\t")
+	header(tw, "Month\t Dividend\t D. Yield\t          Month\t Dividend\t D. Yield\t          Month\t Dividend\t D. Yield\t          Year\t Dividend\t D. Yield\t")
 
 	now := time.Now()
 
 	inNormal := color.New(color.FgWhite).FprintlnFunc()
 	inNormal(tw, fmt.Sprintf(
-		"%s\t %s\t %s\t          %d\t %s\t %s\t",
-		now.Month(),
-		util.SPrintValue(wOutput.DividendMonthProjected, precision),
-		util.SPrintPercentage(wOutput.DividendMonthYield, precision),
+		"%s\t %s\t %s\t          %s\t %s\t %s\t          %s\t %s\t %s\t          %d\t %s\t %s\t",
+		wOutput.DividendProjected[0].Month,
+		util.SPrintValue(wOutput.DividendProjected[0].Projected, precision),
+		util.SPrintPercentage(wOutput.DividendProjected[0].Yield, precision),
+		wOutput.DividendProjected[1].Month,
+		util.SPrintValue(wOutput.DividendProjected[1].Projected, precision),
+		util.SPrintPercentage(wOutput.DividendProjected[1].Yield, precision),
+		wOutput.DividendProjected[2].Month,
+		util.SPrintValue(wOutput.DividendProjected[2].Projected, precision),
+		util.SPrintPercentage(wOutput.DividendProjected[2].Yield, precision),
 		now.Year(),
 		util.SPrintValue(wOutput.DividendYearProjected, precision),
 		util.SPrintPercentage(wOutput.DividendYearYield, precision),
@@ -203,7 +209,7 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t Retntion\t D. Yield\t WA D. Yield\t D. Pay\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t Retention (%)\t D. Yield\t WA D. Yield\t D. Pay\t")
 
 	inNormal := color.New(color.FgWhite).FprintlnFunc()
 	inHeightLight := color.New(color.FgYellow).FprintlnFunc()
@@ -211,8 +217,14 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 	now := time.Now()
 
 	for i, stk := range wStocks {
+		var strPercentageRetention string
+
+		if stk.DividendRetention.Amount > 0 {
+			strPercentageRetention = fmt.Sprintf("(%.2f%%)", stk.PercentageRetention)
+		}
+
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s %s\t %s\t %s\t %s\t %s\t %s\t",
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s %s\t %s\t %s %s\t %s\t %s\t %s\t",
 			i+1,
 			stk.Stock,
 			stk.Market,
@@ -223,7 +235,8 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 			util.SPrintDate(stk.ExDate),
 			util.SPrintInitialDividendStatus(stk.DividendStatus),
 			util.SPrintValue(stk.Dividend, precision),
-			util.SPrintValue(stk.DividendRetention, precision),
+			util.SPrintValue(stk.DividendRetention, 4),
+			strPercentageRetention,
 			util.SPrintPercentage(stk.DYield, precision),
 			util.SPrintPercentage(stk.WADYield, precision),
 			util.SPrintValue(stk.DividendToPay, precision),

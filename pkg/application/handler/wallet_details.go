@@ -5,8 +5,7 @@ import (
 	"time"
 
 	"github.com/gogolfing/cbus"
-
-	"errors"
+	"github.com/pkg/errors"
 
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/render"
@@ -72,59 +71,28 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	}
 
 	if len(sells) > 0 {
-		for symbol, amount := range sells {
-			stk, err := h.stockFinder.FindBySymbol(symbol)
-			if err != nil {
-				logger.FromContext(ctx).Errorf(
-					"An error happen while loading sell stock symbol [%s] -> error [%s]",
-					wName,
-					err,
-				)
+		if err := h.addSellsOperationToWallet(w, sells, commissions); err != nil {
+			logger.FromContext(ctx).Errorf(
+				"An error happen while loading sell stock symbol [%s] -> error [%s]",
+				wName,
+				err,
+			)
 
-				return nil, err
-			}
-
-			o := h.createOperation(stk, amount, operation.Sell, w.CurrentCapitalRate(), commissions)
-
-			w.AddOperation(o)
+			return nil, err
 		}
 	}
 
+	var dividendsProjected []render.WalletDividendProjected
+
 	if len(buys) > 0 {
-		now := time.Now()
-		month := int(now.Month())
-		year := now.Year()
+		if err := h.addBuysOperationToWallet(w, buys, commissions); err != nil {
+			logger.FromContext(ctx).Errorf(
+				"An error happen while loading buys stock symbol [%s] -> error [%s]",
+				wName,
+				err,
+			)
 
-		for symbol, amount := range buys {
-			stk, err := h.stockFinder.FindBySymbol(symbol)
-			if err != nil {
-				logger.FromContext(ctx).Errorf(
-					"An error happen while loading buys stock symbol [%s] -> error [%s]",
-					wName,
-					err,
-				)
-
-				return nil, err
-			}
-
-			o := h.createOperation(stk, amount, operation.Buy, w.CurrentCapitalRate(), commissions)
-
-			ds, err := h.dividendFinder.FindAllDividendsFromThisYearAndMontOn(stk.ID, year, month)
-			if err != nil {
-				if err != mm.ErrNotFound {
-					logger.FromContext(ctx).Errorf(
-						"An error happen while loading dividends for stock bought symbol [%s] -> error [%s]",
-						stk.Symbol,
-						err,
-					)
-
-					return nil, err
-				}
-			}
-
-			o.Stock.Dividends = ds
-
-			w.AddOperation(o)
+			return nil, err
 		}
 
 		if w.FreeMargin().Amount < 0 {
@@ -137,29 +105,36 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 		}
 	}
 
-	wDProjectedMonth := w.DividendNetProjectedNextMonth(h.retention)
-	dividendMonthYield := wDProjectedMonth.Amount * 100 / w.Invested.Amount
+	dividendsProjected, err = h.dividendsProjected(w)
+	if err != nil {
+		logger.FromContext(ctx).Errorf(
+			"An error happen while loading dividends projected -> error [%s]",
+			wName,
+			err,
+		)
+
+		return nil, err
+	}
 
 	wDProjectedYear := w.DividendNetProjectedNextYear(h.retention)
 	dividendYearYield := wDProjectedYear.Amount * 100 / w.Invested.Amount
 
 	wDetailsOutput := render.WalletDetailsOutput{
 		WalletOutput: render.WalletOutput{
-			Capital:                w.Capital,
-			Invested:               w.Invested,
-			Funds:                  w.Funds,
-			FreeMargin:             w.FreeMargin(),
-			NetCapital:             w.NetCapital(),
-			NetBenefits:            w.NetBenefits(),
-			PercentageBenefits:     w.PercentageBenefits(),
-			DividendPayed:          w.Dividend,
-			DividendMonthProjected: wDProjectedMonth,
-			DividendMonthYield:     dividendMonthYield,
-			DividendYearProjected:  wDProjectedYear,
-			DividendYearYield:      dividendYearYield,
-			Connection:             w.Connection,
-			Interest:               w.Interest,
-			Commission:             w.Commission,
+			Capital:               w.Capital,
+			Invested:              w.Invested,
+			Funds:                 w.Funds,
+			FreeMargin:            w.FreeMargin(),
+			NetCapital:            w.NetCapital(),
+			NetBenefits:           w.NetBenefits(),
+			PercentageBenefits:    w.PercentageBenefits(),
+			DividendPayed:         w.Dividend,
+			DividendProjected:     dividendsProjected,
+			DividendYearProjected: wDProjectedYear,
+			DividendYearYield:     dividendYearYield,
+			Connection:            w.Connection,
+			Interest:              w.Interest,
+			Commission:            w.Commission,
 		},
 	}
 
@@ -174,11 +149,12 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 		}
 
 		var (
-			exDate          time.Time
-			wADYield        float64
-			sDividend       mm.Value
-			sDividendStatus dividend.Status
-			dividendToPay   mm.Value
+			exDate               time.Time
+			wADYield             float64
+			sDividend            mm.Value
+			sDividendStatus      dividend.Status
+			dividendToPay        mm.Value
+			sPercentageRetention float64
 		)
 
 		wAPrice := item.WeightedAveragePrice()
@@ -202,6 +178,8 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 				if item.DividendRetention.Amount > 0 {
 					retention = float64(item.Amount) * item.DividendRetention.Amount
 				}
+
+				sPercentageRetention = retention * 100 / dividendToPayGross.Amount
 
 				dividendToPay = mm.Value{
 					Amount:   dividendToPayGross.Amount - retention,
@@ -247,23 +225,24 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 
 		wSOutputs = append(wSOutputs, &render.WalletStockOutput{
 			StockOutput: render.StockOutput{
-				Stock:             item.Stock.Name,
-				Market:            item.Stock.Exchange.Symbol,
-				Symbol:            item.Stock.Symbol,
-				Value:             item.Stock.Value,
-				High52Week:        item.Stock.High52Week,
-				Low52Week:         item.Stock.Low52Week,
-				BuyUnder:          item.Stock.BuyUnder(),
-				ExDate:            exDate,
-				Dividend:          sDividend,
-				DividendRetention: item.DividendRetention,
-				DYield:            item.Stock.DividendYield,
-				DividendStatus:    sDividendStatus,
-				EPS:               item.Stock.EPS,
-				Change:            item.Stock.Change,
-				UpdatedAt:         item.Stock.LastPriceUpdate,
-				HV52Week:          item.Stock.HV52Week,
-				HV20Day:           item.Stock.HV20Day,
+				Stock:               item.Stock.Name,
+				Market:              item.Stock.Exchange.Symbol,
+				Symbol:              item.Stock.Symbol,
+				Value:               item.Stock.Value,
+				High52Week:          item.Stock.High52Week,
+				Low52Week:           item.Stock.Low52Week,
+				BuyUnder:            item.Stock.BuyUnder(),
+				ExDate:              exDate,
+				Dividend:            sDividend,
+				DividendRetention:   item.DividendRetention,
+				PercentageRetention: sPercentageRetention,
+				DYield:              item.Stock.DividendYield,
+				DividendStatus:      sDividendStatus,
+				EPS:                 item.Stock.EPS,
+				Change:              item.Stock.Change,
+				UpdatedAt:           item.Stock.LastPriceUpdate,
+				HV52Week:            item.Stock.HV52Week,
+				HV20Day:             item.Stock.HV20Day,
 
 				PriceWithHighLow: item.Stock.ComparePriceWithHighLow(),
 			},
@@ -360,6 +339,21 @@ func (h *walletDetails) loadWalletWithWalletItemsAndWalletTrades(name string, st
 	return w, err
 }
 
+func (h *walletDetails) addSellsOperationToWallet(w *wallet.Wallet, sells map[string]int, commissions map[string]appCommand.Commission) error {
+	for symbol, amount := range sells {
+		stk, err := h.stockFinder.FindBySymbol(symbol)
+		if err != nil {
+			return err
+		}
+
+		o := h.createOperation(stk, amount, operation.Sell, w.CurrentCapitalRate(), commissions)
+
+		w.AddOperation(o)
+	}
+
+	return nil
+}
+
 func (h *walletDetails) createOperation(
 	stk *stock.Stock,
 	amount int,
@@ -398,4 +392,95 @@ func (h *walletDetails) createOperation(
 	o := operation.NewOperation(now, stk, action, amount, stk.Value, pChange, pChangeCommission, oValue, commission)
 
 	return o
+}
+
+func (h *walletDetails) addBuysOperationToWallet(w *wallet.Wallet, buys map[string]int, commissions map[string]appCommand.Commission) error {
+	now := time.Now()
+	month := int(now.Month())
+	year := now.Year()
+
+	for symbol, amount := range buys {
+		stk, err := h.stockFinder.FindBySymbol(symbol)
+		if err != nil {
+			return err
+		}
+
+		o := h.createOperation(stk, amount, operation.Buy, w.CurrentCapitalRate(), commissions)
+
+		ds, err := h.dividendFinder.FindAllDividendsFromThisYearAndMontOn(stk.ID, year, month)
+		if err != nil {
+			if err != mm.ErrNotFound {
+				return errors.Wrapf(
+					err,
+					"loading dividends for stock bought symbol [%s]",
+					stk.Symbol,
+				)
+			}
+		}
+
+		o.Stock.Dividends = ds
+
+		w.AddOperation(o)
+	}
+
+	return nil
+}
+
+func (h *walletDetails) dividendsProjected(w *wallet.Wallet) ([]render.WalletDividendProjected, error) {
+	var dividendsProjected []render.WalletDividendProjected
+
+	now := time.Now()
+
+	for i := 0; i < 3; i++ {
+		var netDividends float64
+
+		month := now.Month()
+		year := now.Year()
+
+		for _, item := range w.Items {
+			ds, err := h.dividendFinder.FindAllDividendsFromThisYearAndMontOn(item.Stock.ID, year, int(month))
+			if err != nil {
+				if err != mm.ErrNotFound {
+					return nil, errors.Wrapf(
+						err,
+						"loading dividends for stock bought symbol [%s]",
+						item.Stock.Symbol,
+					)
+				}
+			}
+
+			for _, d := range ds {
+				if d.ExDate.Month() == month && d.ExDate.Year() == year {
+					grossDividend := d.Amount.Amount * float64(item.Amount)
+
+					ret := h.retention * grossDividend / 100
+
+					if item.DividendRetention.Amount > 0 {
+						ret = item.DividendRetention.Amount * float64(item.Amount)
+					}
+
+					netDividends = netDividends + (grossDividend - ret)
+				}
+			}
+		}
+
+		netDividends = netDividends / w.CurrentCapitalRate()
+
+		wDProjectedMonth := mm.Value{
+			Amount:   netDividends,
+			Currency: mm.Euro,
+		}
+
+		dividendMonthYield := wDProjectedMonth.Amount * 100 / w.Invested.Amount
+
+		dividendsProjected = append(dividendsProjected, render.WalletDividendProjected{
+			Month:     now.Month().String(),
+			Projected: wDProjectedMonth,
+			Yield:     dividendMonthYield,
+		})
+
+		now = now.AddDate(0, 1, 0)
+	}
+
+	return dividendsProjected, nil
 }
