@@ -48,6 +48,7 @@ func (l *updateStockDividend) OnEvent(ctx context.Context, event cbus.Event) {
 		st := stk
 		go func() {
 			defer wg.Done()
+
 			err := l.stockDividendPersister.DeleteAll(st.ID)
 			if err != nil {
 				logger.FromContext(ctx).Errorf(

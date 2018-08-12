@@ -37,16 +37,17 @@ type (
 	}
 
 	walletItemTuple struct {
-		ID          uuid.UUID `db:"id"`
-		Amount      int       `db:"amount"`
-		Invested    string    `db:"invested"`
-		Dividend    string    `db:"dividend"`
-		Buys        string    `db:"buys"`
-		Sells       string    `db:"sells"`
-		Capital     string    `db:"capital"`
-		CapitalRate float64   `db:"capital_rate"`
-		StockID     uuid.UUID `db:"stock_id"`
-		WalletID    uuid.UUID `db:"wallet_id"`
+		ID                uuid.UUID `db:"id"`
+		Amount            int       `db:"amount"`
+		Invested          string    `db:"invested"`
+		Dividend          string    `db:"dividend"`
+		Buys              string    `db:"buys"`
+		Sells             string    `db:"sells"`
+		Capital           string    `db:"capital"`
+		CapitalRate       float64   `db:"capital_rate"`
+		StockID           uuid.UUID `db:"stock_id"`
+		WalletID          uuid.UUID `db:"wallet_id"`
+		DividendRetention string    `db:"dividend_retention"`
 	}
 
 	walletTradeTuple struct {
@@ -181,7 +182,11 @@ func (f *walletFinder) FindWithItemByStock(stk *stock.Stock) ([]*wallet.Wallet, 
 func (f *walletFinder) LoadActiveItems(w *wallet.Wallet) error {
 	var tuples []walletItemTuple
 
-	query := `SELECT * FROM wallet_item WHERE wallet_id = $1 AND amount > 0`
+	query := `SELECT wi.*, 
+			  CASE WHEN wsdr.retention is NULL THEN 0 ELSE wsdr.retention END AS dividend_retention
+			  FROM wallet_item AS wi
+			  LEFT JOIN wallet_stock_dividend_retention AS wsdr ON wi.wallet_id = wsdr.wallet_id AND wi.stock_id = wsdr.stock_id 
+			  WHERE wi.wallet_id = $1 AND wi.amount > 0`
 
 	err := sqlx.Select(f.db, &tuples, query, w.ID)
 	if err != nil {
@@ -206,13 +211,14 @@ func (f *walletFinder) hydrateWalletItem(tuple *walletItemTuple) (*wallet.Item, 
 		Stock: &stock.Stock{
 			ID: tuple.StockID,
 		},
-		Amount:      tuple.Amount,
-		Invested:    mm.ValueEuroFromString(tuple.Invested),
-		Dividend:    mm.ValueEuroFromString(tuple.Dividend),
-		Buys:        mm.ValueEuroFromString(tuple.Buys),
-		Sells:       mm.ValueEuroFromString(tuple.Sells),
-		CapitalRate: tuple.CapitalRate,
-		Trades:      map[int]*trade.Trade{},
+		Amount:            tuple.Amount,
+		Invested:          mm.ValueEuroFromString(tuple.Invested),
+		Dividend:          mm.ValueEuroFromString(tuple.Dividend),
+		Buys:              mm.ValueEuroFromString(tuple.Buys),
+		Sells:             mm.ValueEuroFromString(tuple.Sells),
+		CapitalRate:       tuple.CapitalRate,
+		Trades:            map[int]*trade.Trade{},
+		DividendRetention: mm.ValueEuroFromString(tuple.DividendRetention),
 	}
 
 	return &i, nil
@@ -261,7 +267,11 @@ func (f *walletFinder) LoadItemOperations(i *wallet.Item) error {
 func (f *walletFinder) LoadItemByStock(w *wallet.Wallet, stk *stock.Stock) error {
 	var tuples []walletItemTuple
 
-	query := `SELECT * FROM wallet_item WHERE wallet_id = $1 AND stock_id = $2`
+	query := `SELECT wi.*, 
+			  CASE WHEN wsdr.retention is NULL THEN 0 ELSE wsdr.retention END AS dividend_retention
+			  FROM wallet_item AS wi
+			  LEFT JOIN wallet_stock_dividend_retention AS wsdr ON wi.wallet_id = wsdr.wallet_id AND wi.stock_id = wsdr.stock_id 
+			  WHERE wi.wallet_id = $1 AND wi.stock_id = $2`
 
 	err := sqlx.Select(f.db, &tuples, query, w.ID, stk.ID)
 	if err != nil {
@@ -284,7 +294,11 @@ func (f *walletFinder) LoadItemByStock(w *wallet.Wallet, stk *stock.Stock) error
 func (f *walletFinder) LoadInactiveItems(w *wallet.Wallet) error {
 	var tuples []walletItemTuple
 
-	query := `SELECT * FROM wallet_item WHERE wallet_id = $1 AND amount = 0`
+	query := `SELECT wi.*, 
+			  CASE WHEN wsdr.retention is NULL THEN 0 ELSE wsdr.retention END AS dividend_retention
+			  FROM wallet_item AS wi
+			  LEFT JOIN wallet_stock_dividend_retention AS wsdr ON wi.wallet_id = wsdr.wallet_id AND wi.stock_id = wsdr.stock_id 
+			  WHERE wi.wallet_id = $1 AND wi.amount = 0`
 
 	err := sqlx.Select(f.db, &tuples, query, w.ID)
 	if err != nil {
@@ -306,7 +320,11 @@ func (f *walletFinder) LoadInactiveItems(w *wallet.Wallet) error {
 func (f *walletFinder) LoadAllItems(w *wallet.Wallet) error {
 	var tuples []walletItemTuple
 
-	query := `SELECT * FROM wallet_item WHERE wallet_id = $1`
+	query := `SELECT wi.*, 
+			  CASE WHEN wsdr.retention is NULL THEN 0 ELSE wsdr.retention END AS dividend_retention
+			  FROM wallet_item AS wi
+			  LEFT JOIN wallet_stock_dividend_retention AS wsdr ON wi.wallet_id = wsdr.wallet_id AND wi.stock_id = wsdr.stock_id 
+			  WHERE wi.wallet_id = $1`
 
 	err := sqlx.Select(f.db, &tuples, query, w.ID)
 	if err != nil {

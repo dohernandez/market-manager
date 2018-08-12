@@ -15,23 +15,24 @@ type (
 	}
 
 	StockOutput struct {
-		ID             uuid.UUID
-		Stock          string
-		Market         string
-		Symbol         string
-		Value          mm.Value
-		High52Week     mm.Value
-		Low52Week      mm.Value
-		BuyUnder       mm.Value
-		Dividend       mm.Value
-		DYield         float64
-		DividendStatus dividend.Status
-		EPS            float64
-		ExDate         time.Time
-		Change         mm.Value
-		UpdatedAt      time.Time
-		HV52Week       float64
-		HV20Day        float64
+		ID                uuid.UUID
+		Stock             string
+		Market            string
+		Symbol            string
+		Value             mm.Value
+		High52Week        mm.Value
+		Low52Week         mm.Value
+		BuyUnder          mm.Value
+		Dividend          mm.Value
+		DividendRetention mm.Value
+		DYield            float64
+		DividendStatus    dividend.Status
+		EPS               float64
+		ExDate            time.Time
+		Change            mm.Value
+		UpdatedAt         time.Time
+		HV52Week          float64
+		HV20Day           float64
 
 		PriceWithHighLow int
 	}

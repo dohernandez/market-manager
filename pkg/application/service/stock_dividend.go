@@ -277,6 +277,8 @@ func (s *stockDividendMarketChameleon) findAllHistoricalDividend(root *html.Node
 }
 
 func (s *stockDividendMarketChameleon) marshalStockFutureHistorical(tds []*html.Node, stkDividend *dividend.StockDividend) {
+	now := time.Now()
+
 	for i, td := range tds {
 		switch i {
 		case 0:
@@ -293,6 +295,10 @@ func (s *stockDividendMarketChameleon) marshalStockFutureHistorical(tds []*html.
 			pDate := scrape.Text(td)
 			if pDate != "" {
 				stkDividend.PaymentDate = s.parseDateString(pDate)
+
+				if stkDividend.PaymentDate.After(now) {
+					stkDividend.Status = dividend.Announced
+				}
 			}
 		case 4:
 			stkDividend.Amount = mm.ValueDollarFromString(scrape.Text(td))

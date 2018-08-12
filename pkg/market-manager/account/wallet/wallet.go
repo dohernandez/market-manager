@@ -313,7 +313,7 @@ func (w *Wallet) CurrentCapitalRate() float64 {
 	return w.capitalRate
 }
 
-func (w *Wallet) DividendProjectedNextMonth() mm.Value {
+func (w *Wallet) DividendGrossProjectedNextMonth() mm.Value {
 	var dividends float64
 
 	now := time.Now()
@@ -338,6 +338,39 @@ func (w *Wallet) DividendProjectedNextMonth() mm.Value {
 	}
 }
 
+func (w *Wallet) DividendNetProjectedNextMonth(retention float64) mm.Value {
+	var netDividends float64
+
+	now := time.Now()
+	month := now.Month()
+	year := now.Year()
+
+	for _, item := range w.Items {
+		for _, d := range item.Stock.Dividends {
+			if d.ExDate.Month() == month && d.ExDate.Year() == year {
+				dividend := d.Amount.Amount * float64(item.Amount)
+
+				ret := retention * dividend / 100
+
+				if item.DividendRetention.Amount > 0 {
+					ret = item.DividendRetention.Amount * float64(item.Amount)
+				}
+
+				netDividends = netDividends + (dividend - ret)
+			}
+		}
+	}
+
+	if w.capitalRate > 0 {
+		netDividends = netDividends / w.capitalRate
+	}
+
+	return mm.Value{
+		Amount:   netDividends,
+		Currency: mm.Euro,
+	}
+}
+
 func (w *Wallet) Margin() mm.Value {
 	netCapital := w.NetCapital()
 	margin := netCapital.Amount * 49 / 100
@@ -354,7 +387,7 @@ func (w *Wallet) FreeMargin() mm.Value {
 	return freeMargin.Increase(w.Funds)
 }
 
-func (w *Wallet) DividendProjectedNextYear() mm.Value {
+func (w *Wallet) DividendGrossProjectedNextYear() mm.Value {
 	var dividends float64
 
 	now := time.Now()
@@ -376,6 +409,40 @@ func (w *Wallet) DividendProjectedNextYear() mm.Value {
 
 	return mm.Value{
 		Amount:   dividends,
+		Currency: mm.Euro,
+	}
+}
+
+func (w *Wallet) DividendNetProjectedNextYear(retention float64) mm.Value {
+	var netDividends float64
+
+	now := time.Now()
+	month := now.Month()
+	year := now.Year()
+	untilYear := now.Year() + 1
+
+	for _, item := range w.Items {
+		for _, d := range item.Stock.Dividends {
+			if d.ExDate.Month() >= month && (d.ExDate.Year() >= year && d.ExDate.Year() < untilYear) {
+				dividend := d.Amount.Amount * float64(item.Amount)
+
+				ret := retention * dividend / 100
+
+				if item.DividendRetention.Amount > 0 {
+					ret = item.DividendRetention.Amount * float64(item.Amount)
+				}
+
+				netDividends = netDividends + (dividend - ret)
+			}
+		}
+	}
+
+	if w.capitalRate > 0 {
+		netDividends = netDividends / w.capitalRate
+	}
+
+	return mm.Value{
+		Amount:   netDividends,
 		Currency: mm.Euro,
 	}
 }

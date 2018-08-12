@@ -137,22 +137,10 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 		}
 	}
 
-	wDProjectedGrossMonth := w.DividendProjectedNextMonth()
-
-	wDProjectedMonth := wDProjectedGrossMonth.Decrease(mm.Value{
-		Amount:   h.retention * wDProjectedGrossMonth.Amount / 100,
-		Currency: wDProjectedGrossMonth.Currency,
-	})
-
+	wDProjectedMonth := w.DividendNetProjectedNextMonth(h.retention)
 	dividendMonthYield := wDProjectedMonth.Amount * 100 / w.Invested.Amount
 
-	wDProjectedGrossYear := w.DividendProjectedNextYear()
-
-	wDProjectedYear := wDProjectedGrossYear.Decrease(mm.Value{
-		Amount:   h.retention * wDProjectedGrossYear.Amount / 100,
-		Currency: wDProjectedGrossYear.Currency,
-	})
-
+	wDProjectedYear := w.DividendNetProjectedNextYear(h.retention)
 	dividendYearYield := wDProjectedYear.Amount * 100 / w.Invested.Amount
 
 	wDetailsOutput := render.WalletDetailsOutput{
@@ -210,8 +198,13 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 					Currency: mm.Dollar,
 				}
 
+				retention := h.retention * dividendToPayGross.Amount / 100
+				if item.DividendRetention.Amount > 0 {
+					retention = float64(item.Amount) * item.DividendRetention.Amount
+				}
+
 				dividendToPay = mm.Value{
-					Amount:   (dividendToPayGross.Amount - (h.retention * dividendToPayGross.Amount / 100)) / w.CurrentCapitalRate(),
+					Amount:   dividendToPayGross.Amount - retention,
 					Currency: mm.Euro,
 				}
 			}
@@ -254,22 +247,23 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 
 		wSOutputs = append(wSOutputs, &render.WalletStockOutput{
 			StockOutput: render.StockOutput{
-				Stock:          item.Stock.Name,
-				Market:         item.Stock.Exchange.Symbol,
-				Symbol:         item.Stock.Symbol,
-				Value:          item.Stock.Value,
-				High52Week:     item.Stock.High52Week,
-				Low52Week:      item.Stock.Low52Week,
-				BuyUnder:       item.Stock.BuyUnder(),
-				ExDate:         exDate,
-				Dividend:       sDividend,
-				DYield:         item.Stock.DividendYield,
-				DividendStatus: sDividendStatus,
-				EPS:            item.Stock.EPS,
-				Change:         item.Stock.Change,
-				UpdatedAt:      item.Stock.LastPriceUpdate,
-				HV52Week:       item.Stock.HV52Week,
-				HV20Day:        item.Stock.HV20Day,
+				Stock:             item.Stock.Name,
+				Market:            item.Stock.Exchange.Symbol,
+				Symbol:            item.Stock.Symbol,
+				Value:             item.Stock.Value,
+				High52Week:        item.Stock.High52Week,
+				Low52Week:         item.Stock.Low52Week,
+				BuyUnder:          item.Stock.BuyUnder(),
+				ExDate:            exDate,
+				Dividend:          sDividend,
+				DividendRetention: item.DividendRetention,
+				DYield:            item.Stock.DividendYield,
+				DividendStatus:    sDividendStatus,
+				EPS:               item.Stock.EPS,
+				Change:            item.Stock.Change,
+				UpdatedAt:         item.Stock.LastPriceUpdate,
+				HV52Week:          item.Stock.HV52Week,
+				HV20Day:           item.Stock.HV20Day,
 
 				PriceWithHighLow: item.Stock.ComparePriceWithHighLow(),
 			},
