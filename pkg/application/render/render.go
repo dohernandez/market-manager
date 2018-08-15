@@ -40,6 +40,7 @@ type (
 
 	TradeOutput struct {
 		ID     uuid.UUID
+		Number int
 		Stock  string
 		Market string
 		Symbol string

@@ -49,7 +49,7 @@ func (s *screenStockWalletDetails) Render(output interface{}) {
 		logger.FromContext(s.ctx).Fatal("No stock found")
 	}
 
-	walletOutput := sOutput.WalletDetails.WalletOutput
+	//walletOutput := sOutput.WalletDetails.WalletOutput
 	precision := sOutput.Precision
 
 	switch sOutput.Sorting.By {
@@ -64,11 +64,7 @@ func (s *screenStockWalletDetails) Render(output interface{}) {
 	noColor := color.New(color.Reset).FprintlnFunc()
 
 	noColor(tw, "")
-	s.renderGeneral(tw, walletOutput, precision)
-	noColor(tw, "")
 	s.renderItemStocks(tw, walletStockOutputs, precision)
-	noColor(tw, "")
-	s.renderWalletDividendProjected(tw, walletOutput, precision)
 	noColor(tw, "")
 	s.renderStocksDividends(tw, walletStockOutputs, precision)
 	noColor(tw, "")
@@ -92,10 +88,10 @@ func (s *screenStockWalletDetails) renderTrades(tw *tabwriter.Writer, wStocks []
 	profitable := color.New(color.FgGreen).FprintlnFunc()
 	notProfitable := color.New(color.FgRed).FprintlnFunc()
 
-	for i, t := range wStocks[0].Trades {
+	for _, t := range wStocks[0].Trades {
 		str := fmt.Sprintf(
 			"%d\t %s\t %s\t %s\t %0.f\t %s\t %s\t %.0f\t %s\t %s\t %.0f\t %s\t %s\t %s\t %s\t",
-			i+1,
+			t.Number,
 			t.Stock,
 			t.Market,
 			t.Symbol,

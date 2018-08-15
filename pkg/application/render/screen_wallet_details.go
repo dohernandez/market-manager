@@ -148,10 +148,11 @@ func (s *screenWalletDetails) renderItemStocks(tw *tabwriter.Writer, wStocks []*
 	inLooses := color.New(color.FgRed).FprintlnFunc()
 
 	for i, stk := range wStocks {
+
 		str := fmt.Sprintf(
 			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f%%\t %s\t",
 			i+1,
-			stk.Stock,
+			util.SPrintTruncate(stk.Stock, 27),
 			stk.Market,
 			stk.Symbol,
 			stk.Amount,
@@ -226,7 +227,7 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 		str := fmt.Sprintf(
 			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s %s\t %s\t %s %s\t %s\t %s\t %s\t",
 			i+1,
-			stk.Stock,
+			util.SPrintTruncate(stk.Stock, 27),
 			stk.Market,
 			stk.Symbol,
 			stk.Amount,
@@ -252,7 +253,7 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 
 func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*WalletStockOutput, precision int) {
 	noColor := color.New(color.Reset).FprintlnFunc()
-	noColor(tw, "# Stocks")
+	noColor(tw, "# Stocks Price")
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
@@ -266,7 +267,7 @@ func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*Wall
 		str := fmt.Sprintf(
 			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %.*f\t %.*f\t %s\t %.*f\t %s\t",
 			i+1,
-			stk.Stock,
+			util.SPrintTruncate(stk.Stock, 27),
 			stk.Market,
 			stk.Symbol,
 			stk.Amount,

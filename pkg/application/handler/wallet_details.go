@@ -198,6 +198,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			}
 
 			sTrades = append(sTrades, &render.TradeOutput{
+				Number: t.Number,
 				Stock:  t.Stock.Name,
 				Market: t.Stock.Exchange.Symbol,
 				Symbol: t.Stock.Symbol,

@@ -178,7 +178,7 @@ func (s *screenListStocks) renderStocks(tw *tabwriter.Writer, stks []*StockOutpu
 		str := fmt.Sprintf(
 			"%d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f\t %s %s\t %s\t",
 			i+1,
-			stk.Stock,
+			util.SPrintTruncate(stk.Stock, 27),
 			stk.Market,
 			stk.Symbol,
 			util.SPrintValue(stk.Value, s.precision),
