@@ -29,3 +29,17 @@ const (
 	Announced Status = "announced"
 	Payed     Status = "payed"
 )
+
+func (d *StockDividend) TodayStatus() Status {
+	now := time.Now()
+
+	if d.Status == Payed {
+		return d.Status
+	}
+
+	if d.Status == Announced && now.After(d.PaymentDate) {
+		return Payed
+	}
+
+	return d.Status
+}

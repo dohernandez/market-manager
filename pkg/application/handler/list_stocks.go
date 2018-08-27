@@ -99,6 +99,8 @@ func (h *listStocks) Handle(ctx context.Context, command cbus.Command) (result i
 			EPS:            stk.EPS,
 			Change:         stk.Change,
 			UpdatedAt:      stk.LastPriceUpdate,
+			HV52Week:       stk.HV52Week,
+			HV20Day:        stk.HV20Day,
 
 			PriceWithHighLow: stk.ComparePriceWithHighLow(),
 		})

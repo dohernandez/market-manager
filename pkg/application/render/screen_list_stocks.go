@@ -168,7 +168,7 @@ func (s *screenListStocks) Render(output interface{}) {
 func (s *screenListStocks) renderStocks(tw *tabwriter.Writer, stks []*StockOutput) {
 	header := color.New(color.FgWhite).FprintlnFunc()
 
-	header(tw, "#\t Stock\t Market\t Symbol\t Price\t High 52wk\t Low 52wk\t Buy Under\t Dividend\t  D. Yield\t EPS\t Ex Date\t Change\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t Price\t High 52wk\t Low 52wk\t HV 52wk\t HV 20day\t Buy Under\t Dividend\t  D. Yield\t EPS\t Ex Date\t Change\t")
 
 	normal := color.New(color.FgWhite).FprintlnFunc()
 	overSell := color.New(color.FgGreen).FprintlnFunc()
@@ -176,14 +176,18 @@ func (s *screenListStocks) renderStocks(tw *tabwriter.Writer, stks []*StockOutpu
 
 	for i, stk := range stks {
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f\t %s %s\t %s\t",
+			"%d\t %s\t %s\t %s\t %s\t %s\t %s\t %.*f\t %.*f\t %s\t %s\t %s\t %.*f\t %s %s\t %s\t",
 			i+1,
-			util.SPrintTruncate(stk.Stock, 27),
+			util.SPrintTruncate(stk.Stock, 14),
 			stk.Market,
 			stk.Symbol,
 			util.SPrintValue(stk.Value, s.precision),
 			util.SPrintValue(stk.High52Week, s.precision),
 			util.SPrintValue(stk.Low52Week, s.precision),
+			s.precision,
+			stk.HV52Week,
+			s.precision,
+			stk.HV20Day,
 			util.SPrintValue(stk.BuyUnder, s.precision),
 			util.SPrintValue(stk.Dividend, s.precision),
 			util.SPrintPercentage(stk.DYield, s.precision),
