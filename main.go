@@ -324,6 +324,10 @@ func main() {
 									Usage: "stock symbol to buy and amount separate by comma. Example epd:10",
 								},
 								cli.StringFlag{
+									Name:  "transfer, t",
+									Usage: "transfer simulate.",
+								},
+								cli.StringFlag{
 									Name:  "sort",
 									Usage: "Sort by (stock, invested) Default by stock",
 								},

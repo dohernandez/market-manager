@@ -35,5 +35,7 @@ type (
 		Commissions map[string]Commission
 
 		Status operation.Status
+
+		IncreaseInvestment string
 	}
 )

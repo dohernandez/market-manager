@@ -58,6 +58,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	buys := walletDetails.Buys
 	commissions := walletDetails.Commissions
 	status := walletDetails.Status
+	increaseInvestment := walletDetails.IncreaseInvestment
 
 	w, err := h.loadWalletWithWalletItemsAndWalletTrades(wName, status)
 	if err != nil {
@@ -69,6 +70,8 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 
 		return nil, err
 	}
+
+	w.IncreaseInvestment(mm.ValueEuroFromString(increaseInvestment))
 
 	if len(sells) > 0 {
 		if err := h.addSellsOperationToWallet(w, sells, commissions); err != nil {
@@ -167,7 +170,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 				sDividend = d.Amount
 				wADYield = d.Amount.Amount * 4 / wAPrice.Amount * 100
 
-				sDividendStatus = d.Status
+				sDividendStatus = d.TodayStatus()
 
 				dividendToPayGross := mm.Value{
 					Amount:   float64(item.Amount) * d.Amount.Amount,

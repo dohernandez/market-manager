@@ -498,6 +498,7 @@ func (cmd *CLI) ExportWallet(cliCtx *cli.Context) error {
 		Buys:        buys,
 		Commissions: commissions,
 		Status:      status,
+		IncreaseInvestment: cliCtx.String("transfer"),
 	})
 	if err != nil {
 		return err
