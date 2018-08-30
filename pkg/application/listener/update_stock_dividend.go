@@ -13,7 +13,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
-const updateDividendConcurrency = 15
+const updateDividendConcurrency = 5
 
 type updateStockDividend struct {
 	stockDividendPersister dividend.Persister
