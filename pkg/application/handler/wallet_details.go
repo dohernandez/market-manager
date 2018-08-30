@@ -85,8 +85,6 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 		}
 	}
 
-	var dividendsProjected []render.WalletDividendProjected
-
 	if len(buys) > 0 {
 		if err := h.addBuysOperationToWallet(w, buys, commissions); err != nil {
 			logger.FromContext(ctx).Errorf(
@@ -108,6 +106,8 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 		}
 	}
 
+	var dividendsProjected []render.WalletDividendProjected
+
 	dividendsProjected, err = h.dividendsProjected(w)
 	if err != nil {
 		logger.FromContext(ctx).Errorf(
@@ -120,6 +120,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	}
 
 	wDProjectedYear := w.DividendNetProjectedNextYear(h.retention)
+	wDProjectedYear = wDProjectedYear.Increase(w.Dividend)
 	dividendYearYield := wDProjectedYear.Amount * 100 / w.Invested.Amount
 
 	wDetailsOutput := render.WalletDetailsOutput{

@@ -11,6 +11,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/trade"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type Item struct {
@@ -423,7 +424,11 @@ func (w *Wallet) DividendNetProjectedNextYear(retention float64) mm.Value {
 
 	for _, item := range w.Items {
 		for _, d := range item.Stock.Dividends {
-			if d.ExDate.Month() >= month && (d.ExDate.Year() >= year && d.ExDate.Year() < untilYear) {
+			if (d.ExDate.Year() >= year && d.ExDate.Year() < untilYear) && d.ExDate.Month() >= month {
+				if d.TodayStatus() == dividend.Payed {
+					continue
+				}
+
 				dividend := d.Amount.Amount * float64(item.Amount)
 
 				ret := retention * dividend / 100
