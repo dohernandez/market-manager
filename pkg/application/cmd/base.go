@@ -127,7 +127,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksPrice, updateStockPrice)
 	bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksPrice, updateStockDividendYield)
 	bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksPrice, updateWalletCapital)
-	bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksPrice, updateStockPriceVolatility)
+	//bus.ListenCommand(cbus.AfterSuccess, &updateAllStocksPrice, updateStockPriceVolatility)
 
 	// Update one stock price
 	updateOneStocksPrice := command.UpdateOneStockPrice{}
