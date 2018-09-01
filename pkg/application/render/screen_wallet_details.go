@@ -127,7 +127,7 @@ func (s *screenWalletDetails) renderGeneral(tw *tabwriter.Writer, wOutput Wallet
 		precision,
 		wOutput.PercentageBenefits,
 		util.SPrintValue(wOutput.DividendPayed, precision),
-		util.SPrintPercentage(wOutput.DividendYearYield, precision),
+		util.SPrintPercentage(wOutput.DividendPayedYield, precision),
 		util.SPrintValue(wOutput.Connection, precision),
 		util.SPrintValue(wOutput.Interest, precision),
 		util.SPrintValue(wOutput.Commission, precision),

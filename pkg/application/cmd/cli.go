@@ -493,11 +493,11 @@ func (cmd *CLI) ExportWallet(cliCtx *cli.Context) error {
 	}
 
 	wOutput, err := bus.ExecuteContext(ctx, &command.WalletDetails{
-		Wallet:      cliCtx.String("wallet"),
-		Sells:       sells,
-		Buys:        buys,
-		Commissions: commissions,
-		Status:      status,
+		Wallet:             cliCtx.String("wallet"),
+		Sells:              sells,
+		Buys:               buys,
+		Commissions:        commissions,
+		Status:             status,
 		IncreaseInvestment: cliCtx.String("transfer"),
 	})
 	if err != nil {

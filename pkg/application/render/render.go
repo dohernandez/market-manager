@@ -102,6 +102,7 @@ type (
 		NetBenefits           mm.Value
 		PercentageBenefits    float64
 		DividendPayed         mm.Value
+		DividendPayedYield    float64
 		DividendYearProjected mm.Value
 		DividendYearYield     float64
 		Connection            mm.Value

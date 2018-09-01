@@ -133,6 +133,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			NetBenefits:           w.NetBenefits(),
 			PercentageBenefits:    w.PercentageBenefits(),
 			DividendPayed:         w.Dividend,
+			DividendPayedYield:    w.Dividend.Amount * 100 / w.Invested.Amount,
 			DividendProjected:     dividendsProjected,
 			DividendYearProjected: wDProjectedYear,
 			DividendYearYield:     dividendYearYield,
@@ -484,7 +485,21 @@ func (h *walletDetails) dividendsProjected(w *wallet.Wallet) ([]render.WalletDiv
 			Yield:     dividendMonthYield,
 		})
 
-		now = now.AddDate(0, 1, 0)
+		var days int
+
+		switch now.Month() {
+		case time.January, time.March, time.May, time.July, time.August, time.October, time.December:
+			days = 31 - now.Day()
+		case time.April, time.June, time.September, time.November:
+			days = 30 - now.Day()
+		case time.February:
+			// TODO Check if the year is
+			days = 28 - now.Day()
+		default:
+			panic("Wrong month")
+		}
+
+		now = now.AddDate(0, 0, days+1)
 	}
 
 	return dividendsProjected, nil
