@@ -20,7 +20,7 @@ type registerWalletOperationImport struct {
 	importPath      string
 }
 
-const linePerFile = 10
+const linePerFile = 30
 
 func NewRegisterWalletOperationImport(resourceStorage util.ResourceStorage, importPath string) *registerWalletOperationImport {
 	return &registerWalletOperationImport{
