@@ -4,16 +4,13 @@ import (
 	"bufio"
 	"encoding/csv"
 	"os"
-
-	"github.com/pkg/errors"
 )
-
-var ErrFileOpen = errors.New("File already opened")
 
 type Reader interface {
 	Open() error
 	Close() error
 	ReadLine() (record []string, err error)
+	ReadAllLines() (record [][]string, err error)
 }
 
 type CsvReader struct {
@@ -30,10 +27,6 @@ func NewCsvReader(csvFileName string) *CsvReader {
 }
 
 func (r *CsvReader) Open() error {
-	if r.file != nil {
-		return ErrFileOpen
-	}
-
 	csvFile, err := os.Open(r.csvFileName)
 	if err != nil {
 		return err
@@ -56,4 +49,8 @@ func (r *CsvReader) Close() error {
 
 func (r *CsvReader) ReadLine() (record []string, err error) {
 	return r.reader.Read()
+}
+
+func (r *CsvReader) ReadAllLines() (record [][]string, err error) {
+	return r.reader.ReadAll()
 }

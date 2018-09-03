@@ -70,6 +70,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	stockInfoFinder := storage.NewStockInfoFinder(cmd.DB)
 	bankAccountFinder := storage.NewBankAccountFinder(cmd.DB)
 	walletReload := storage.NewWalletReload(cmd.DB)
+	resourceStorage := storage.NewUtilImportStorage(cmd.DB)
 
 	stockPersister := storage.NewStockPersister(cmd.DB)
 	walletPersister := storage.NewWalletPersister(cmd.DB)
@@ -110,6 +111,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	updateStockPriceVolatility := listener.NewUpdateStockPriceVolatility(stockPriceVolatilityMarketChameleonService, stockPersister)
 	updateStockDividend := listener.NewUpdateStockDividend(stockDividendPersister, stockDividendMarketChameleonService)
 	addWalletOperation := listener.NewAddWalletOperation(stockFinder, walletFinder, walletPersister, ccClient)
+	registerWalletOperationImport := listener.NewRegisterWalletOperationImport(resourceStorage, cmd.config.Import.AccountsPath)
 
 	// COMMAND BUS
 	bus := cbus.Bus{}
@@ -191,8 +193,9 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// add dividend
 	addDividend := command.AddDividend{}
 	bus.Handle(&addDividend, addDividendHandler)
-	bus.ListenCommand(cbus.AfterSuccess, &addDividend, addWalletOperation)
-	bus.ListenCommand(cbus.AfterSuccess, &addDividend, updateWalletCapital)
+	//bus.ListenCommand(cbus.AfterSuccess, &addDividend, addWalletOperation)
+	//bus.ListenCommand(cbus.AfterSuccess, &addDividend, updateWalletCapital)
+	bus.ListenCommand(cbus.AfterSuccess, &addDividend, registerWalletOperationImport)
 
 	return &bus
 }
