@@ -1,6 +1,6 @@
 package command
 
-type AddDividend struct {
+type AddDividendOperation struct {
 	Date   string
 	Wallet string
 	Stock  string

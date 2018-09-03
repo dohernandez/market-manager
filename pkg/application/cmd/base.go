@@ -191,21 +191,21 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.Handle(&importRetention, importRetentionHandler)
 
 	// add dividend
-	addDividend := command.AddDividend{}
+	addDividend := command.AddDividendOperation{}
 	bus.Handle(&addDividend, addOperationHandler)
 	bus.ListenCommand(cbus.AfterSuccess, &addDividend, addWalletOperation)
 	bus.ListenCommand(cbus.AfterSuccess, &addDividend, updateWalletCapital)
 	bus.ListenCommand(cbus.AfterSuccess, &addDividend, registerWalletOperationImport)
 
 	// add buy stock
-	addBought := command.AddBought{}
+	addBought := command.AddBuyOperation{}
 	bus.Handle(&addBought, addOperationHandler)
 	bus.ListenCommand(cbus.AfterSuccess, &addBought, addWalletOperation)
 	bus.ListenCommand(cbus.AfterSuccess, &addBought, updateWalletCapital)
 	bus.ListenCommand(cbus.AfterSuccess, &addBought, registerWalletOperationImport)
 
 	// add sell stock
-	addSold := command.AddSold{}
+	addSold := command.AddSellOperation{}
 	bus.Handle(&addSold, addOperationHandler)
 	bus.ListenCommand(cbus.AfterSuccess, &addSold, addWalletOperation)
 	bus.ListenCommand(cbus.AfterSuccess, &addSold, updateWalletCapital)

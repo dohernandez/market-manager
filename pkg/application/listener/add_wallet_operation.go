@@ -44,12 +44,12 @@ func (l *addWalletOperation) OnEvent(ctx context.Context, event cbus.Event) {
 	trades := map[uuid.UUID]string{}
 
 	switch cmd := event.Command.(type) {
-	case *appCommand.AddDividend:
+	case *appCommand.AddDividendOperation:
 		wName = cmd.Wallet
-	case *appCommand.AddBought:
+	case *appCommand.AddBuyOperation:
 		wName = cmd.Wallet
 		trades[ops[0].ID] = cmd.Trade
-	case *appCommand.AddSold:
+	case *appCommand.AddSellOperation:
 		wName = cmd.Wallet
 		trades[ops[0].ID] = cmd.Trade
 	case *appCommand.ImportOperation:

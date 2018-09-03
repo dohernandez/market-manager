@@ -40,12 +40,12 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 	var wName, trade string
 
 	switch cmd := event.Command.(type) {
-	case *appCommand.AddDividend:
+	case *appCommand.AddDividendOperation:
 		wName = cmd.Wallet
-	case *appCommand.AddBought:
+	case *appCommand.AddBuyOperation:
 		wName = cmd.Wallet
 		trade = cmd.Trade
-	case *appCommand.AddSold:
+	case *appCommand.AddSellOperation:
 		wName = cmd.Wallet
 		trade = cmd.Trade
 	default:

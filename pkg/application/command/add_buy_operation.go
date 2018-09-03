@@ -1,6 +1,6 @@
 package command
 
-type AddBought struct {
+type AddBuyOperation struct {
 	Trade                 string
 	Date                  string
 	Wallet                string

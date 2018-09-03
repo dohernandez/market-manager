@@ -638,7 +638,7 @@ func (cmd *CLI) AddDividend(cliCtx *cli.Context) error {
 
 	bus := cmd.initCommandBus()
 
-	_, err := bus.ExecuteContext(ctx, &command.AddDividend{
+	_, err := bus.ExecuteContext(ctx, &command.AddDividendOperation{
 		Wallet: cliCtx.String("wallet"),
 		Date:   cliCtx.String("date"),
 		Stock:  cliCtx.String("stock"),
@@ -699,7 +699,7 @@ func (cmd *CLI) AddBuyStock(cliCtx *cli.Context) error {
 
 	bus := cmd.initCommandBus()
 
-	_, err := bus.ExecuteContext(ctx, &command.AddBought{
+	_, err := bus.ExecuteContext(ctx, &command.AddBuyOperation{
 		Trade:                 cliCtx.String("trade"),
 		Wallet:                cliCtx.String("wallet"),
 		Date:                  cliCtx.String("date"),
@@ -766,7 +766,7 @@ func (cmd *CLI) AddSellStock(cliCtx *cli.Context) error {
 
 	bus := cmd.initCommandBus()
 
-	_, err := bus.ExecuteContext(ctx, &command.AddSold{
+	_, err := bus.ExecuteContext(ctx, &command.AddSellOperation{
 		Trade:                 cliCtx.String("trade"),
 		Wallet:                cliCtx.String("wallet"),
 		Date:                  cliCtx.String("date"),
