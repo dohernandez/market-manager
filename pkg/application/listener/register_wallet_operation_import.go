@@ -2,14 +2,12 @@ package listener
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/gogolfing/cbus"
 
 	"regexp"
-
-	"fmt"
-
-	"strconv"
 
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/util"
@@ -32,13 +30,29 @@ func NewRegisterWalletOperationImport(resourceStorage util.ResourceStorage, impo
 }
 
 func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.Event) {
-	var wName string
+	ops, ok := event.Result.([]*operation.Operation)
+	if !ok {
+		logger.FromContext(ctx).Warn("registerWalletOperationImport: Result instance not supported")
 
-	aDividend, ok := event.Command.(*appCommand.AddDividend)
-	if ok {
-		wName = aDividend.Wallet
-	} else {
-		logger.FromContext(ctx).Warn("Result instance not supported")
+		return
+	}
+
+	var wName, trade string
+
+	switch event.Command.(type) {
+	case *appCommand.AddDividend:
+		cmd := event.Command.(*appCommand.AddDividend)
+
+		wName = cmd.Wallet
+	case *appCommand.AddBought:
+		cmd := event.Command.(*appCommand.AddBought)
+
+		wName = cmd.Wallet
+		trade = cmd.Trade
+	default:
+		logger.FromContext(ctx).Error(
+			"registerWalletOperationImport: Operation action not supported",
+		)
 
 		return
 	}
@@ -84,7 +98,7 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 
 	nLines := len(lines)
 	if err != nil || nLines >= linePerFile {
-		fileNumber := l.geResourceNumberFromFilePath(r.FileName)
+		fileNumber := l.getResourceNumberFromFilePath(r.FileName)
 
 		fName := fmt.Sprintf("%d_%s.csv", fileNumber+1, wName)
 		if fileNumber < 10 {
@@ -109,18 +123,11 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 	defer wf.Close()
 	defer wf.Flush()
 
-	ops, ok := event.Result.([]*operation.Operation)
-	if !ok {
-		logger.FromContext(ctx).Warn("Result instance not supported")
-
-		return
-	}
-
 	for _, o := range ops {
+		v := fmt.Sprintf("%.2f", o.Value.Amount)
+
 		switch o.Action {
 		case operation.Dividend:
-			v := fmt.Sprintf("%.2f", o.Value.Amount)
-
 			lines = append(lines, []string{
 				"",
 				o.Date.Format("2/1/2006"),
@@ -132,6 +139,25 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 				"",
 				v,
 				"",
+			})
+		case operation.Buy:
+			a := fmt.Sprintf("%d", o.Amount)
+			p := fmt.Sprintf("%.2f", o.Price.Amount)
+			pc := fmt.Sprintf("%.2f", o.PriceChange.Amount)
+			pcc := fmt.Sprintf("%.2f", o.PriceChangeCommission.Amount)
+			c := fmt.Sprintf("%.2f", o.Commission.Amount)
+
+			lines = append(lines, []string{
+				trade,
+				o.Date.Format("2/1/2006"),
+				o.Stock.Name,
+				"Compra",
+				a,
+				p,
+				pc,
+				pcc,
+				v,
+				c,
 			})
 		default:
 			logger.FromContext(ctx).Warn("Operation action not supported")
@@ -148,7 +174,7 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 	}
 }
 
-func (l *registerWalletOperationImport) geResourceNumberFromFilePath(fileName string) int {
+func (l *registerWalletOperationImport) getResourceNumberFromFilePath(fileName string) int {
 	reg := regexp.MustCompile(`(^[0-9]{2})+_+(.*)`)
 	res := reg.ReplaceAllString(fileName, "${1}")
 

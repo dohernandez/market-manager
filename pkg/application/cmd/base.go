@@ -102,7 +102,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	updateWalletStocksPriceHandler := handler.NewUpdateWalletStocksPrice(walletFinder, stockFinder)
 	reloadWalletHandler := handler.NewReloadWallet(walletFinder, walletReload)
 	importRetentionHandler := handler.NewImportRetention(stockFinder, walletFinder, walletPersister)
-	addDividendHandler := handler.NewAddDividend(stockFinder)
+	addOperationHandler := handler.NewAddOperation(stockFinder)
 
 	// LISTENER
 	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahooService, stockPersister)
@@ -192,10 +192,17 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 
 	// add dividend
 	addDividend := command.AddDividend{}
-	bus.Handle(&addDividend, addDividendHandler)
-	//bus.ListenCommand(cbus.AfterSuccess, &addDividend, addWalletOperation)
-	//bus.ListenCommand(cbus.AfterSuccess, &addDividend, updateWalletCapital)
+	bus.Handle(&addDividend, addOperationHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &addDividend, addWalletOperation)
+	bus.ListenCommand(cbus.AfterSuccess, &addDividend, updateWalletCapital)
 	bus.ListenCommand(cbus.AfterSuccess, &addDividend, registerWalletOperationImport)
+
+	// add buy stock
+	addBought := command.AddBought{}
+	bus.Handle(&addBought, addOperationHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &addBought, addWalletOperation)
+	bus.ListenCommand(cbus.AfterSuccess, &addBought, updateWalletCapital)
+	bus.ListenCommand(cbus.AfterSuccess, &addBought, registerWalletOperationImport)
 
 	return &bus
 }

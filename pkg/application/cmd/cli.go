@@ -652,3 +652,70 @@ func (cmd *CLI) AddDividend(cliCtx *cli.Context) error {
 
 	return nil
 }
+
+func (cmd *CLI) AddBuyStock(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	if cliCtx.String("wallet") == "" {
+		logger.FromContext(ctx).Fatal("Missing wallet name")
+	}
+
+	if cliCtx.String("trade") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's trade")
+	}
+
+	if cliCtx.String("date") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's date")
+	}
+
+	if cliCtx.String("stock") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's stock")
+	}
+
+	if cliCtx.String("amount") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's stock amount")
+	}
+
+	if cliCtx.String("value") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's value")
+	}
+
+	if cliCtx.String("price") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's price")
+	}
+
+	if cliCtx.String("price-change") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's price change")
+	}
+
+	if cliCtx.String("price-change-commission") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's price change commission")
+	}
+
+	if cliCtx.String("commission") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's commission")
+	}
+
+	bus := cmd.initCommandBus()
+
+	_, err := bus.ExecuteContext(ctx, &command.AddBought{
+		Trade:                 cliCtx.String("trade"),
+		Wallet:                cliCtx.String("wallet"),
+		Date:                  cliCtx.String("date"),
+		Stock:                 cliCtx.String("stock"),
+		Value:                 cliCtx.Float64("value"),
+		Price:                 cliCtx.Float64("price"),
+		PriceChange:           cliCtx.Float64("price-change"),
+		PriceChangeCommission: cliCtx.Float64("price-change-commission"),
+		Commission:            cliCtx.Float64("commission"),
+		Amount:                cliCtx.Int("amount"),
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed adding dividend operation to the wallet")
+	}
+
+	logger.FromContext(ctx).Info("Adding dividend operation to the wallet finished")
+
+	return nil
+}

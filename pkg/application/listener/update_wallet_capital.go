@@ -36,7 +36,7 @@ func (l *updateWalletCapital) OnEvent(ctx context.Context, event cbus.Event) {
 	if !ok {
 		ops, ok := event.Result.([]*operation.Operation)
 		if !ok {
-			logger.FromContext(ctx).Warn("Result instance not supported")
+			logger.FromContext(ctx).Warn("updateWalletCapital: Result instance not supported")
 
 			return
 		}

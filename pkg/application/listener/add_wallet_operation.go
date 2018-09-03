@@ -33,22 +33,37 @@ func NewAddWalletOperation(stockFinder stock.Finder, walletFinder wallet.Finder,
 }
 
 func (l *addWalletOperation) OnEvent(ctx context.Context, event cbus.Event) {
+	ops, ok := event.Result.([]*operation.Operation)
+	if !ok {
+		logger.FromContext(ctx).Warn("addWalletOperation: Result instance not supported")
+
+		return
+	}
+
 	var wName string
 	trades := map[uuid.UUID]string{}
 
-	iOperation, ok := event.Command.(*appCommand.ImportOperation)
-	if ok {
-		wName = iOperation.Wallet
-		trades = iOperation.Trades
-	} else {
-		aDividend, ok := event.Command.(*appCommand.AddDividend)
-		if !ok {
-			logger.FromContext(ctx).Warn("Result instance not supported")
+	switch event.Command.(type) {
+	case *appCommand.AddDividend:
+		cmd := event.Command.(*appCommand.AddDividend)
 
-			return
-		}
+		wName = cmd.Wallet
+	case *appCommand.AddBought:
+		cmd := event.Command.(*appCommand.AddBought)
 
-		wName = aDividend.Wallet
+		wName = cmd.Wallet
+		trades[ops[0].ID] = cmd.Trade
+	case *appCommand.ImportOperation:
+		cmd := event.Command.(*appCommand.ImportOperation)
+
+		wName = cmd.Wallet
+		trades = cmd.Trades
+	default:
+		logger.FromContext(ctx).Error(
+			"addWalletOperation: Operation action not supported",
+		)
+
+		return
 	}
 
 	if wName == "" {
@@ -60,14 +75,7 @@ func (l *addWalletOperation) OnEvent(ctx context.Context, event cbus.Event) {
 		return
 	}
 
-	ops, ok := event.Result.([]*operation.Operation)
-	if !ok {
-		logger.FromContext(ctx).Warn("Result instance not supported")
-
-		return
-	}
-
-	w, err := l.LoadWalletWithActiveWalletItemsAndActiveWalletTrades(wName)
+	w, err := l.loadWalletWithActiveWalletItemsAndActiveWalletTrades(wName)
 	if err != nil {
 		logger.FromContext(ctx).Errorf(
 			"An error happen while loading wallet name [%s] -> error [%s]",
@@ -99,7 +107,7 @@ func (l *addWalletOperation) OnEvent(ctx context.Context, event cbus.Event) {
 	}
 }
 
-func (l *addWalletOperation) LoadWalletWithActiveWalletItemsAndActiveWalletTrades(name string) (*wallet.Wallet, error) {
+func (l *addWalletOperation) loadWalletWithActiveWalletItemsAndActiveWalletTrades(name string) (*wallet.Wallet, error) {
 	w, err := l.walletFinder.FindByName(name)
 	if err != nil {
 		return nil, err
