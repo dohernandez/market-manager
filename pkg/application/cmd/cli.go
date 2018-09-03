@@ -786,3 +786,35 @@ func (cmd *CLI) AddSellStock(cliCtx *cli.Context) error {
 
 	return nil
 }
+
+func (cmd *CLI) AddInterest(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	if cliCtx.String("wallet") == "" {
+		logger.FromContext(ctx).Fatal("Missing wallet name")
+	}
+
+	if cliCtx.String("date") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's date")
+	}
+
+	if cliCtx.String("value") == "" {
+		logger.FromContext(ctx).Fatal("Missing interest value")
+	}
+
+	bus := cmd.initCommandBus()
+
+	_, err := bus.ExecuteContext(ctx, &command.AddInterestOperation{
+		Wallet: cliCtx.String("wallet"),
+		Date:   cliCtx.String("date"),
+		Value:  cliCtx.Float64("value"),
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed adding interest operation to the wallet")
+	}
+
+	logger.FromContext(ctx).Info("Adding interest operation to the wallet finished")
+
+	return nil
+}

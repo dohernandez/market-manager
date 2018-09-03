@@ -2,13 +2,12 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gogolfing/cbus"
 	"github.com/pkg/errors"
 
 	"time"
-
-	"fmt"
 
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
@@ -71,6 +70,10 @@ func (h *addOperation) Handle(ctx context.Context, command cbus.Command) (result
 		commission = mm.Value{Amount: cmd.Commission, Currency: mm.Euro}
 
 		amount = cmd.Amount
+	case *appCommand.AddInterestOperation:
+		action = operation.Interest
+		date = h.parseDateString(cmd.Date)
+		value = mm.Value{Amount: cmd.Value, Currency: mm.Euro}
 	default:
 		logger.FromContext(ctx).Error(
 			"addOperation: Operation action not supported",
@@ -79,23 +82,27 @@ func (h *addOperation) Handle(ctx context.Context, command cbus.Command) (result
 		return nil, errors.New("operation action not supported")
 	}
 
-	if symbol == "" {
-		logger.FromContext(ctx).Error(
-			"An error happen stock symbol not defined",
-		)
+	s := new(stock.Stock)
 
-		return nil, errors.New(fmt.Sprintf("find stock %s: %s", symbol, err.Error()))
-	}
+	if action != operation.Interest {
+		if symbol == "" {
+			logger.FromContext(ctx).Error(
+				"An error happen stock symbol not defined",
+			)
 
-	s, err := h.stockFinder.FindBySymbol(symbol)
-	if err != nil {
-		logger.FromContext(ctx).Errorf(
-			"An error happen while finding stock by symbol [%s] -> error [%s]",
-			symbol,
-			err,
-		)
+			return nil, errors.New(fmt.Sprintf("find stock %s: %s", symbol, err.Error()))
+		}
 
-		return nil, errors.New(fmt.Sprintf("find stock %s: %s", symbol, err.Error()))
+		s, err = h.stockFinder.FindBySymbol(symbol)
+		if err != nil {
+			logger.FromContext(ctx).Errorf(
+				"An error happen while finding stock by symbol [%s] -> error [%s]",
+				symbol,
+				err,
+			)
+
+			return nil, errors.New(fmt.Sprintf("find stock %s: %s", symbol, err.Error()))
+		}
 	}
 
 	o := operation.NewOperation(date, s, action, amount, price, priceChange, priceChangeCommission, value, commission)

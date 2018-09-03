@@ -441,6 +441,26 @@ func main() {
 										},
 									},
 								},
+								{
+									Name:      "interest",
+									Aliases:   []string{"i"},
+									Action:    cLine.AddInterest,
+									ArgsUsage: "Add interest operation to the wallet",
+									Flags: []cli.Flag{
+										cli.StringFlag{
+											Name:  "wallet, w",
+											Usage: "Wallet name",
+										},
+										cli.StringFlag{
+											Name:  "date, d",
+											Usage: "Operation's date",
+										},
+										cli.StringFlag{
+											Name:  "value, v",
+											Usage: "Interest value",
+										},
+									},
+								},
 							},
 						},
 					},

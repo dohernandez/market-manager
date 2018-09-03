@@ -48,6 +48,8 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 	case *appCommand.AddSellOperation:
 		wName = cmd.Wallet
 		trade = cmd.Trade
+	case *appCommand.AddInterestOperation:
+		wName = cmd.Wallet
 	default:
 		logger.FromContext(ctx).Error(
 			"registerWalletOperationImport: Operation action not supported",
@@ -123,51 +125,56 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 	defer wf.Flush()
 
 	for _, o := range ops {
+		var (
+			action                operation.Action
+			stockName             string
+			price                 string
+			amount                string
+			priceChange           string
+			priceChangeCommission string
+			commission            string
+		)
 		v := fmt.Sprintf("%.2f", o.Value.Amount)
 
 		switch o.Action {
 		case operation.Dividend:
-			lines = append(lines, []string{
-				"",
-				o.Date.Format("2/1/2006"),
-				o.Stock.Name,
-				"Dividendo",
-				"",
-				v,
-				"",
-				"",
-				v,
-				"",
-			})
+			action = "Dividendo"
+			stockName = o.Stock.Name
+			price = v
 		case operation.Buy, operation.Sell:
-			action := "Compra"
+			action = "Compra"
 			if o.Action == operation.Sell {
 				action = "Venta"
 			}
 
-			a := fmt.Sprintf("%d", o.Amount)
-			p := fmt.Sprintf("%.2f", o.Price.Amount)
-			pc := fmt.Sprintf("%.2f", o.PriceChange.Amount)
-			pcc := fmt.Sprintf("%.2f", o.PriceChangeCommission.Amount)
-			c := fmt.Sprintf("%.2f", o.Commission.Amount)
-
-			lines = append(lines, []string{
-				trade,
-				o.Date.Format("2/1/2006"),
-				o.Stock.Name,
-				action,
-				a,
-				p,
-				pc,
-				pcc,
-				v,
-				c,
-			})
+			amount = fmt.Sprintf("%d", o.Amount)
+			price = fmt.Sprintf("%.2f", o.Price.Amount)
+			priceChange = fmt.Sprintf("%.2f", o.PriceChange.Amount)
+			priceChangeCommission = fmt.Sprintf("%.2f", o.PriceChangeCommission.Amount)
+			commission = fmt.Sprintf("%.2f", o.Commission.Amount)
+		case operation.Interest:
+			action = "Interés"
+			price = v
 		default:
 			logger.FromContext(ctx).Warn("registerWalletOperationImport: Operation action not supported")
 
 			return
 		}
+
+		line := []string{
+			trade,
+			o.Date.Format("2/1/2006"),
+			stockName,
+			string(action),
+			amount,
+			price,
+			priceChange,
+			priceChangeCommission,
+			v,
+			commission,
+		}
+
+		lines = append(lines, line)
 	}
 
 	err = wf.WriteAllLines(lines)

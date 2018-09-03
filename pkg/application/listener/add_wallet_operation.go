@@ -55,6 +55,8 @@ func (l *addWalletOperation) OnEvent(ctx context.Context, event cbus.Event) {
 	case *appCommand.ImportOperation:
 		wName = cmd.Wallet
 		trades = cmd.Trades
+	case *appCommand.AddInterestOperation:
+		wName = cmd.Wallet
 	default:
 		logger.FromContext(ctx).Error(
 			"addWalletOperation: Operation action not supported",
