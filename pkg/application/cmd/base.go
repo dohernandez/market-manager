@@ -204,6 +204,13 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.ListenCommand(cbus.AfterSuccess, &addBought, updateWalletCapital)
 	bus.ListenCommand(cbus.AfterSuccess, &addBought, registerWalletOperationImport)
 
+	// add sell stock
+	addSold := command.AddSold{}
+	bus.Handle(&addSold, addOperationHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &addSold, addWalletOperation)
+	bus.ListenCommand(cbus.AfterSuccess, &addSold, updateWalletCapital)
+	bus.ListenCommand(cbus.AfterSuccess, &addSold, registerWalletOperationImport)
+
 	return &bus
 }
 

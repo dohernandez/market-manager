@@ -39,14 +39,13 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 
 	var wName, trade string
 
-	switch event.Command.(type) {
+	switch cmd := event.Command.(type) {
 	case *appCommand.AddDividend:
-		cmd := event.Command.(*appCommand.AddDividend)
-
 		wName = cmd.Wallet
 	case *appCommand.AddBought:
-		cmd := event.Command.(*appCommand.AddBought)
-
+		wName = cmd.Wallet
+		trade = cmd.Trade
+	case *appCommand.AddSold:
 		wName = cmd.Wallet
 		trade = cmd.Trade
 	default:
@@ -140,7 +139,12 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 				v,
 				"",
 			})
-		case operation.Buy:
+		case operation.Buy, operation.Sell:
+			action := "Compra"
+			if o.Action == operation.Sell {
+				action = "Venta"
+			}
+
 			a := fmt.Sprintf("%d", o.Amount)
 			p := fmt.Sprintf("%.2f", o.Price.Amount)
 			pc := fmt.Sprintf("%.2f", o.PriceChange.Amount)
@@ -151,7 +155,7 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 				trade,
 				o.Date.Format("2/1/2006"),
 				o.Stock.Name,
-				"Compra",
+				action,
 				a,
 				p,
 				pc,
@@ -160,7 +164,7 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 				c,
 			})
 		default:
-			logger.FromContext(ctx).Warn("Operation action not supported")
+			logger.FromContext(ctx).Warn("registerWalletOperationImport: Operation action not supported")
 
 			return
 		}

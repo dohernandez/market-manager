@@ -43,18 +43,25 @@ func (h *addOperation) Handle(ctx context.Context, command cbus.Command) (result
 		commission            mm.Value
 		amount                int
 	)
-	switch command.(type) {
+	switch cmd := command.(type) {
 	case *appCommand.AddDividend:
-		cmd := command.(*appCommand.AddDividend)
-
 		action = operation.Dividend
 		symbol = cmd.Stock
 		date = h.parseDateString(cmd.Date)
 		value = mm.Value{Amount: cmd.Value, Currency: mm.Euro}
 	case *appCommand.AddBought:
-		cmd := command.(*appCommand.AddBought)
-
 		action = operation.Buy
+		symbol = cmd.Stock
+		date = h.parseDateString(cmd.Date)
+		price = mm.Value{Amount: cmd.Price}
+		priceChange = mm.Value{Amount: cmd.PriceChange}
+		priceChangeCommission = mm.Value{Amount: cmd.PriceChangeCommission, Currency: mm.Euro}
+		value = mm.Value{Amount: cmd.Value, Currency: mm.Euro}
+		commission = mm.Value{Amount: cmd.Commission, Currency: mm.Euro}
+
+		amount = cmd.Amount
+	case *appCommand.AddSold:
+		action = operation.Sell
 		symbol = cmd.Stock
 		date = h.parseDateString(cmd.Date)
 		price = mm.Value{Amount: cmd.Price}

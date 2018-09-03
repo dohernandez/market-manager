@@ -393,6 +393,54 @@ func main() {
 										},
 									},
 								},
+								{
+									Name:      "sell",
+									Aliases:   []string{"s"},
+									Action:    cLine.AddSellStock,
+									ArgsUsage: "Add sell stock operation to the wallet",
+									Flags: []cli.Flag{
+										cli.StringFlag{
+											Name:  "wallet, w",
+											Usage: "Wallet name",
+										},
+										cli.StringFlag{
+											Name:  "trade, t",
+											Usage: "Operation's trade",
+										},
+										cli.StringFlag{
+											Name:  "date, d",
+											Usage: "Operation's date",
+										},
+										cli.StringFlag{
+											Name:  "stock, s",
+											Usage: "Operation's stock",
+										},
+										cli.StringFlag{
+											Name:  "amount, a",
+											Usage: "Operation's stock amount",
+										},
+										cli.StringFlag{
+											Name:  "price, p",
+											Usage: "Operation's price",
+										},
+										cli.StringFlag{
+											Name:  "price-change, pc",
+											Usage: "Operation's price change",
+										},
+										cli.StringFlag{
+											Name:  "price-change-commission, pcc",
+											Usage: "Operation's price change commission",
+										},
+										cli.StringFlag{
+											Name:  "value, v",
+											Usage: "Operation's value",
+										},
+										cli.StringFlag{
+											Name:  "commission, c",
+											Usage: "Operation's commission",
+										},
+									},
+								},
 							},
 						},
 					},
