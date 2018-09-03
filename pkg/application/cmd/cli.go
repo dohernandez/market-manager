@@ -615,3 +615,40 @@ func (cmd *CLI) ImportStockRetention(cliCtx *cli.Context) error {
 
 	return nil
 }
+
+func (cmd *CLI) AddDividend(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	if cliCtx.String("wallet") == "" {
+		logger.FromContext(ctx).Fatal("Missing wallet name")
+	}
+
+	if cliCtx.String("date") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's date")
+	}
+
+	if cliCtx.String("stock") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's stock")
+	}
+
+	if cliCtx.String("value") == "" {
+		logger.FromContext(ctx).Fatal("Missing dividend value")
+	}
+
+	bus := cmd.initCommandBus()
+
+	_, err := bus.ExecuteContext(ctx, &command.AddDividend{
+		Wallet: cliCtx.String("wallet"),
+		Date:   cliCtx.String("date"),
+		Stock:  cliCtx.String("stock"),
+		Value:  cliCtx.Float64("value"),
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed adding dividend operation to the wallet")
+	}
+
+	logger.FromContext(ctx).Info("Adding dividend operation to the wallet finished")
+
+	return nil
+}

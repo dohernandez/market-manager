@@ -35,10 +35,10 @@ func (h *addDividend) Handle(ctx context.Context, command cbus.Command) (result 
 	ad := command.(*appCommand.AddDividend)
 
 	symbol := ad.Stock
-	s, err := h.stockFinder.FindByName(symbol)
+	s, err := h.stockFinder.FindBySymbol(symbol)
 	if err != nil {
 		logger.FromContext(ctx).Errorf(
-			"An error happen while finding stock by name [%s] -> error [%s]",
+			"An error happen while finding stock by symbol [%s] -> error [%s]",
 			symbol,
 			err,
 		)
@@ -47,7 +47,6 @@ func (h *addDividend) Handle(ctx context.Context, command cbus.Command) (result 
 	}
 
 	dDate := h.parseDateString(ad.Date)
-	//amount, _ := strconv.Atoi(ad.Amount)
 	dValue := ad.Value
 
 	price := mm.Value{Amount: 0}

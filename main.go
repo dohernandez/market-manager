@@ -196,34 +196,6 @@ func main() {
 								},
 							},
 						},
-						//{
-						//	Name:      "stocksDividends",
-						//	Aliases:   []string{"sd"},
-						//	Action:    purchaseCMD.ExportStocksWithDividend,
-						//	ArgsUsage: "",
-						//	Flags: []cli.Flag{
-						//		cli.StringFlag{
-						//			Name:  "file, f",
-						//			Usage: "csv file to export",
-						//		},
-						//		cli.StringFlag{
-						//			Name:  "year, y",
-						//			Usage: "filter by year. Default current year",
-						//		},
-						//		cli.StringFlag{
-						//			Name:  "month, m",
-						//			Usage: "filter by month. Default current month",
-						//		},
-						//		cli.StringFlag{
-						//			Name:  "sort",
-						//			Usage: "Sort by (dyield, exdate, dividend) Default by dyield",
-						//		},
-						//		cli.StringFlag{
-						//			Name:  "order",
-						//			Usage: "Order (desc, asc) Default by desc",
-						//		},
-						//	},
-						//},
 					},
 				},
 			},
@@ -334,6 +306,44 @@ func main() {
 								cli.StringFlag{
 									Name:  "order",
 									Usage: "Order (desc, asc) Default by desc",
+								},
+							},
+						},
+					},
+				},
+				{
+					Name:    "operation",
+					Aliases: []string{"o"},
+					Usage:   "Manage wallet's operation",
+					Subcommands: []cli.Command{
+						{
+							Name:    "add",
+							Aliases: []string{"a"},
+							Usage:   "Add operation to the wallet",
+							Subcommands: []cli.Command{
+								{
+									Name:      "dividend",
+									Aliases:   []string{"d"},
+									Action:    cLine.AddDividend,
+									ArgsUsage: "Add dividend operation to the wallet",
+									Flags: []cli.Flag{
+										cli.StringFlag{
+											Name:  "wallet, w",
+											Usage: "Wallet name",
+										},
+										cli.StringFlag{
+											Name:  "date, d",
+											Usage: "Operation's date",
+										},
+										cli.StringFlag{
+											Name:  "stock, s",
+											Usage: "Operation's stock",
+										},
+										cli.StringFlag{
+											Name:  "value, v",
+											Usage: "Dividend value",
+										},
+									},
 								},
 							},
 						},
