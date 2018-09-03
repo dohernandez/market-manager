@@ -15,6 +15,8 @@ type (
 	}
 )
 
+var _ wallet.Persister = &walletPersister{}
+
 func NewWalletPersister(db *sqlx.DB) *walletPersister {
 	return &walletPersister{
 		db: db,

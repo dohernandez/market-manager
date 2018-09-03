@@ -11,34 +11,25 @@ import (
 
 	"github.com/gogolfing/cbus"
 
+	"github.com/satori/go.uuid"
+
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/util"
-	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
-	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
 type importOperation struct {
-	stockFinder     stock.Finder
-	walletFinder    wallet.Finder
-	walletPersister wallet.Persister
-	ccClient        *cc.Client
+	stockFinder stock.Finder
 }
 
 func NewImportOperation(
 	stockFinder stock.Finder,
-	walletFinder wallet.Finder,
-	walletPersister wallet.Persister,
-	ccClient *cc.Client,
 ) *importOperation {
 	return &importOperation{
-		stockFinder:     stockFinder,
-		walletFinder:    walletFinder,
-		walletPersister: walletPersister,
-		ccClient:        ccClient,
+		stockFinder: stockFinder,
 	}
 }
 
@@ -49,28 +40,8 @@ func (h *importOperation) Handle(ctx context.Context, command cbus.Command) (res
 	r.Open()
 	defer r.Close()
 
-	wName := command.(*appCommand.ImportOperation).Wallet
-	if wName == "" {
-		logger.FromContext(ctx).Errorf(
-			"An error happen while loading wallet -> error [%s]",
-			err,
-		)
-
-		return nil, errors.New("missing wallet name")
-	}
-
-	w, err := h.LoadWalletWithActiveWalletItemsAndActiveWalletTrades(wName)
-	if err != nil {
-		logger.FromContext(ctx).Errorf(
-			"An error happen while loading wallet name [%s] -> error [%s]",
-			wName,
-			err,
-		)
-
-		return nil, err
-	}
-
 	var os []*operation.Operation
+	trades := map[uuid.UUID]string{}
 
 	for {
 		line, err := r.ReadLine()
@@ -117,64 +88,15 @@ func (h *importOperation) Handle(ctx context.Context, command cbus.Command) (res
 		o := operation.NewOperation(date, s, action, amount, price, priceChange, priceChangeCommission, value, commission)
 
 		os = append(os, o)
-		w.AddOperation(o)
 
 		if line[0] != "" {
-			n, _ := strconv.Atoi(line[0])
-			w.AddTrade(n, o)
-		} else if action == operation.Dividend {
-			w.AddTrade(0, o)
+			trades[o.ID] = line[0]
 		}
 	}
 
-	err = h.walletPersister.PersistOperations(w)
-	if err != nil {
-		logger.FromContext(ctx).Errorf(
-			"An error happen while persisting operation -> error [%s]",
-			err,
-		)
-
-		return nil, err
-	}
+	command.(*appCommand.ImportOperation).Trades = trades
 
 	return os, nil
-}
-
-func (h *importOperation) LoadWalletWithActiveWalletItemsAndActiveWalletTrades(name string) (*wallet.Wallet, error) {
-	w, err := h.walletFinder.FindByName(name)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = h.walletFinder.LoadActiveItems(w); err != nil {
-		return nil, err
-	}
-
-	if err = h.walletFinder.LoadActiveTrades(w); err != nil {
-		return nil, err
-	}
-
-	for _, i := range w.Items {
-		// Add this into go routing. Use the example explain in the page
-		// https://medium.com/@trevor4e/learning-gos-concurrency-through-illustrations-8c4aff603b3
-		stk, err := h.stockFinder.FindByID(i.Stock.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		// I like to keep the address but change the content to keep,
-		// trade and item pointing to the same stock
-		*i.Stock = *stk
-	}
-
-	cEURUSD, err := h.ccClient.Converter.Get()
-	if err != nil {
-		return nil, err
-	}
-
-	w.SetCapitalRate(cEURUSD.EURUSD)
-
-	return w, err
 }
 
 // parseDateString - parse a potentially partial date string to Time

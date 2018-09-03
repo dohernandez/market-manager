@@ -95,12 +95,13 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	updateOneStockDividendHandler := handler.NewUpdateOneStockDividend(stockFinder)
 	importTransferHandler := handler.NewImportTransfer(bankAccountFinder, transferPersister, walletFinder, walletPersister)
 	importWalletHandler := handler.NewImportWallet(bankAccountFinder, walletPersister)
-	importOperationHandler := handler.NewImportOperation(stockFinder, walletFinder, walletPersister, ccClient)
+	importOperationHandler := handler.NewImportOperation(stockFinder)
 	listStockHandler := handler.NewListStock(stockFinder, stockDividendFinder)
 	walletDetailsHandler := handler.NewWalletDetails(walletFinder, stockFinder, stockDividendFinder, ccClient, cmd.config.Degiro.Retention)
 	updateWalletStocksPriceHandler := handler.NewUpdateWalletStocksPrice(walletFinder, stockFinder)
 	reloadWalletHandler := handler.NewReloadWallet(walletFinder, walletReload)
 	importRetentionHandler := handler.NewImportRetention(stockFinder, walletFinder, walletPersister)
+	addDividendHandler := handler.NewAddDividend(stockFinder)
 
 	// LISTENER
 	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahooService, stockPersister)
@@ -108,6 +109,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	updateWalletCapital := listener.NewUpdateWalletCapital(walletFinder, walletPersister, ccClient)
 	updateStockPriceVolatility := listener.NewUpdateStockPriceVolatility(stockPriceVolatilityMarketChameleonService, stockPersister)
 	updateStockDividend := listener.NewUpdateStockDividend(stockDividendPersister, stockDividendMarketChameleonService)
+	addWalletOperation := listener.NewAddWalletOperation(stockFinder, walletFinder, walletPersister, ccClient)
 
 	// COMMAND BUS
 	bus := cbus.Bus{}
@@ -160,6 +162,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// import operation
 	importOperation := command.ImportOperation{}
 	bus.Handle(&importOperation, importOperationHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &importOperation, addWalletOperation)
 	bus.ListenCommand(cbus.AfterSuccess, &importOperation, updateWalletCapital)
 
 	// List stocks
@@ -184,6 +187,12 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// import retention
 	importRetention := command.ImportRetention{}
 	bus.Handle(&importRetention, importRetentionHandler)
+
+	// add dividend
+	addDividend := command.AddDividend{}
+	bus.Handle(&addDividend, addDividendHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &addDividend, addWalletOperation)
+	bus.ListenCommand(cbus.AfterSuccess, &addDividend, updateWalletCapital)
 
 	return &bus
 }
