@@ -78,7 +78,7 @@ func (l *updateWalletCapital) OnEvent(ctx context.Context, event cbus.Event) {
 			w.Items[stk.ID].CapitalRate = cEURUSD.EURUSD
 
 			capital := w.Items[stk.ID].Capital()
-			w.Capital = capital
+			w.Capital = w.Capital.Increase(capital)
 		}
 
 		err = l.walletPersister.UpdateAllItemsCapital(ws)
