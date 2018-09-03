@@ -119,30 +119,13 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 		return nil, err
 	}
 
-	wDProjectedYear := w.DividendNetProjectedNextYear(h.retention)
-	wDProjectedYear = wDProjectedYear.Increase(w.Dividend)
-	dividendYearYield := wDProjectedYear.Amount * 100 / w.Invested.Amount
+	wDetailsOutput := h.walletDetailOutput(w, dividendsProjected)
+	wDetailsOutput.WalletStockOutputs = h.walletStocksOutput(w, status)
 
-	wDetailsOutput := render.WalletDetailsOutput{
-		WalletOutput: render.WalletOutput{
-			Capital:               w.Capital,
-			Invested:              w.Invested,
-			Funds:                 w.Funds,
-			FreeMargin:            w.FreeMargin(),
-			NetCapital:            w.NetCapital(),
-			NetBenefits:           w.NetBenefits(),
-			PercentageBenefits:    w.PercentageBenefits(),
-			DividendPayed:         w.Dividend,
-			DividendPayedYield:    w.Dividend.Amount * 100 / w.Invested.Amount,
-			DividendProjected:     dividendsProjected,
-			DividendYearProjected: wDProjectedYear,
-			DividendYearYield:     dividendYearYield,
-			Connection:            w.Connection,
-			Interest:              w.Interest,
-			Commission:            w.Commission,
-		},
-	}
+	return wDetailsOutput, err
+}
 
+func (h *walletDetails) walletStocksOutput(w *wallet.Wallet, status operation.Status) []*render.WalletStockOutput {
 	var wSOutputs []*render.WalletStockOutput
 	for _, item := range w.Items {
 		if status == operation.Active && item.Amount == 0 {
@@ -268,10 +251,33 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 			Trades:             sTrades,
 		})
 	}
+	return wSOutputs
+}
 
-	wDetailsOutput.WalletStockOutputs = wSOutputs
-
-	return wDetailsOutput, err
+func (h *walletDetails) walletDetailOutput(w *wallet.Wallet, dividendsProjected []render.WalletDividendProjected) render.WalletDetailsOutput {
+	wDProjectedYear := w.DividendNetProjectedNextYear(h.retention)
+	wDProjectedYear = wDProjectedYear.Increase(w.Dividend)
+	dividendYearYield := wDProjectedYear.Amount * 100 / w.Invested.Amount
+	wDetailsOutput := render.WalletDetailsOutput{
+		WalletOutput: render.WalletOutput{
+			Capital:               w.Capital,
+			Invested:              w.Invested,
+			Funds:                 w.Funds,
+			FreeMargin:            w.FreeMargin(),
+			NetCapital:            w.NetCapital(),
+			NetBenefits:           w.NetBenefits(),
+			PercentageBenefits:    w.PercentageBenefits(),
+			DividendPayed:         w.Dividend,
+			DividendPayedYield:    w.Dividend.Amount * 100 / w.Invested.Amount,
+			DividendProjected:     dividendsProjected,
+			DividendYearProjected: wDProjectedYear,
+			DividendYearYield:     dividendYearYield,
+			Connection:            w.Connection,
+			Interest:              w.Interest,
+			Commission:            w.Commission,
+		},
+	}
+	return wDetailsOutput
 }
 
 func (h *walletDetails) loadWalletWithWalletItemsAndWalletTrades(name string, status operation.Status) (*wallet.Wallet, error) {
