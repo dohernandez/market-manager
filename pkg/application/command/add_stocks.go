@@ -1,5 +1,6 @@
 package command
 
 type AddStocks struct {
-	stks []string
+	Symbol string
+	Market string
 }
