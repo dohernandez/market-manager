@@ -108,7 +108,7 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 
 	var dividendsProjected []render.WalletDividendProjected
 
-	dividendsProjected, err = h.dividendsProjected(w)
+	dividendsProjected, err = h.dividendsProjectedDate(w, time.Now())
 	if err != nil {
 		logger.FromContext(ctx).Errorf(
 			"An error happen while loading dividends projected -> error [%s]",
@@ -123,161 +123,6 @@ func (h *walletDetails) Handle(ctx context.Context, command cbus.Command) (resul
 	wDetailsOutput.WalletStockOutputs = h.walletStocksOutput(w, status)
 
 	return wDetailsOutput, err
-}
-
-func (h *walletDetails) walletStocksOutput(w *wallet.Wallet, status operation.Status) []*render.WalletStockOutput {
-	var wSOutputs []*render.WalletStockOutput
-	for _, item := range w.Items {
-		if status == operation.Active && item.Amount == 0 {
-			continue
-		}
-
-		if status == operation.Inactive && item.Amount != 0 {
-			continue
-		}
-
-		var (
-			exDate               time.Time
-			wADYield             float64
-			sDividend            mm.Value
-			sDividendStatus      dividend.Status
-			dividendToPay        mm.Value
-			sPercentageRetention float64
-		)
-
-		wAPrice := item.WeightedAveragePrice()
-
-		if len(item.Stock.Dividends) > 0 {
-			d := item.Stock.Dividends[0]
-			exDate = d.ExDate
-
-			if d.Amount.Amount > 0 {
-				sDividend = d.Amount
-				wADYield = d.Amount.Amount * 4 / wAPrice.Amount * 100
-
-				sDividendStatus = d.TodayStatus()
-
-				dividendToPayGross := mm.Value{
-					Amount:   float64(item.Amount) * d.Amount.Amount,
-					Currency: mm.Dollar,
-				}
-
-				retention := h.retention * dividendToPayGross.Amount / 100
-				if item.DividendRetention.Amount > 0 {
-					retention = float64(item.Amount) * item.DividendRetention.Amount
-				}
-
-				sPercentageRetention = retention * 100 / dividendToPayGross.Amount
-
-				dividendToPay = mm.Value{
-					Amount:   dividendToPayGross.Amount - retention,
-					Currency: mm.Euro,
-				}
-			}
-		}
-
-		var sTrades []*render.TradeOutput
-
-		for _, t := range item.Trades {
-			var isProfitable bool
-
-			if t.Net().Amount > 0 {
-				isProfitable = true
-			}
-
-			sTrades = append(sTrades, &render.TradeOutput{
-				Number: t.Number,
-				Stock:  t.Stock.Name,
-				Market: t.Stock.Exchange.Symbol,
-				Symbol: t.Stock.Symbol,
-				Enter: struct {
-					Amount float64
-					Kurs   mm.Value
-					Total  mm.Value
-				}{Amount: t.BuyAmount, Kurs: t.WeightedAverageBuyPrice(), Total: t.Buys},
-				Position: struct {
-					Amount   float64
-					Dividend mm.Value
-					Capital  mm.Value
-				}{Amount: t.Amount, Dividend: t.Dividend, Capital: t.Capital()},
-				Exit: struct {
-					Amount float64
-					Kurs   mm.Value
-					Total  mm.Value
-				}{Amount: t.SellAmount, Kurs: t.WeightedAverageSellPrice(), Total: t.Sells},
-
-				BenefitPercentage: t.BenefitPercentage(),
-				Net:               t.Net(),
-				IsProfitable:      isProfitable,
-			})
-		}
-
-		wSOutputs = append(wSOutputs, &render.WalletStockOutput{
-			StockOutput: render.StockOutput{
-				Stock:               item.Stock.Name,
-				Market:              item.Stock.Exchange.Symbol,
-				Symbol:              item.Stock.Symbol,
-				Value:               item.Stock.Value,
-				High52Week:          item.Stock.High52Week,
-				Low52Week:           item.Stock.Low52Week,
-				BuyUnder:            item.Stock.BuyUnder(),
-				ExDate:              exDate,
-				Dividend:            sDividend,
-				DividendRetention:   item.DividendRetention,
-				PercentageRetention: sPercentageRetention,
-				DYield:              item.Stock.DividendYield,
-				DividendStatus:      sDividendStatus,
-				EPS:                 item.Stock.EPS,
-				Change:              item.Stock.Change,
-				UpdatedAt:           item.Stock.LastPriceUpdate,
-				HV52Week:            item.Stock.HV52Week,
-				HV20Day:             item.Stock.HV20Day,
-
-				PriceWithHighLow: item.Stock.ComparePriceWithHighLow(),
-			},
-			Amount:             item.Amount,
-			Capital:            item.Capital(),
-			Invested:           item.Invested,
-			DividendPayed:      item.Dividend,
-			DividendToPay:      dividendToPay,
-			PercentageWallet:   item.PercentageInvestedRepresented(w.Capital.Amount),
-			Buys:               item.Buys,
-			Sells:              item.Sells,
-			NetBenefits:        item.NetBenefits(),
-			PercentageBenefits: item.PercentageBenefits(),
-			Change:             item.Change(),
-			WAPrice:            wAPrice,
-			WADYield:           wADYield,
-			Trades:             sTrades,
-		})
-	}
-	return wSOutputs
-}
-
-func (h *walletDetails) walletDetailOutput(w *wallet.Wallet, dividendsProjected []render.WalletDividendProjected) render.WalletDetailsOutput {
-	wDProjectedYear := w.DividendNetProjectedNextYear(h.retention)
-	wDProjectedYear = wDProjectedYear.Increase(w.Dividend)
-	dividendYearYield := wDProjectedYear.Amount * 100 / w.Invested.Amount
-	wDetailsOutput := render.WalletDetailsOutput{
-		WalletOutput: render.WalletOutput{
-			Capital:               w.Capital,
-			Invested:              w.Invested,
-			Funds:                 w.Funds,
-			FreeMargin:            w.FreeMargin(),
-			NetCapital:            w.NetCapital(),
-			NetBenefits:           w.NetBenefits(),
-			PercentageBenefits:    w.PercentageBenefits(),
-			DividendPayed:         w.Dividend,
-			DividendPayedYield:    w.Dividend.Amount * 100 / w.Invested.Amount,
-			DividendProjected:     dividendsProjected,
-			DividendYearProjected: wDProjectedYear,
-			DividendYearYield:     dividendYearYield,
-			Connection:            w.Connection,
-			Interest:              w.Interest,
-			Commission:            w.Commission,
-		},
-	}
-	return wDetailsOutput
 }
 
 func (h *walletDetails) loadWalletWithWalletItemsAndWalletTrades(name string, status operation.Status) (*wallet.Wallet, error) {
@@ -438,16 +283,14 @@ func (h *walletDetails) addBuysOperationToWallet(w *wallet.Wallet, buys map[stri
 	return nil
 }
 
-func (h *walletDetails) dividendsProjected(w *wallet.Wallet) ([]render.WalletDividendProjected, error) {
+func (h *walletDetails) dividendsProjectedDate(w *wallet.Wallet, date time.Time) ([]render.WalletDividendProjected, error) {
 	var dividendsProjected []render.WalletDividendProjected
-
-	now := time.Now()
 
 	for i := 0; i < 3; i++ {
 		var netDividends float64
 
-		month := now.Month()
-		year := now.Year()
+		month := date.Month()
+		year := date.Year()
 
 		for _, item := range w.Items {
 			ds, err := h.dividendFinder.FindAllDividendsFromThisYearAndMontOn(item.Stock.ID, year, int(month))
@@ -486,27 +329,182 @@ func (h *walletDetails) dividendsProjected(w *wallet.Wallet) ([]render.WalletDiv
 		dividendMonthYield := wDProjectedMonth.Amount * 100 / w.Invested.Amount
 
 		dividendsProjected = append(dividendsProjected, render.WalletDividendProjected{
-			Month:     now.Month().String(),
+			Month:     date.Month().String(),
 			Projected: wDProjectedMonth,
 			Yield:     dividendMonthYield,
 		})
 
 		var days int
 
-		switch now.Month() {
+		switch date.Month() {
 		case time.January, time.March, time.May, time.July, time.August, time.October, time.December:
-			days = 31 - now.Day()
+			days = 31 - date.Day()
 		case time.April, time.June, time.September, time.November:
-			days = 30 - now.Day()
+			days = 30 - date.Day()
 		case time.February:
 			// TODO Check if the year is
-			days = 28 - now.Day()
+			days = 28 - date.Day()
 		default:
 			panic("Wrong month")
 		}
 
-		now = now.AddDate(0, 0, days+1)
+		date = date.AddDate(0, 0, days+1)
 	}
 
 	return dividendsProjected, nil
+}
+
+func (h *walletDetails) walletDetailOutput(w *wallet.Wallet, dividendsProjected []render.WalletDividendProjected) render.WalletDetailsOutput {
+	wDProjectedYear := w.DividendNetProjectedNextYear(h.retention)
+	wDProjectedYear = wDProjectedYear.Increase(w.Dividend)
+	dividendYearYield := wDProjectedYear.Amount * 100 / w.Invested.Amount
+	wDetailsOutput := render.WalletDetailsOutput{
+		WalletOutput: render.WalletOutput{
+			Capital:               w.Capital,
+			Invested:              w.Invested,
+			Funds:                 w.Funds,
+			FreeMargin:            w.FreeMargin(),
+			NetCapital:            w.NetCapital(),
+			NetBenefits:           w.NetBenefits(),
+			PercentageBenefits:    w.PercentageBenefits(),
+			DividendPayed:         w.Dividend,
+			DividendPayedYield:    w.Dividend.Amount * 100 / w.Invested.Amount,
+			DividendProjected:     dividendsProjected,
+			DividendYearProjected: wDProjectedYear,
+			DividendYearYield:     dividendYearYield,
+			Connection:            w.Connection,
+			Interest:              w.Interest,
+			Commission:            w.Commission,
+		},
+	}
+	return wDetailsOutput
+}
+
+func (h *walletDetails) walletStocksOutput(w *wallet.Wallet, status operation.Status) []*render.WalletStockOutput {
+	var wSOutputs []*render.WalletStockOutput
+	for _, item := range w.Items {
+		if status == operation.Active && item.Amount == 0 {
+			continue
+		}
+
+		if status == operation.Inactive && item.Amount != 0 {
+			continue
+		}
+
+		var (
+			exDate               time.Time
+			wADYield             float64
+			sDividend            mm.Value
+			sDividendStatus      dividend.Status
+			dividendToPay        mm.Value
+			sPercentageRetention float64
+		)
+
+		wAPrice := item.WeightedAveragePrice()
+
+		if len(item.Stock.Dividends) > 0 {
+			d := item.Stock.Dividends[0]
+			exDate = d.ExDate
+
+			if d.Amount.Amount > 0 {
+				sDividend = d.Amount
+				wADYield = d.Amount.Amount * 4 / wAPrice.Amount * 100
+
+				sDividendStatus = d.TodayStatus()
+
+				dividendToPayGross := mm.Value{
+					Amount:   float64(item.Amount) * d.Amount.Amount,
+					Currency: mm.Dollar,
+				}
+
+				retention := h.retention * dividendToPayGross.Amount / 100
+				if item.DividendRetention.Amount > 0 {
+					retention = float64(item.Amount) * item.DividendRetention.Amount
+				}
+
+				sPercentageRetention = retention * 100 / dividendToPayGross.Amount
+
+				dividendToPay = mm.Value{
+					Amount:   dividendToPayGross.Amount - retention,
+					Currency: mm.Euro,
+				}
+			}
+		}
+
+		var sTrades []*render.TradeOutput
+
+		for _, t := range item.Trades {
+			var isProfitable bool
+
+			if t.Net().Amount > 0 {
+				isProfitable = true
+			}
+
+			sTrades = append(sTrades, &render.TradeOutput{
+				Number: t.Number,
+				Stock:  t.Stock.Name,
+				Market: t.Stock.Exchange.Symbol,
+				Symbol: t.Stock.Symbol,
+				Enter: struct {
+					Amount float64
+					Kurs   mm.Value
+					Total  mm.Value
+				}{Amount: t.BuyAmount, Kurs: t.WeightedAverageBuyPrice(), Total: t.Buys},
+				Position: struct {
+					Amount   float64
+					Dividend mm.Value
+					Capital  mm.Value
+				}{Amount: t.Amount, Dividend: t.Dividend, Capital: t.Capital()},
+				Exit: struct {
+					Amount float64
+					Kurs   mm.Value
+					Total  mm.Value
+				}{Amount: t.SellAmount, Kurs: t.WeightedAverageSellPrice(), Total: t.Sells},
+
+				BenefitPercentage: t.BenefitPercentage(),
+				Net:               t.Net(),
+				IsProfitable:      isProfitable,
+			})
+		}
+
+		wSOutputs = append(wSOutputs, &render.WalletStockOutput{
+			StockOutput: render.StockOutput{
+				Stock:               item.Stock.Name,
+				Market:              item.Stock.Exchange.Symbol,
+				Symbol:              item.Stock.Symbol,
+				Value:               item.Stock.Value,
+				High52Week:          item.Stock.High52Week,
+				Low52Week:           item.Stock.Low52Week,
+				BuyUnder:            item.Stock.BuyUnder(),
+				ExDate:              exDate,
+				Dividend:            sDividend,
+				DividendRetention:   item.DividendRetention,
+				PercentageRetention: sPercentageRetention,
+				DYield:              item.Stock.DividendYield,
+				DividendStatus:      sDividendStatus,
+				EPS:                 item.Stock.EPS,
+				Change:              item.Stock.Change,
+				UpdatedAt:           item.Stock.LastPriceUpdate,
+				HV52Week:            item.Stock.HV52Week,
+				HV20Day:             item.Stock.HV20Day,
+
+				PriceWithHighLow: item.Stock.ComparePriceWithHighLow(),
+			},
+			Amount:             item.Amount,
+			Capital:            item.Capital(),
+			Invested:           item.Invested,
+			DividendPayed:      item.Dividend,
+			DividendToPay:      dividendToPay,
+			PercentageWallet:   item.PercentageInvestedRepresented(w.Capital.Amount),
+			Buys:               item.Buys,
+			Sells:              item.Sells,
+			NetBenefits:        item.NetBenefits(),
+			PercentageBenefits: item.PercentageBenefits(),
+			Change:             item.Change(),
+			WAPrice:            wAPrice,
+			WADYield:           wADYield,
+			Trades:             sTrades,
+		})
+	}
+	return wSOutputs
 }

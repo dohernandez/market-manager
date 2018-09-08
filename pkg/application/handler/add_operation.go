@@ -46,12 +46,12 @@ func (h *addOperation) Handle(ctx context.Context, command cbus.Command) (result
 	case *appCommand.AddDividendOperation:
 		action = operation.Dividend
 		symbol = cmd.Stock
-		date = h.parseDateString(cmd.Date)
+		date = parseOperationDateString(cmd.Date)
 		value = mm.Value{Amount: cmd.Value, Currency: mm.Euro}
 	case *appCommand.AddBuyOperation:
 		action = operation.Buy
 		symbol = cmd.Stock
-		date = h.parseDateString(cmd.Date)
+		date = parseOperationDateString(cmd.Date)
 		price = mm.Value{Amount: cmd.Price}
 		priceChange = mm.Value{Amount: cmd.PriceChange}
 		priceChangeCommission = mm.Value{Amount: cmd.PriceChangeCommission, Currency: mm.Euro}
@@ -62,7 +62,7 @@ func (h *addOperation) Handle(ctx context.Context, command cbus.Command) (result
 	case *appCommand.AddSellOperation:
 		action = operation.Sell
 		symbol = cmd.Stock
-		date = h.parseDateString(cmd.Date)
+		date = parseOperationDateString(cmd.Date)
 		price = mm.Value{Amount: cmd.Price}
 		priceChange = mm.Value{Amount: cmd.PriceChange}
 		priceChangeCommission = mm.Value{Amount: cmd.PriceChangeCommission, Currency: mm.Euro}
@@ -72,7 +72,7 @@ func (h *addOperation) Handle(ctx context.Context, command cbus.Command) (result
 		amount = cmd.Amount
 	case *appCommand.AddInterestOperation:
 		action = operation.Interest
-		date = h.parseDateString(cmd.Date)
+		date = parseOperationDateString(cmd.Date)
 		value = mm.Value{Amount: cmd.Value, Currency: mm.Euro}
 	default:
 		logger.FromContext(ctx).Error(
@@ -110,15 +110,4 @@ func (h *addOperation) Handle(ctx context.Context, command cbus.Command) (result
 	return []*operation.Operation{
 		o,
 	}, nil
-}
-
-// parseDateString - parse a potentially partial date string to Time
-func (h *addOperation) parseDateString(dt string) time.Time {
-	if dt == "" {
-		return time.Now()
-	}
-
-	t, _ := time.Parse("2/1/2006", dt)
-
-	return t
 }

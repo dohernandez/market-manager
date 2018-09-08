@@ -10,6 +10,9 @@ import (
 type StockPrice interface {
 	Price(stk *stock.Stock) (stock.Price, error)
 }
+type StockPriceAtDate interface {
+	Price(stk *stock.Stock, date time.Time) (stock.Price, error)
+}
 
 type StockPriceVolatility interface {
 	PriceVolatility(stk *stock.Stock) (stock.PriceVolatility, error)

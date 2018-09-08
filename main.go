@@ -297,7 +297,39 @@ func main() {
 								},
 								cli.StringFlag{
 									Name:  "transfer, t",
-									Usage: "transfer simulate.",
+									Usage: "transfer simulate",
+								},
+								cli.StringFlag{
+									Name:  "sort",
+									Usage: "Sort by (stock, invested) Default by stock",
+								},
+								cli.StringFlag{
+									Name:  "order",
+									Usage: "Order (desc, asc) Default by desc",
+								},
+							},
+						},
+						{
+							Name:      "snapshot",
+							Aliases:   []string{"wr"},
+							Action:    cLine.ExportSnapshotWallet,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "file, f",
+									Usage: "csv file to export",
+								},
+								cli.StringFlag{
+									Name:  "wallet, w",
+									Usage: "Wallet name",
+								},
+								cli.StringFlag{
+									Name:  "date, d",
+									Usage: "date of the report",
+								},
+								cli.StringFlag{
+									Name:  "exclude, e",
+									Usage: "exclude stock(s) separate by comma",
 								},
 								cli.StringFlag{
 									Name:  "sort",

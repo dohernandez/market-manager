@@ -9,6 +9,7 @@ type (
 	Finder interface {
 		FindByName(name string) (*Wallet, error)
 		FindByBankAccount(ba *bank.Account) (*Wallet, error)
+		LoadBankAccounts(w *Wallet) error
 		FindWithItemByStock(stk *stock.Stock) ([]*Wallet, error)
 		LoadActiveItems(w *Wallet) error
 		LoadInactiveItems(w *Wallet) error

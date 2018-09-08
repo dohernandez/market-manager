@@ -16,61 +16,27 @@ import (
 
 	"github.com/dohernandez/go-quote"
 	gf "github.com/dohernandez/googlefinance-client-go"
-	"github.com/dohernandez/market-manager/pkg/infrastructure/client/go-iex"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
-	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
 // ----------------------------------------------------------------------------------------------------------------------
-// BasicStockPrice Service
+// YahooStockPriceAtDate Service
 // ----------------------------------------------------------------------------------------------------------------------
 type (
-	basicStockPrice struct {
-		ctx       context.Context
-		iexClient *iex.Client
+	yahooStockPriceAtDate struct {
+		ctx context.Context
 	}
 )
 
-func NewBasicStockPrice(ctx context.Context, iexClient *iex.Client) *basicStockPrice {
-	return &basicStockPrice{
-		ctx:       ctx,
-		iexClient: iexClient,
+func NewStockPriceAtDate(ctx context.Context) *yahooStockPriceAtDate {
+	return &yahooStockPriceAtDate{
+		ctx: ctx,
 	}
 }
 
-func (s *basicStockPrice) Price(stk *stock.Stock) (stock.Price, error) {
-	method := "closedPriceFromYahoo"
-
-	p, err := s.closedPriceFromYahoo(stk)
-	if err != nil {
-		logger.FromContext(s.ctx).WithError(err).Debugf("failed %s for stock %q", method, stk.Symbol)
-		time.Sleep(5 * time.Second)
-		method = "closedPriceFromGoogle"
-
-		p, err = s.closedPriceFromGoogle(stk)
-		if err != nil {
-			logger.FromContext(s.ctx).WithError(err).Debugf("failed %s for stock %q", method, stk.Symbol)
-			time.Sleep(5 * time.Second)
-			method = "closedPriceFromIEXTrading"
-
-			p, err = s.closedPriceFromIEXTrading(stk)
-			if err != nil {
-				if err == mm.ErrNotFound {
-					return stock.Price{}, err
-				}
-
-				return stock.Price{}, errors.WithStack(err)
-			}
-		}
-	}
-	logger.FromContext(s.ctx).Debugf("got price %+v from stock %s with method %s", p, stk.Symbol, method)
-
-	return p, nil
-}
-
-func (s *basicStockPrice) closedPriceFromYahoo(stk *stock.Stock) (stock.Price, error) {
-	endDate := time.Now()
+func (s *yahooStockPriceAtDate) Price(stk *stock.Stock, date time.Time) (stock.Price, error) {
+	endDate := date
 	startDate := endDate.Add(-24 * time.Hour)
 
 	q, err := quote.NewQuoteFromYahoo(stk.Symbol, startDate.Format("2006-01-02"), endDate.Format("2006-01-02"), quote.Daily, true)
@@ -78,7 +44,7 @@ func (s *basicStockPrice) closedPriceFromYahoo(stk *stock.Stock) (stock.Price, e
 		return stock.Price{}, err
 	}
 
-	return stock.Price{
+	p := stock.Price{
 		Date:   q.Date[0],
 		Close:  q.Close[0],
 		High:   q.High[0],
@@ -86,10 +52,29 @@ func (s *basicStockPrice) closedPriceFromYahoo(stk *stock.Stock) (stock.Price, e
 		Open:   q.Open[0],
 		Volume: int64(q.Volume[0]),
 		Change: q.Close[0] - q.Open[0],
-	}, nil
+	}
+
+	logger.FromContext(s.ctx).Debugf("got price %+v from stock %s with yahooStockPriceAtDate", p, stk.Symbol)
+
+	return p, nil
 }
 
-func (s *basicStockPrice) closedPriceFromGoogle(stk *stock.Stock) (stock.Price, error) {
+// ----------------------------------------------------------------------------------------------------------------------
+// GoogleStockPriceAtDate Service
+// ----------------------------------------------------------------------------------------------------------------------
+type (
+	googleStockPriceAtDate struct {
+		ctx context.Context
+	}
+)
+
+func NewGoogleStockPriceAtDate(ctx context.Context) *googleStockPriceAtDate {
+	return &googleStockPriceAtDate{
+		ctx: ctx,
+	}
+}
+
+func (s *googleStockPriceAtDate) Price(stk *stock.Stock, date time.Time) (stock.Price, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -107,34 +92,39 @@ func (s *basicStockPrice) closedPriceFromGoogle(stk *stock.Stock) (stock.Price, 
 		return stock.Price{}, errors.Errorf("symbol '%s' not found\n", stk.Symbol)
 	}
 
-	p := gps[len(gps)-1]
+	gp := gps[len(gps)-1]
 
-	return stock.Price{
-		Date:   p.Date,
-		Close:  p.Close,
-		High:   p.High,
-		Low:    p.Low,
-		Open:   p.Open,
-		Volume: p.Volume,
-		Change: p.Close - p.Open,
-	}, nil
-}
-
-func (s *basicStockPrice) closedPriceFromIEXTrading(stk *stock.Stock) (stock.Price, error) {
-	q, err := s.iexClient.Quote.Get(stk.Symbol)
-	if err != nil {
-		return stock.Price{}, err
+	p := stock.Price{
+		Date:   gp.Date,
+		Close:  gp.Close,
+		High:   gp.High,
+		Low:    gp.Low,
+		Open:   gp.Open,
+		Volume: gp.Volume,
+		Change: gp.Close - gp.Open,
 	}
-	return stock.Price{
-		//Date:   q.LatestUpdate,
-		Close:  q.Close,
-		High:   q.High,
-		Low:    q.Low,
-		Open:   q.Open,
-		Volume: q.Volume,
-		Change: q.Close - q.Open,
-	}, nil
+
+	logger.FromContext(s.ctx).Debugf("got price %+v from stock %s with yahooStockPriceAtDate", gp, stk.Symbol)
+
+	return p, nil
 }
+
+//
+//func (s *yahooStockPriceAtDate) closedPriceFromIEXTrading(stk *stock.Stock) (stock.Price, error) {
+//	q, err := s.iexClient.Quote.Get(stk.Symbol)
+//	if err != nil {
+//		return stock.Price{}, err
+//	}
+//	return stock.Price{
+//		//Date:   q.LatestUpdate,
+//		Close:  q.Close,
+//		High:   q.High,
+//		Low:    q.Low,
+//		Open:   q.Open,
+//		Volume: q.Volume,
+//		Change: q.Close - q.Open,
+//	}, nil
+//}
 
 // ----------------------------------------------------------------------------------------------------------------------
 // YahooScraperStockPrice Service

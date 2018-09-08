@@ -818,3 +818,55 @@ func (cmd *CLI) AddInterest(cliCtx *cli.Context) error {
 
 	return nil
 }
+
+func (cmd *CLI) ExportSnapshotWallet(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	if cliCtx.String("wallet") == "" {
+		logger.FromContext(ctx).Fatal("Missing wallet name")
+	}
+
+	if cliCtx.String("date") == "" {
+		logger.FromContext(ctx).Fatal("Missing operation's date")
+	}
+
+	var excludes []string
+	if cliCtx.String("exclude") != "" {
+		excludes = strings.Split(cliCtx.String("exclude"), ",")
+	}
+
+	bus := cmd.initCommandBus()
+
+	wOutput, err := bus.ExecuteContext(ctx, &command.WalletDateDetails{
+		Wallet:        cliCtx.String("wallet"),
+		Date:          cliCtx.String("date"),
+		TransferPath:  cmd.config.Import.TransfersPath,
+		OperationPath: cmd.config.Import.AccountsPath,
+		Excludes:      excludes,
+	})
+	if err != nil {
+		return err
+	}
+
+	rOutput := render.OutputScreenWalletDetails{
+		WalletDetails: wOutput.(render.WalletDetailsOutput),
+		Sorting:       cmd.sortingFromCliCtx(cliCtx),
+		Precision:     2,
+	}
+
+	if cliCtx.String("stock") != "" {
+		sls := render.NewScreenWalletStockDetails(cmd.ctx)
+		sls.Render(&render.OutputScreenWalletStockDetails{
+			OutputScreenWalletDetails: rOutput,
+			Stock: cliCtx.String("stock"),
+		})
+
+		return nil
+	}
+
+	sls := render.NewWalletDateDetails(cmd.ctx)
+	sls.Render(&rOutput)
+
+	return nil
+}

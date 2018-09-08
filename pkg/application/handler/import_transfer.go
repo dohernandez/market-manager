@@ -2,12 +2,7 @@ package handler
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"io"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/gogolfing/cbus"
 	"github.com/satori/go.uuid"
@@ -65,7 +60,7 @@ func (h *importTransfer) Handle(ctx context.Context, command cbus.Command) (resu
 			logger.FromContext(ctx).Fatal(err)
 		}
 
-		t, err := h.createTransfer(line)
+		t, err := createTransferFromLine(line, h.bankAccountFinder)
 		if err != nil {
 			logger.FromContext(ctx).Errorf(
 				"An error happen while creating transfer -> error [%s]",
@@ -140,47 +135,4 @@ func (h *importTransfer) Handle(ctx context.Context, command cbus.Command) (resu
 	}
 
 	return ts, nil
-}
-
-// parseDateString - parse a potentially partial date string to Time
-func (h *importTransfer) createTransfer(line []string) (*transfer.Transfer, error) {
-
-	date := h.parseDateString(line[0])
-
-	from, err := h.bankAccountFinder.FindByAlias(line[1])
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("%s %q", err.Error(), line[1]))
-	}
-
-	to, err := h.bankAccountFinder.FindByAlias(line[2])
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("%s %q", err.Error(), line[2]))
-	}
-
-	amount, err := h.parsePriceString(line[3])
-	if err != nil {
-		return nil, err
-	}
-
-	return transfer.NewTransfer(from, to, amount, date), nil
-
-}
-
-// parseDateString - parse a potentially partial date string to Time
-func (h *importTransfer) parseDateString(dt string) time.Time {
-	if dt == "" {
-		return time.Now()
-	}
-
-	t, _ := time.Parse("2/1/2006", dt)
-
-	return t
-}
-
-// parsePriceString - parse a potentially float string to float64
-func (h *importTransfer) parsePriceString(price string) (float64, error) {
-	price = strings.Replace(price, ".", "", 1)
-	price = strings.Replace(price, ",", ".", 1)
-
-	return strconv.ParseFloat(price, 64)
 }

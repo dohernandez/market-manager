@@ -10,6 +10,8 @@ import (
 
 	"time"
 
+	"github.com/almerlucke/go-iban/iban"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/trade"
@@ -66,6 +68,14 @@ type (
 		CloseNet     string    `db:"net"`
 		StockID      uuid.UUID `db:"stock_id"`
 		WalletID     uuid.UUID `db:"wallet_id"`
+	}
+
+	walletBankAccountTuple struct {
+		ID            uuid.UUID `db:"id"`
+		Name          string    `db:"name"`
+		AccountNo     string    `db:"account_no"`
+		Alias         string    `db:"alias"`
+		AccountNoType string    `db:"account_no_type"`
 	}
 )
 
@@ -156,10 +166,6 @@ func (f *walletFinder) FindWithItemByStock(stk *stock.Stock) ([]*wallet.Wallet, 
 
 	err := sqlx.Select(f.db, &tuples, query, stk.ID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, mm.ErrNotFound
-		}
-
 		return nil, errors.Wrapf(err, "Select wallets with item with stock %q", stk.ID)
 	}
 
@@ -436,6 +442,41 @@ func (f *walletFinder) LoadTradeItemOperations(i *wallet.Item) error {
 		}
 
 		i.Trades[k] = t
+	}
+
+	return nil
+}
+
+func (f *walletFinder) LoadBankAccounts(w *wallet.Wallet) error {
+	var tuples []walletBankAccountTuple
+
+	query := `SELECT ba.* 
+			FROM bank_account ba
+			INNER JOIN wallet_bank_account wba ON ba.ID = wba.bank_account_id 
+			WHERE wba.wallet_id = $1`
+
+	err := sqlx.Select(f.db, &tuples, query, w.ID)
+	if err != nil {
+		return errors.Wrapf(err, "Select bank with wallet_id %q", w.ID)
+	}
+
+	for _, tuple := range tuples {
+		var AccountNo string
+		if bank.AccountNoType(tuple.AccountNoType) == bank.IBAN {
+			IBAN, err := iban.NewIBAN(tuple.AccountNo)
+			if err != nil {
+				return errors.Wrapf(err, "Select bank with wallet_id %q", w.ID)
+			}
+
+			AccountNo = IBAN.PrintCode
+		}
+
+		w.BankAccounts[tuple.ID] = &bank.Account{
+			ID:        tuple.ID,
+			Name:      tuple.Name,
+			AccountNo: AccountNo,
+			Alias:     tuple.Alias,
+		}
 	}
 
 	return nil
