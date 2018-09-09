@@ -3,11 +3,8 @@ package listener
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/gogolfing/cbus"
-
-	"regexp"
 
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/util"
@@ -19,8 +16,6 @@ type registerWalletOperationImport struct {
 	resourceStorage util.ResourceStorage
 	importPath      string
 }
-
-const linePerFile = 30
 
 func NewRegisterWalletOperationImport(resourceStorage util.ResourceStorage, importPath string) *registerWalletOperationImport {
 	return &registerWalletOperationImport{
@@ -67,63 +62,20 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 		return
 	}
 
-	r, err := l.resourceStorage.FindLastByResourceAndWallet("accounts", wName)
+	wf, err := getCsvWriterFromResourceImport(l.resourceStorage, "accounts", l.importPath, wName)
 	if err != nil {
 		logger.FromContext(ctx).Errorf(
-			"An error happen while loading latest account resource import from wallet [%s] -> error [%s]",
+			"An error happen while getting csv writer from import for wallet [%s] -> error [%s]",
 			wName,
 			err,
 		)
-
-		return
 	}
-
-	var lines [][]string
-
-	filePath := fmt.Sprintf("%s/%s", l.importPath, r.FileName)
-	rf := util.NewCsvReader(filePath)
-
-	rf.Open()
-	defer rf.Close()
-
-	lines, err = rf.ReadAllLines()
-	if err != nil {
-		logger.FromContext(ctx).Errorf(
-			"An error happen while loading previous lines from resource [%s] -> error [%s]",
-			filePath,
-			err,
-		)
-
-		return
-	}
-
-	nLines := len(lines)
-	if err != nil || nLines >= linePerFile {
-		fileNumber := l.getResourceNumberFromFilePath(r.FileName)
-
-		fName := fmt.Sprintf("%d_%s.csv", fileNumber+1, wName)
-		if fileNumber < 10 {
-			fName = fmt.Sprintf("0%d_%s.csv", fileNumber+1, wName)
-		}
-
-		filePath = fmt.Sprintf("%s/%s", l.importPath, fName)
-
-		defer func() {
-			ir := util.NewResource("accounts", fName)
-
-			err := l.resourceStorage.Persist(ir)
-			if err != nil {
-				panic(err)
-			}
-		}()
-	}
-
-	wf := util.NewCsvWriter(filePath)
 
 	wf.Open()
 	defer wf.Close()
 	defer wf.Flush()
 
+	var lines [][]string
 	for _, o := range ops {
 		var (
 			action                operation.Action
@@ -183,13 +135,4 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 
 		return
 	}
-}
-
-func (l *registerWalletOperationImport) getResourceNumberFromFilePath(fileName string) int {
-	reg := regexp.MustCompile(`(^[0-9]{2})+_+(.*)`)
-	res := reg.ReplaceAllString(fileName, "${1}")
-
-	n, _ := strconv.Atoi(res)
-
-	return n
 }

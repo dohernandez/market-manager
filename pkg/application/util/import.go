@@ -17,7 +17,7 @@ type (
 	ResourceStorage interface {
 		Persist(r Resource) error
 		FindAllByResource(resource string) ([]Resource, error)
-		FindLastByResourceAndWallet(resource, wName string) (Resource, error)
+		FindLastByResourceAndFilesGroup(resource, wName string) (Resource, error)
 	}
 )
 

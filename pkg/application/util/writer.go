@@ -31,7 +31,7 @@ func (r *CsvWriter) Open() error {
 		return ErrFileOpen
 	}
 
-	csvFile, err := os.OpenFile(r.csvFileName, os.O_RDWR|os.O_CREATE, 0666)
+	csvFile, err := os.OpenFile(r.csvFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return err
 	}
