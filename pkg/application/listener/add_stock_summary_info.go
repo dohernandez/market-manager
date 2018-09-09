@@ -5,6 +5,8 @@ import (
 
 	"github.com/gogolfing/cbus"
 
+	"strings"
+
 	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -49,7 +51,7 @@ func (l *addStockSummaryInfo) OnEvent(ctx context.Context, event cbus.Event) {
 
 		}
 
-		s.Name = summaryYahoo.Name
+		s.Name = strings.ToUpper(summaryYahoo.Name)
 
 		s.Type = stock.NewStockInfo(summaryMarketChameleon.Type, stock.StockInfoType)
 		s.Industry = stock.NewStockInfo(summaryMarketChameleon.Type, stock.StockInfoIndustry)

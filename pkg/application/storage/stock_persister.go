@@ -53,7 +53,7 @@ func (p *stockPersister) execInsert(tx *sqlx.Tx, s *stock.Stock) error {
 		s.ID,
 		s.Market.ID,
 		s.Exchange.ID,
-		s.Name,
+		string(s.Name),
 		s.Symbol,
 		s.LastPriceUpdate,
 		s.HighLow52WeekUpdate,
