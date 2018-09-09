@@ -870,3 +870,31 @@ func (cmd *CLI) ExportSnapshotWallet(cliCtx *cli.Context) error {
 
 	return nil
 }
+
+// AddStock adds stock. Scraped the rest of information of the stock from Yahoo/MarketChameleon
+func (cmd *CLI) AddStock(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	if cliCtx.String("stock") == "" {
+		logger.FromContext(ctx).Fatal("Missing stock symbol")
+	}
+
+	if cliCtx.String("exchange") == "" {
+		logger.FromContext(ctx).Fatal("Missing exchange symbol")
+	}
+
+	bus := cmd.initCommandBus()
+
+	_, err := bus.ExecuteContext(ctx, &command.AddStock{
+		Symbol:   cliCtx.String("stock"),
+		Exchange: cliCtx.String("exchange"),
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed adding stock")
+	}
+
+	logger.FromContext(ctx).Info("Add stock finished")
+
+	return nil
+}

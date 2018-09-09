@@ -70,6 +70,7 @@ type (
 
 	// Summary represents stock's summary struct
 	Summary struct {
+		Name        string
 		Description string
 		Type        string
 		Sector      string
@@ -109,6 +110,18 @@ func NewStock(market *market.Market, exchange *exchange.Exchange, name, symbol s
 		Type:                t,
 		Sector:              sector,
 		Industry:            industry,
+		LastPriceUpdate:     time.Time{},
+		HighLow52WeekUpdate: time.Time{},
+	}
+}
+
+// NewStockFromSymbol creates an stock instance only with the symbol
+func NewStockFromSymbol(market *market.Market, exchange *exchange.Exchange, symbol string) *Stock {
+	return &Stock{
+		ID:                  uuid.NewV4(),
+		Market:              market,
+		Exchange:            exchange,
+		Symbol:              symbol,
 		LastPriceUpdate:     time.Time{},
 		HighLow52WeekUpdate: time.Time{},
 	}

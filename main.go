@@ -123,6 +123,30 @@ func main() {
 					},
 				},
 				{
+					Name:    "add",
+					Aliases: []string{"a"},
+					Usage:   "Add data",
+					Subcommands: []cli.Command{
+						{
+							Name:      "stock",
+							Aliases:   []string{"p"},
+							Usage:     "Add stock. Scraped the rest of information of the stock from Yahoo/MarketChameleon",
+							Action:    cLine.AddStock,
+							ArgsUsage: "",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "stock, s",
+									Usage: "Stock symbol(tricker) to add",
+								},
+								cli.StringFlag{
+									Name:  "exchange, e",
+									Usage: "Exchange name",
+								},
+							},
+						},
+					},
+				},
+				{
 					Name:    "update",
 					Aliases: []string{"u"},
 					Usage:   "Update data",

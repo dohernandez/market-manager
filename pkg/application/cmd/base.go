@@ -87,6 +87,8 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	stockPriceScrapeYahooService := service.NewYahooScrapeStockPrice(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
 	stockPriceVolatilityMarketChameleonService := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
 	stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
+	stockSummaryMarketChameleonService := service.NewStockSummaryMarketChameleon(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
+	stockSummaryYahooService := service.NewStockSummaryYahoo(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
 
 	// HANDLER
 	importStocksHandler := handler.NewImportStock(marketFinder, exchangeFinder, stockInfoFinder, stockPersister, stockInfoPersister)
@@ -104,6 +106,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	importRetentionHandler := handler.NewImportRetention(stockFinder, walletFinder, walletPersister)
 	addOperationHandler := handler.NewAddOperation(stockFinder)
 	walletDateDetailsHandler := handler.NewWalletDateDetails(walletFinder, stockFinder, stockDividendFinder, ccClient, cmd.config.Degiro.Retention, bankAccountFinder)
+	addStockHandler := handler.NewAddStock(marketFinder, exchangeFinder)
 
 	// LISTENER
 	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahooService, stockPersister)
@@ -113,6 +116,8 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	updateStockDividend := listener.NewUpdateStockDividend(stockDividendPersister, stockDividendMarketChameleonService)
 	addWalletOperation := listener.NewAddWalletOperation(stockFinder, walletFinder, walletPersister, ccClient)
 	registerWalletOperationImport := listener.NewRegisterWalletOperationImport(resourceStorage, cmd.config.Import.AccountsPath)
+	addStockSummaryInfo := listener.NewAddStockSummaryInfo(stockSummaryMarketChameleonService, stockSummaryYahooService)
+	saveStock := listener.NewSaveStock(stockInfoFinder, stockPersister, stockInfoPersister)
 
 	// COMMAND BUS
 	bus := cbus.Bus{}
@@ -222,6 +227,16 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// Wallet report
 	walletDateDetails := command.WalletDateDetails{}
 	bus.Handle(&walletDateDetails, walletDateDetailsHandler)
+
+	// add stock
+	addStock := command.AddStock{}
+	bus.Handle(&addStock, addStockHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &addStock, addStockSummaryInfo)
+	bus.ListenCommand(cbus.AfterSuccess, &addStock, saveStock)
+	bus.ListenCommand(cbus.AfterSuccess, &addStock, updateStockPrice)
+	bus.ListenCommand(cbus.AfterSuccess, &addStock, updateStockDividend)
+	bus.ListenCommand(cbus.AfterSuccess, &addStock, updateStockDividendYield)
+	bus.ListenCommand(cbus.AfterSuccess, &addStock, updateStockPriceVolatility)
 
 	return &bus
 }
