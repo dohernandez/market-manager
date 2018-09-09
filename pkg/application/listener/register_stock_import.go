@@ -62,4 +62,6 @@ func (l *registerStockImport) OnEvent(ctx context.Context, event cbus.Event) {
 
 		return
 	}
+
+	logger.FromContext(ctx).Debug("Registered stocks into file")
 }

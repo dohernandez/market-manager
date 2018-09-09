@@ -135,4 +135,6 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 
 		return
 	}
+
+	logger.FromContext(ctx).Debug("Registered operation wallet into file")
 }
