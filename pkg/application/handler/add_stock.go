@@ -17,8 +17,11 @@ type addStock struct {
 	exchangeFinder exchange.Finder
 }
 
-func NewAddStock() *addStock {
-	return &addStock{}
+func NewAddStock(marketFinder market.Finder, exchangeFinder exchange.Finder) *addStock {
+	return &addStock{
+		marketFinder:   marketFinder,
+		exchangeFinder: exchangeFinder,
+	}
 }
 
 func (h *addStock) Handle(ctx context.Context, command cbus.Command) (result interface{}, err error) {
