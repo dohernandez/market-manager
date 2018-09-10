@@ -67,11 +67,11 @@ func (s *utilImportStorage) FindAllByResource(resource string) ([]util.Resource,
 	return rs, nil
 }
 
-func (s *utilImportStorage) FindLastByResourceAndWallet(resource, wName string) (util.Resource, error) {
+func (s *utilImportStorage) FindLastByResourceAndFilesGroup(resource, filesGroup string) (util.Resource, error) {
 	var r util.Resource
 	query := `SELECT * FROM import WHERE resource = $1 AND file_name LIKE $2 ORDER BY created_at desc`
 
-	err := sqlx.Get(s.db, &r, query, resource, fmt.Sprintf("%%_%s.%%", wName))
+	err := sqlx.Get(s.db, &r, query, resource, fmt.Sprintf("%%_%s.%%", filesGroup))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return r, mm.ErrNotFound

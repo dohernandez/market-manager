@@ -53,9 +53,9 @@ func (l *addStockSummaryInfo) OnEvent(ctx context.Context, event cbus.Event) {
 
 		s.Name = strings.ToUpper(summaryYahoo.Name)
 
-		s.Type = stock.NewStockInfo(summaryMarketChameleon.Type, stock.StockInfoType)
-		s.Industry = stock.NewStockInfo(summaryMarketChameleon.Type, stock.StockInfoIndustry)
-		s.Sector = stock.NewStockInfo(summaryMarketChameleon.Type, stock.StockInfoSector)
+		s.Type = stock.NewStockInfo(strings.ToUpper(summaryMarketChameleon.Type), stock.StockInfoType)
+		s.Industry = stock.NewStockInfo(strings.ToUpper(summaryMarketChameleon.Industry), stock.StockInfoIndustry)
+		s.Sector = stock.NewStockInfo(strings.ToUpper(summaryMarketChameleon.Sector), stock.StockInfoSector)
 	}
 
 	return

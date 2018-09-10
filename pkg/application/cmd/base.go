@@ -118,6 +118,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	registerWalletOperationImport := listener.NewRegisterWalletOperationImport(resourceStorage, cmd.config.Import.AccountsPath)
 	addStockSummaryInfo := listener.NewAddStockSummaryInfo(stockSummaryMarketChameleonService, stockSummaryYahooService)
 	saveStock := listener.NewSaveStock(stockInfoFinder, stockPersister, stockInfoPersister)
+	registerStockImport := listener.NewRegisterStockImport(resourceStorage, cmd.config.Import.StocksPath)
 
 	// COMMAND BUS
 	bus := cbus.Bus{}
@@ -237,6 +238,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.ListenCommand(cbus.AfterSuccess, &addStock, updateStockDividend)
 	bus.ListenCommand(cbus.AfterSuccess, &addStock, updateStockDividendYield)
 	bus.ListenCommand(cbus.AfterSuccess, &addStock, updateStockPriceVolatility)
+	bus.ListenCommand(cbus.AfterSuccess, &addStock, registerStockImport)
 
 	return &bus
 }
