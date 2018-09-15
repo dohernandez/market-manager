@@ -79,16 +79,6 @@ func (h *importRetention) Handle(ctx context.Context, command cbus.Command) (res
 		}
 	}
 
-	err = h.walletPersister.UpdateRetentions(w)
-	if err != nil {
-		logger.FromContext(ctx).Errorf(
-			"An error happen while persisting operation -> error [%s]",
-			err,
-		)
-
-		return nil, err
-	}
-
 	return w, nil
 }
 
