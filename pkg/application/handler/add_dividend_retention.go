@@ -3,41 +3,35 @@ package handler
 import (
 	"context"
 	"errors"
-	"io"
 
 	"github.com/gogolfing/cbus"
 
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
-	"github.com/dohernandez/market-manager/pkg/application/util"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
-type importRetention struct {
+type addDividendRetention struct {
 	stockFinder  stock.Finder
 	walletFinder wallet.Finder
 }
 
-func NewImportRetention(
+func NewAddDividendRetention(
 	stockFinder stock.Finder,
 	walletFinder wallet.Finder,
-) *importRetention {
-	return &importRetention{
+) *addDividendRetention {
+	return &addDividendRetention{
 		stockFinder:  stockFinder,
 		walletFinder: walletFinder,
 	}
 }
 
-func (h *importRetention) Handle(ctx context.Context, command cbus.Command) (result interface{}, err error) {
-	filePath := command.(*appCommand.ImportRetention).FilePath
-	r := util.NewCsvReader(filePath)
+func (h *addDividendRetention) Handle(ctx context.Context, command cbus.Command) (result interface{}, err error) {
+	addDividendRetentionCommand := command.(*appCommand.AddDividendRetention)
 
-	r.Open()
-	defer r.Close()
-
-	wName := command.(*appCommand.ImportRetention).Wallet
+	wName := addDividendRetentionCommand.Wallet
 	if wName == "" {
 		logger.FromContext(ctx).Errorf(
 			"An error happen while loading wallet -> error [%s]",
@@ -58,21 +52,12 @@ func (h *importRetention) Handle(ctx context.Context, command cbus.Command) (res
 		return nil, err
 	}
 
-	for {
-		line, err := r.ReadLine()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			logger.FromContext(ctx).Fatal(err)
+	for _, i := range w.Items {
+		if i.Stock.Symbol != addDividendRetentionCommand.Stock {
+			continue
 		}
 
-		for _, i := range w.Items {
-			if i.Stock.Name != line[0] {
-				continue
-			}
-
-			i.DividendRetention = mm.ValueDollarFromString(line[1])
-		}
+		i.DividendRetention = mm.ValueDollarFromString(addDividendRetentionCommand.Retention)
 	}
 
 	return w, nil

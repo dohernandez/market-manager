@@ -584,7 +584,7 @@ func (cmd *CLI) ReloadWallet(cliCtx *cli.Context) error {
 	return nil
 }
 
-func (cmd *CLI) ImportStockRetention(cliCtx *cli.Context) error {
+func (cmd *CLI) ImportDividendRetention(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
@@ -895,6 +895,39 @@ func (cmd *CLI) AddStock(cliCtx *cli.Context) error {
 	}
 
 	logger.FromContext(ctx).Info("Add stock finished")
+
+	return nil
+}
+
+// AddDividendRetention adds dividend retention.
+func (cmd *CLI) AddDividendRetention(cliCtx *cli.Context) error {
+	ctx, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	if cliCtx.String("wallet") == "" {
+		logger.FromContext(ctx).Fatal("Missing wallet symbol")
+	}
+
+	if cliCtx.String("stock") == "" {
+		logger.FromContext(ctx).Fatal("Missing stock symbol")
+	}
+
+	if cliCtx.String("retention") == "" {
+		logger.FromContext(ctx).Fatal("Missing retention value")
+	}
+
+	bus := cmd.initCommandBus()
+
+	_, err := bus.ExecuteContext(ctx, &command.AddDividendRetention{
+		Stock:     cliCtx.String("stock"),
+		Retention: cliCtx.String("retention"),
+		Wallet:    cliCtx.String("wallet"),
+	})
+	if err != nil {
+		logger.FromContext(ctx).WithError(err).Fatal("Failed adding stock")
+	}
+
+	logger.FromContext(ctx).Info("Add dividend retention finished")
 
 	return nil
 }
