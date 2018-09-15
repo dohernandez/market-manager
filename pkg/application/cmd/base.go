@@ -69,14 +69,15 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	exchangeFinder := storage.NewExchangeFinder(cmd.DB)
 	stockInfoFinder := storage.NewStockInfoFinder(cmd.DB)
 	bankAccountFinder := storage.NewBankAccountFinder(cmd.DB)
-	walletReload := storage.NewWalletReload(cmd.DB)
-	resourceStorage := storage.NewUtilImportStorage(cmd.DB)
 
 	stockPersister := storage.NewStockPersister(cmd.DB)
 	walletPersister := storage.NewWalletPersister(cmd.DB)
 	stockInfoPersister := storage.NewStockInfoPersister(cmd.DB)
 	stockDividendPersister := storage.NewStockDividendPersister(cmd.DB)
 	transferPersister := storage.NewTransferPersister(cmd.DB)
+
+	walletReload := storage.NewWalletReload(cmd.DB)
+	resourceStorage := storage.NewUtilImportStorage(cmd.DB)
 
 	// CLIENT
 	timeout := time.Second * time.Duration(cmd.config.CurrencyConverter.Timeout)
@@ -103,10 +104,11 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	walletDetailsHandler := handler.NewWalletDetails(walletFinder, stockFinder, stockDividendFinder, ccClient, cmd.config.Degiro.Retention)
 	updateWalletStocksPriceHandler := handler.NewUpdateWalletStocksPrice(walletFinder, stockFinder)
 	reloadWalletHandler := handler.NewReloadWallet(walletFinder, walletReload)
-	importRetentionHandler := handler.NewImportRetention(stockFinder, walletFinder, walletPersister)
+	importRetentionHandler := handler.NewImportRetention(stockFinder, walletFinder)
 	addOperationHandler := handler.NewAddOperation(stockFinder)
 	walletDateDetailsHandler := handler.NewWalletDateDetails(walletFinder, stockFinder, stockDividendFinder, ccClient, cmd.config.Degiro.Retention, bankAccountFinder)
 	addStockHandler := handler.NewAddStock(marketFinder, exchangeFinder)
+	addDividendRetentionHandler := handler.NewAddDividendRetention(stockFinder, walletFinder)
 
 	// LISTENER
 	updateStockPrice := listener.NewUpdateStockPrice(stockFinder, stockPriceScrapeYahooService, stockPersister)
@@ -119,6 +121,8 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	addStockSummaryInfo := listener.NewAddStockSummaryInfo(stockSummaryMarketChameleonService, stockSummaryYahooService)
 	saveStock := listener.NewSaveStock(stockInfoFinder, stockPersister, stockInfoPersister)
 	registerStockImport := listener.NewRegisterStockImport(resourceStorage, cmd.config.Import.StocksPath)
+	saveDividendRetention := listener.NewSaveDividendRetention(walletPersister)
+	registerDividendRetentionImport := listener.NewRegisterDividendRetentionImport(resourceStorage, cmd.config.Import.RetentionsPath)
 
 	// COMMAND BUS
 	bus := cbus.Bus{}
@@ -196,6 +200,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// import retention
 	importRetention := command.ImportRetention{}
 	bus.Handle(&importRetention, importRetentionHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &importRetention, saveDividendRetention)
 
 	// add dividend
 	addDividend := command.AddDividendOperation{}
@@ -239,6 +244,12 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.ListenCommand(cbus.AfterSuccess, &addStock, updateStockDividendYield)
 	bus.ListenCommand(cbus.AfterSuccess, &addStock, updateStockPriceVolatility)
 	bus.ListenCommand(cbus.AfterSuccess, &addStock, registerStockImport)
+
+	// add dividend retention
+	addDividendRetention := command.AddDividendRetention{}
+	bus.Handle(&addDividendRetention, addDividendRetentionHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &addDividendRetention, saveDividendRetention)
+	bus.ListenCommand(cbus.AfterSuccess, &addDividendRetention, registerDividendRetentionImport)
 
 	return &bus
 }

@@ -269,7 +269,7 @@ func main() {
 						{
 							Name:      "stock-retention",
 							Aliases:   []string{"sr"},
-							Action:    cLine.ImportStockRetention,
+							Action:    cLine.ImportDividendRetention,
 							ArgsUsage: "",
 							Flags: []cli.Flag{
 								cli.StringFlag{
@@ -368,14 +368,14 @@ func main() {
 					},
 				},
 				{
-					Name:    "operation",
-					Aliases: []string{"o"},
-					Usage:   "Manage wallet's operation",
+					Name:    "add",
+					Aliases: []string{"a"},
+					Usage:   "Add to the wallet",
 					Subcommands: []cli.Command{
 						{
-							Name:    "add",
-							Aliases: []string{"a"},
-							Usage:   "Add operation to the wallet",
+							Name:    "operation",
+							Aliases: []string{"o"},
+							Usage:   "Add wallet's operation",
 							Subcommands: []cli.Command{
 								{
 									Name:      "dividend",
@@ -516,6 +516,26 @@ func main() {
 											Usage: "Interest value",
 										},
 									},
+								},
+							},
+						},
+						{
+							Name:    "dividend-retention",
+							Aliases: []string{"dr"},
+							Usage:   "Add wallet's stock dividend retention",
+							Action:  cLine.AddDividendRetention,
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "wallet, w",
+									Usage: "wallet name",
+								},
+								cli.StringFlag{
+									Name:  "stock, s",
+									Usage: "stock symbol",
+								},
+								cli.StringFlag{
+									Name:  "retention, r",
+									Usage: "dividend retention",
 								},
 							},
 						},

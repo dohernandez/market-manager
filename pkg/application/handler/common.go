@@ -10,6 +10,7 @@ import (
 
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
+	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/transfer"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -126,4 +127,30 @@ func parseOperationPriceString(price string) float64 {
 	p, _ := strconv.ParseFloat(price, 64)
 
 	return p
+}
+
+func loadWalletWithActiveWalletItems(walletFinder wallet.Finder, stockFinder stock.Finder, name string) (*wallet.Wallet, error) {
+	w, err := walletFinder.FindByName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = walletFinder.LoadActiveItems(w); err != nil {
+		return nil, err
+	}
+
+	for _, i := range w.Items {
+		// Add this into go routing. Use the example explain in the page
+		// https://medium.com/@trevor4e/learning-gos-concurrency-through-illustrations-8c4aff603b3
+		stk, err := stockFinder.FindByID(i.Stock.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		// I like to keep the address but change the content to keep,
+		// trade and item pointing to the same stock
+		*i.Stock = *stk
+	}
+
+	return w, err
 }
