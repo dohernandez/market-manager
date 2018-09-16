@@ -216,21 +216,30 @@ func (w *Wallet) AddBankAccount(ba *bank.Account) error {
 	return nil
 }
 
-func (w *Wallet) AddOperation(o *operation.Operation) {
-	w.Operations = append(w.Operations, o)
+func (w *Wallet) AddOperation(o *operation.Operation) error {
+	wi := new(Item)
 
-	// Getting the wallet item
-	wi, ok := w.Items[o.Stock.ID]
-	if !ok {
-		if o.Stock.ID != uuid.Nil {
-			wi = NewItem(o.Stock)
-			w.Items[o.Stock.ID] = wi
+	if o.Action == operation.Dividend || o.Action == operation.Sell || o.Action == operation.Buy {
+		var ok bool
+		// Getting the wallet item
+		wi, ok = w.Items[o.Stock.ID]
+		if !ok {
+			if o.Action == operation.Dividend || o.Action == operation.Sell {
+				return mm.ErrCanNotAddOperation
+			}
+
+			if o.Stock.ID != uuid.Nil {
+				wi = NewItem(o.Stock)
+				w.Items[o.Stock.ID] = wi
+			}
+		}
+
+		if wi != nil {
+			wi.Operations = append(wi.Operations, o)
 		}
 	}
 
-	if wi != nil {
-		wi.Operations = append(wi.Operations, o)
-	}
+	w.Operations = append(w.Operations, o)
 
 	switch o.Action {
 	case operation.Buy:
@@ -261,6 +270,8 @@ func (w *Wallet) AddOperation(o *operation.Operation) {
 		w.Funds = w.Funds.Decrease(o.Value)
 		w.Connection = w.Connection.Increase(o.Value)
 	}
+
+	return nil
 }
 
 func (w *Wallet) IncreaseInvestment(v mm.Value) {
@@ -465,7 +476,7 @@ func (w *Wallet) AddTrade(n int, o *operation.Operation) error {
 			item, ok := w.Items[o.Stock.ID]
 			if !ok {
 				return errors.Errorf(
-					"Adding dividend to trade wallet %q. Wallet item for stock %s is not loaded",
+					"Adding buy to trade wallet %q. Wallet item for stock %s is not loaded",
 					w.ID,
 					o.Stock.ID,
 				)
@@ -491,6 +502,7 @@ func (w *Wallet) AddTrade(n int, o *operation.Operation) error {
 
 		for k, t := range item.Trades {
 			if t.Status == trade.Close {
+				// TODO Check if the ex-date dividend was before the trade was close
 				continue
 			}
 

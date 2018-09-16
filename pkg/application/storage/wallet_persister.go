@@ -5,6 +5,8 @@ import (
 
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 )
 
@@ -52,7 +54,7 @@ func (p *walletPersister) execInsert(tx *sqlx.Tx, w *wallet.Wallet) error {
 
 	_, err := tx.Exec(query, w.ID, w.Name, w.URL)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "execInsert")
 	}
 
 	return nil
@@ -64,7 +66,7 @@ func (p *walletPersister) execBankAccountInsert(tx *sqlx.Tx, w *wallet.Wallet) e
 	for _, ba := range w.BankAccounts {
 		_, err := tx.Exec(query, w.ID, ba.ID)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "execBankAccountInsert")
 		}
 	}
 
@@ -103,7 +105,7 @@ func (p *walletPersister) execOperationInsert(tx *sqlx.Tx, w *wallet.Wallet) err
 			o.Commission.Amount,
 		)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "execOperationInsert")
 		}
 	}
 
@@ -135,7 +137,7 @@ func (p *walletPersister) execWalletItemInsert(tx *sqlx.Tx, w *wallet.Wallet) er
 			wi.Sells.Amount,
 		)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "execWalletItemInsert")
 		}
 	}
 
@@ -197,8 +199,11 @@ func (p *walletPersister) execUpdateAccounting(tx *sqlx.Tx, w *wallet.Wallet) er
 		w.Interest.Amount,
 		w.ID,
 	)
+	if err != nil {
+		return errors.Wrapf(err, "execUpdateAccounting")
+	}
 
-	return err
+	return nil
 }
 
 // UpdateAllItemsCapital Update the capital of all items from all wallets, along with the capital of the wallet
@@ -223,7 +228,7 @@ func (p *walletPersister) execUpdateItemCapital(tx *sqlx.Tx, w *wallet.Wallet) e
 
 		_, err := tx.Exec(query, i.Capital().Amount, i.CapitalRate, i.ID)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "execUpdateItemCapital")
 		}
 	}
 
@@ -239,8 +244,11 @@ func (p *walletPersister) execUpdateCapital(tx *sqlx.Tx, w *wallet.Wallet) error
 	) WHERE id = $2`
 
 	_, err := tx.Exec(query, w.ID, w.ID)
+	if err != nil {
+		return errors.Wrapf(err, "execUpdateCapital")
+	}
 
-	return err
+	return nil
 }
 
 func (p *walletPersister) execUpdateTrade(tx *sqlx.Tx, w *wallet.Wallet) error {
@@ -294,7 +302,7 @@ func (p *walletPersister) execUpdateTrade(tx *sqlx.Tx, w *wallet.Wallet) error {
 			t.CloseCapital.Amount,
 			t.CloseNet.Amount,
 		); err != nil {
-			return err
+			return errors.Wrapf(err, "execUpdateTrade")
 		}
 
 		for _, o := range t.Operations {

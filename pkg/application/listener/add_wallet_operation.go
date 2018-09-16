@@ -10,6 +10,7 @@ import (
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
+	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -86,7 +87,37 @@ func (l *addWalletOperation) OnEvent(ctx context.Context, event cbus.Event) {
 	}
 
 	for _, o := range ops {
-		w.AddOperation(o)
+		err = w.AddOperation(o)
+		if err != nil {
+			if err == mm.ErrCanNotAddOperation {
+				err = l.walletFinder.LoadItemByStock(w, o.Stock)
+				if err != nil {
+					logger.FromContext(ctx).Errorf(
+						"An error happen while loading wallet item from stock operation [%s:%s] -> error [%s]",
+						o.Action,
+						o.Stock.Symbol,
+						err,
+					)
+
+					return
+				}
+
+				err = w.AddOperation(o)
+				if err == nil {
+					continue
+				}
+			}
+
+			logger.FromContext(ctx).Warnf(
+				"An error happen while adding operation [%s] stock [%s] to wallet name [%s] -> error [%s]",
+				o.Action,
+				o.Stock.Symbol,
+				wName,
+				err,
+			)
+
+			continue
+		}
 
 		nTrade, ok := trades[o.ID]
 		if ok {

@@ -99,6 +99,7 @@ func (l *registerWalletOperationImport) OnEvent(ctx context.Context, event cbus.
 				action = "Venta"
 			}
 
+			stockName = o.Stock.Name
 			amount = fmt.Sprintf("%d", o.Amount)
 			price = fmt.Sprintf("%.2f", o.Price.Amount)
 			priceChange = fmt.Sprintf("%.2f", o.PriceChange.Amount)

@@ -83,5 +83,5 @@ func (o *Operation) FinalCommission() mm.Value {
 func (o *Operation) FinalPricePaid() mm.Value {
 	fc := o.FinalCommission()
 
-	return fc.Increase(o.Value)
+	return o.Value.Decrease(fc)
 }
