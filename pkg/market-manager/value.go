@@ -14,8 +14,9 @@ type Currency string
 
 // Possible currency
 const (
-	Euro   Currency = "€"
-	Dollar          = "$"
+	Euro           Currency = "€"
+	Dollar                  = "$"
+	CanadianDollar          = "C$"
 )
 
 var (

@@ -13,7 +13,7 @@ func SPrintValue(value mm.Value, precision int) string {
 		return ""
 	}
 
-	if value.Currency == mm.Dollar {
+	if value.Currency == mm.Dollar || value.Currency == mm.CanadianDollar {
 		if value.Amount > 0 {
 			return fmt.Sprintf("%s%.*f", value.Currency, precision, value.Amount)
 		}
