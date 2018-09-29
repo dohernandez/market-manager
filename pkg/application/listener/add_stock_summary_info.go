@@ -33,13 +33,17 @@ func (l *addStockSummaryInfo) OnEvent(ctx context.Context, event cbus.Event) {
 	}
 
 	for _, s := range ss {
-		summaryMarketChameleon, err := l.stockSummaryMarketChameleon.Summary(s)
-		if err != nil {
-			logger.FromContext(ctx).Errorf(
-				"addStockSummaryInfo: can load summary MarketChameleon for stock [%s]",
-				s.Symbol,
-			)
+		var summaryMarketChameleon stock.Summary
+		if s.Exchange.Symbol == "NASDAQ" || s.Exchange.Symbol == "NYSE" {
+			var err error
+			summaryMarketChameleon, err = l.stockSummaryMarketChameleon.Summary(s)
+			if err != nil {
+				logger.FromContext(ctx).Errorf(
+					"addStockSummaryInfo: can load summary MarketChameleon for stock [%s]",
+					s.Symbol,
+				)
 
+			}
 		}
 
 		summaryYahoo, err := l.stockSummaryYahoo.Summary(s)
