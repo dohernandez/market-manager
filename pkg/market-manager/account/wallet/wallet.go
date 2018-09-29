@@ -77,7 +77,8 @@ func (i *Item) Capital() mm.Value {
 	capital := float64(i.Amount) * i.Stock.Value.Amount
 
 	if i.CapitalRate > 0 {
-		if i.Stock.Exchange.Symbol == "NASDAQ" || i.Stock.Exchange.Symbol == "NYSE" {
+		if i.Stock.Exchange.Symbol == "NASDAQ" || i.Stock.Exchange.Symbol == "NYSE" ||
+			i.Stock.Exchange.Symbol == "TSX" {
 			capital = capital / i.CapitalRate
 		}
 	}
