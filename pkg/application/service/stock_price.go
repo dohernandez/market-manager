@@ -145,7 +145,12 @@ func NewYahooScrapeStockPrice(ctx context.Context, url string) *yahooScraperStoc
 }
 
 func (s *yahooScraperStockPrice) Price(stk *stock.Stock) (stock.Price, error) {
-	url := fmt.Sprintf("%s/%s?p=%s", s.url, stk.Symbol, stk.Symbol)
+	stkSymbol := stk.Symbol
+	if stk.Exchange.Symbol == "TSX" {
+		stkSymbol = stk.Symbol + ".TO"
+	}
+
+	url := fmt.Sprintf("%s/%s?p=%s", s.url, stkSymbol, stk.Symbol)
 
 	resp, err := http.Get(url)
 	if err != nil {

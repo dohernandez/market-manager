@@ -118,7 +118,12 @@ func NewStockSummaryYahoo(ctx context.Context, url string) *stockSummaryYahoo {
 }
 
 func (s *stockSummaryYahoo) Summary(stk *stock.Stock) (stock.Summary, error) {
-	url := fmt.Sprintf("%s/%s/profile?p=%s", s.url, stk.Symbol, stk.Symbol)
+	stkSymbol := stk.Symbol
+	if stk.Exchange.Symbol == "TSX" {
+		stkSymbol = stk.Symbol + ".TO"
+	}
+
+	url := fmt.Sprintf("%s/%s/profile?p=%s", s.url, stkSymbol, stk.Symbol)
 
 	resp, err := http.Get(url)
 	if err != nil {
