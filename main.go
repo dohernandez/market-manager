@@ -129,7 +129,7 @@ func main() {
 					Subcommands: []cli.Command{
 						{
 							Name:      "stock",
-							Aliases:   []string{"p"},
+							Aliases:   []string{"s"},
 							Usage:     "Add stock. Scraped the rest of information of the stock from Yahoo/MarketChameleon",
 							Action:    cLine.AddStock,
 							ArgsUsage: "",

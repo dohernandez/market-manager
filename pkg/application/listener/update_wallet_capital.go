@@ -51,11 +51,16 @@ func (l *updateWalletCapital) OnEvent(ctx context.Context, event cbus.Event) {
 		}
 	}
 
-	cEURUSD, err := l.ccClient.Converter.Get()
+	currencyConverter, err := l.ccClient.Converter.Get()
 	if err != nil {
-		logger.FromContext(ctx).Error("An error happen while getting converter EURUSD: error [%s]")
+		logger.FromContext(ctx).Error("An error happen while getting currency to euro converter: error [%s]")
 
 		return
+	}
+
+	capitalRate := wallet.CapitalRate{
+		EURUSD: currencyConverter.EURUSD,
+		EURCAD: currencyConverter.EURCAD,
 	}
 
 	for _, stk := range stks {
@@ -75,10 +80,7 @@ func (l *updateWalletCapital) OnEvent(ctx context.Context, event cbus.Event) {
 		}
 
 		for _, w := range ws {
-			w.Items[stk.ID].CapitalRate = cEURUSD.EURUSD
-
-			capital := w.Items[stk.ID].Capital()
-			w.Capital = w.Capital.Increase(capital)
+			w.SetCapitalRate(capitalRate)
 		}
 
 		err = l.walletPersister.UpdateAllItemsCapital(ws)

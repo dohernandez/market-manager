@@ -114,7 +114,8 @@ func (i *Item) PercentageBenefits() float64 {
 func (i *Item) Change() mm.Value {
 	change := float64(i.Amount) * i.Stock.Change.Amount
 
-	if i.Stock.Exchange.Symbol == "NASDAQ" || i.Stock.Exchange.Symbol == "NYSE" {
+	if i.Stock.Exchange.Symbol == "NASDAQ" || i.Stock.Exchange.Symbol == "NYSE" ||
+		i.Stock.Exchange.Symbol == "TSX" {
 		change = change / i.CapitalRate
 	}
 
@@ -171,6 +172,19 @@ func (i *Item) PercentageInvestedRepresented(invested float64) float64 {
 	return i.Invested.Amount * 100 / invested
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CapitalRate
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+type CapitalRate struct {
+	EURUSD float64
+	EURCAD float64
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Wallet
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 type Wallet struct {
 	ID           uuid.UUID
 	Name         string
@@ -190,7 +204,7 @@ type Wallet struct {
 	Interest   mm.Value
 
 	// Rate currency conversion
-	capitalRate float64
+	capitalRate CapitalRate
 
 	Trades map[int]*trade.Trade
 }
@@ -309,19 +323,33 @@ func (w *Wallet) PercentageBenefits() float64 {
 	return percent - 100
 }
 
-func (w *Wallet) SetCapitalRate(capitalRate float64) {
+func (w *Wallet) SetCapitalRate(capitalRate CapitalRate) {
 	w.capitalRate = capitalRate
 
 	for _, item := range w.Items {
-		item.CapitalRate = capitalRate
+		switch item.Stock.Exchange.Symbol {
+		case "NASDAQ", "NYSE":
+			item.CapitalRate = capitalRate.EURUSD
+		case "TSX":
+			item.CapitalRate = capitalRate.EURCAD
+		default:
+			item.CapitalRate = 1
+		}
 	}
 
 	for _, t := range w.Trades {
-		t.CapitalRate = capitalRate
+		switch t.Stock.Exchange.Symbol {
+		case "NASDAQ", "NYSE":
+			t.CapitalRate = capitalRate.EURUSD
+		case "TSX":
+			t.CapitalRate = capitalRate.EURCAD
+		default:
+			t.CapitalRate = 1
+		}
 	}
 }
 
-func (w *Wallet) CurrentCapitalRate() float64 {
+func (w *Wallet) CurrentCapitalRate() CapitalRate {
 	return w.capitalRate
 }
 
@@ -335,13 +363,17 @@ func (w *Wallet) DividendGrossProjectedNextMonth() mm.Value {
 	for _, item := range w.Items {
 		for _, d := range item.Stock.Dividends {
 			if d.ExDate.Month() == month && d.ExDate.Year() == year {
-				dividends = dividends + d.Amount.Amount*float64(item.Amount)
+
+				switch item.Stock.Exchange.Symbol {
+				case "NASDAQ", "NYSE":
+					dividends += d.Amount.Amount * float64(item.Amount) / w.capitalRate.EURUSD
+				case "TSX":
+					dividends += d.Amount.Amount * float64(item.Amount) / w.capitalRate.EURCAD
+				default:
+					dividends += d.Amount.Amount * float64(item.Amount)
+				}
 			}
 		}
-	}
-
-	if w.capitalRate > 0 {
-		dividends = dividends / w.capitalRate
 	}
 
 	return mm.Value{
@@ -360,21 +392,24 @@ func (w *Wallet) DividendNetProjectedNextMonth(retention float64) mm.Value {
 	for _, item := range w.Items {
 		for _, d := range item.Stock.Dividends {
 			if d.ExDate.Month() == month && d.ExDate.Year() == year {
-				dividend := d.Amount.Amount * float64(item.Amount)
+				dnd := d.Amount.Amount * float64(item.Amount)
 
-				ret := retention * dividend / 100
+				ret := retention * dnd / 100
 
 				if item.DividendRetention.Amount > 0 {
 					ret = item.DividendRetention.Amount * float64(item.Amount)
 				}
 
-				netDividends = netDividends + (dividend - ret)
+				switch item.Stock.Exchange.Symbol {
+				case "NASDAQ", "NYSE":
+					netDividends += dnd/w.capitalRate.EURUSD - ret
+				case "TSX":
+					netDividends += dnd/w.capitalRate.EURCAD - ret
+				default:
+					netDividends += dnd - ret
+				}
 			}
 		}
-	}
-
-	if w.capitalRate > 0 {
-		netDividends = netDividends / w.capitalRate
 	}
 
 	return mm.Value{
@@ -410,13 +445,16 @@ func (w *Wallet) DividendGrossProjectedNextYear() mm.Value {
 	for _, item := range w.Items {
 		for _, d := range item.Stock.Dividends {
 			if d.ExDate.Month() >= month && (d.ExDate.Year() >= year && d.ExDate.Year() < untilYear) {
-				dividends = dividends + d.Amount.Amount*float64(item.Amount)
+				switch item.Stock.Exchange.Symbol {
+				case "NASDAQ", "NYSE":
+					dividends += d.Amount.Amount * float64(item.Amount) / w.capitalRate.EURUSD
+				case "TSX":
+					dividends += d.Amount.Amount * float64(item.Amount) / w.capitalRate.EURCAD
+				default:
+					dividends += d.Amount.Amount * float64(item.Amount)
+				}
 			}
 		}
-	}
-
-	if w.capitalRate > 0 {
-		dividends = dividends / w.capitalRate
 	}
 
 	return mm.Value{
@@ -440,21 +478,24 @@ func (w *Wallet) DividendNetProjectedNextYear(retention float64) mm.Value {
 					continue
 				}
 
-				dividend := d.Amount.Amount * float64(item.Amount)
+				dnd := d.Amount.Amount * float64(item.Amount)
 
-				ret := retention * dividend / 100
+				ret := retention * dnd / 100
 
 				if item.DividendRetention.Amount > 0 {
 					ret = item.DividendRetention.Amount * float64(item.Amount)
 				}
 
-				netDividends = netDividends + (dividend - ret)
+				switch item.Stock.Exchange.Symbol {
+				case "NASDAQ", "NYSE":
+					netDividends += dnd/w.capitalRate.EURUSD - ret
+				case "TSX":
+					netDividends += dnd/w.capitalRate.EURCAD - ret
+				default:
+					netDividends += dnd - ret
+				}
 			}
 		}
-	}
-
-	if w.capitalRate > 0 {
-		netDividends = netDividends / w.capitalRate
 	}
 
 	return mm.Value{

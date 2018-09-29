@@ -164,12 +164,17 @@ func (l *addWalletOperation) loadWalletWithActiveWalletItemsAndActiveWalletTrade
 		*i.Stock = *stk
 	}
 
-	cEURUSD, err := l.ccClient.Converter.Get()
+	currencyConverter, err := l.ccClient.Converter.Get()
 	if err != nil {
 		return nil, err
 	}
 
-	w.SetCapitalRate(cEURUSD.EURUSD)
+	capitalRate := wallet.CapitalRate{
+		EURUSD: currencyConverter.EURUSD,
+		EURCAD: currencyConverter.EURCAD,
+	}
+
+	w.SetCapitalRate(capitalRate)
 
 	return w, err
 }

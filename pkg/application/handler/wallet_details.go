@@ -186,12 +186,17 @@ func (h *walletDetails) loadWalletWithWalletItemsAndWalletTrades(name string, st
 		}
 	}
 
-	cEURUSD, err := h.ccClient.Converter.Get()
+	currencyConverter, err := h.ccClient.Converter.Get()
 	if err != nil {
 		return nil, err
 	}
 
-	w.SetCapitalRate(cEURUSD.EURUSD)
+	capitalRate := wallet.CapitalRate{
+		EURUSD: currencyConverter.EURUSD,
+		EURCAD: currencyConverter.EURCAD,
+	}
+
+	w.SetCapitalRate(capitalRate)
 
 	return w, err
 }
@@ -203,7 +208,17 @@ func (h *walletDetails) addSellsOperationToWallet(w *wallet.Wallet, sells map[st
 			return err
 		}
 
-		o := h.createOperation(stk, amount, operation.Sell, w.CurrentCapitalRate(), commissions)
+		var capitalRate float64
+		switch stk.Exchange.Symbol {
+		case "NASDAQ", "NYSE":
+			capitalRate = w.CurrentCapitalRate().EURUSD
+		case "TSX":
+			capitalRate = w.CurrentCapitalRate().EURCAD
+		default:
+			capitalRate = 1
+		}
+
+		o := h.createOperation(stk, amount, operation.Sell, capitalRate, commissions)
 
 		w.AddOperation(o)
 	}
@@ -262,7 +277,17 @@ func (h *walletDetails) addBuysOperationToWallet(w *wallet.Wallet, buys map[stri
 			return err
 		}
 
-		o := h.createOperation(stk, amount, operation.Buy, w.CurrentCapitalRate(), commissions)
+		var capitalRate float64
+		switch stk.Exchange.Symbol {
+		case "NASDAQ", "NYSE":
+			capitalRate = w.CurrentCapitalRate().EURUSD
+		case "TSX":
+			capitalRate = w.CurrentCapitalRate().EURCAD
+		default:
+			capitalRate = 1
+		}
+
+		o := h.createOperation(stk, amount, operation.Buy, capitalRate, commissions)
 
 		ds, err := h.dividendFinder.FindAllDividendsFromThisYearAndMontOn(stk.ID, year, month)
 		if err != nil {
@@ -314,12 +339,17 @@ func (h *walletDetails) dividendsProjectedDate(w *wallet.Wallet, date time.Time)
 						ret = item.DividendRetention.Amount * float64(item.Amount)
 					}
 
-					netDividends = netDividends + (grossDividend - ret)
+					switch item.Stock.Exchange.Symbol {
+					case "NASDAQ", "NYSE":
+						netDividends += grossDividend/w.CurrentCapitalRate().EURUSD - ret
+					case "TSX":
+						netDividends += grossDividend/w.CurrentCapitalRate().EURCAD - ret
+					default:
+						netDividends += grossDividend - ret
+					}
 				}
 			}
 		}
-
-		netDividends = netDividends / w.CurrentCapitalRate()
 
 		wDProjectedMonth := mm.Value{
 			Amount:   netDividends,
