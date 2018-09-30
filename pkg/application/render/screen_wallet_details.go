@@ -142,7 +142,7 @@ func (s *screenWalletDetails) renderItemStocks(tw *tabwriter.Writer, wStocks []*
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Capital\t Invested\t % \t Dividend\t Buys\t Sells\t Benefits\t % \t Change\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t AMT\t Capital\t Invested\t % \t Dividend\t Buys\t Sells\t Benefits\t % \t Change\t")
 
 	inProfits := color.New(color.FgGreen).FprintlnFunc()
 	inLooses := color.New(color.FgRed).FprintlnFunc()
@@ -210,7 +210,7 @@ func (s *screenWalletDetails) renderStocksDividends(tw *tabwriter.Writer, wStock
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t Ex Date\t Dividend\t Retention (%)\t D. Yield\t WA D. Yield\t D. Pay\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t AMT\t Price\t WA Price\t Ex Date\t Dividend\t Retention (%)\t D. Yield\t WA D. Yield\t D. Pay\t")
 
 	inNormal := color.New(color.FgWhite).FprintlnFunc()
 	inHeightLight := color.New(color.FgYellow).FprintlnFunc()
@@ -257,7 +257,7 @@ func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*Wall
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
-	header(tw, "#\t Stock\t Market\t Symbol\t Amount\t Price\t WA Price\t High 52wk\t Low 52wk\t HV 52wk\t HV 20day\t Buy Under\t EPS\t Change\t")
+	header(tw, "#\t Stock\t Market\t Symbol\t AMT\t Price\t WA Price\t High 52wk\t Low 52wk\t HV 52wk\t HV 20day\t Buy Under\t EPS\t PER\t Change\t")
 
 	normal := color.New(color.FgWhite).FprintlnFunc()
 	overSell := color.New(color.FgGreen).FprintlnFunc()
@@ -265,7 +265,7 @@ func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*Wall
 
 	for i, stk := range wStocks {
 		str := fmt.Sprintf(
-			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %.*f\t %.*f\t %s\t %.*f\t %s\t",
+			"%d\t %s\t %s\t %s\t %d\t %s\t %s\t %s\t %s\t %.*f\t %.*f\t %s\t %.*f\t %.*f\t %s\t",
 			i+1,
 			util.SPrintTruncate(stk.Stock, 27),
 			stk.Market,
@@ -282,6 +282,8 @@ func (s *screenWalletDetails) renderStocks(tw *tabwriter.Writer, wStocks []*Wall
 			util.SPrintValue(stk.BuyUnder, precision),
 			precision,
 			stk.EPS,
+			precision,
+			stk.PER,
 			util.SPrintValue(stk.Change, precision),
 		)
 

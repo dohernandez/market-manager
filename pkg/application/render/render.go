@@ -34,6 +34,7 @@ type (
 		UpdatedAt           time.Time
 		HV52Week            float64
 		HV20Day             float64
+		PER                 float64
 
 		PriceWithHighLow int
 	}

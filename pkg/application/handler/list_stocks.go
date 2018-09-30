@@ -101,6 +101,7 @@ func (h *listStocks) Handle(ctx context.Context, command cbus.Command) (result i
 			UpdatedAt:      stk.LastPriceUpdate,
 			HV52Week:       stk.HV52Week,
 			HV20Day:        stk.HV20Day,
+			PER:            stk.PER,
 
 			PriceWithHighLow: stk.ComparePriceWithHighLow(),
 		})
