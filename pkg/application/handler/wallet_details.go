@@ -517,6 +517,7 @@ func (h *walletDetails) walletStocksOutput(w *wallet.Wallet, status operation.St
 				UpdatedAt:           item.Stock.LastPriceUpdate,
 				HV52Week:            item.Stock.HV52Week,
 				HV20Day:             item.Stock.HV20Day,
+				PER:                 item.Stock.PER,
 
 				PriceWithHighLow: item.Stock.ComparePriceWithHighLow(),
 			},
