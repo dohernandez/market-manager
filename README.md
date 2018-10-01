@@ -11,6 +11,7 @@ Also, allow us to manage our own wallet, storing all the operations we have made
     * [Import tools](#import-tools)
         * [Stocks](#import-stocks)
         * [Wallets](#import-wallet)
+        * [Transfers](#import-transfer)
 * [Dependencies](#dependencies)
     * [Upstream](#upstream)
 
@@ -58,6 +59,30 @@ Add/Create wallets
     
     ```bash
     $ market-manager account import wallet
+    ```
+
+<br />[[table of contents]](#table-of-contents)
+
+#### Import transfer
+
+Add/Create transfers
+
+* Add/Create `csv` file to `resources/import/transfers` with the transfers(s) with the following format:
+    
+    | DATE      | FROM | TO     | AMOUNT |
+    |-----------|------|--------|--------|
+    | 6/10/2017 | Bank | Wallet | 20,00  |
+    
+    **FROM**: Name of the bank account. This values is used to match with our wallet in case you transfer money out from the wallet. 
+    
+    **TO**: Name of the bank account. This values is used to match with our wallet in case you transfer money in to the wallet.  
+
+**Note:** The file **SHOULD** only contain the values, the header is just for better understanding.
+
+* Run the command
+    
+    ```bash
+    $ market-manager banking import transfer
     ```
 
 <br />[[table of contents]](#table-of-contents)
