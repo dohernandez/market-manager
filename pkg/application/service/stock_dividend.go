@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +15,7 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
+	"github.com/dohernandez/market-manager/pkg/application/util"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -24,10 +27,28 @@ import (
 // ----------------------------------------------------------------------------------------------------------------------
 type (
 	stockDividendMarketChameleon struct {
-		stockScrape
+		ctx        context.Context
+		urlBuilder UrlBuilder
+		htmlParser HtmlParser
 	}
 
 	dividendType string
+
+	stockScrapeMarketChameleonWWWUrlBuilder struct {
+		stockScrape
+	}
+
+	stockDividendMarketChameleonWWWHtmlParser struct {
+		ctx context.Context
+	}
+
+	stockScrapeMarketChameleonFileUrlBuilder struct {
+		stockScrape
+	}
+
+	stockDividendMarketChameleonFileHtmlParser struct {
+		ctx context.Context
+	}
 )
 
 const (
@@ -35,30 +56,125 @@ const (
 	Historical              = "historical_divs"
 )
 
-func NewStockDividendMarketChameleon(ctx context.Context, url string) *stockDividendMarketChameleon {
-	return &stockDividendMarketChameleon{
-		stockScrape: stockScrape{
+// ----------------------------------------------------------------------------------------------------------------------
+// UrlBuilder
+// ----------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------
+// WWW
+// ----------------------------------------------------------------------------------------------------------------------
+func NewStockScrapeMarketChameleonWWWUrlBuilder(ctx context.Context, url string) UrlBuilder {
+	return &stockScrapeMarketChameleonWWWUrlBuilder{
+		stockScrape{
 			ctx: ctx,
 			url: url,
 		},
 	}
 }
 
-func (s *stockDividendMarketChameleon) NextFuture(stk *stock.Stock) (dividend.StockDividend, error) {
-	url := fmt.Sprintf("%s/%s/Dividends", s.url, stk.Symbol)
+func (s *stockScrapeMarketChameleonWWWUrlBuilder) BuildUrl(stk *stock.Stock) (string, error) {
+	return fmt.Sprintf("%s/%s/Dividends", s.url, stk.Symbol), nil
+}
 
+// ----------------------------------------------------------------------------------------------------------------------
+// File
+// ----------------------------------------------------------------------------------------------------------------------
+func NewStockScrapeMarketChameleonFileUrlBuilder(ctx context.Context, url string) UrlBuilder {
+	return &stockScrapeMarketChameleonFileUrlBuilder{
+		stockScrape{
+			ctx: ctx,
+			url: url,
+		},
+	}
+}
+
+func (s *stockScrapeMarketChameleonFileUrlBuilder) BuildUrl(stk *stock.Stock) (string, error) {
+	var filePath string
+
+	err := filepath.Walk(s.url, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+
+		if filepath.Ext(path) == ".html" {
+			stockSymbol := util.GeResourceNameFromFilePath(path)
+			if stk.Symbol == stockSymbol {
+				filePath = path
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return filePath, err
+	}
+
+	return filePath, nil
+}
+
+// ----------------------------------------------------------------------------------------------------------------------
+// HtmlParser
+// ----------------------------------------------------------------------------------------------------------------------
+func NewStockDividendMarketChameleonWWWHtmlParser(ctx context.Context) HtmlParser {
+	return &stockDividendMarketChameleonWWWHtmlParser{
+		ctx: ctx,
+	}
+}
+
+func (s *stockDividendMarketChameleonWWWHtmlParser) Parse(url string) (*html.Node, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return dividend.StockDividend{}, err
+		return nil, err
 	}
 
 	if resp.StatusCode == http.StatusForbidden {
-		return dividend.StockDividend{}, errors.New(
+		return nil, errors.New(
 			"marketChameleon said: You do not have permission to view this directory or page using the credentials that you supplied.",
 		)
 	}
 
 	root, err := html.Parse(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return root, nil
+}
+
+func NewStockDividendMarketChameleonFileHtmlParser(ctx context.Context) HtmlParser {
+	return &stockDividendMarketChameleonFileHtmlParser{
+		ctx: ctx,
+	}
+}
+
+func (s *stockDividendMarketChameleonFileHtmlParser) Parse(url string) (*html.Node, error) {
+	r, err := os.Open(url)
+	if err != nil {
+		return nil, err
+	}
+
+	root, err := html.Parse(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return root, nil
+}
+
+func NewStockDividendMarketChameleon(ctx context.Context, urlBuilder UrlBuilder, htmlParser HtmlParser) *stockDividendMarketChameleon {
+	return &stockDividendMarketChameleon{
+		ctx:        ctx,
+		urlBuilder: urlBuilder,
+		htmlParser: htmlParser,
+	}
+}
+
+func (s *stockDividendMarketChameleon) NextFuture(stk *stock.Stock) (dividend.StockDividend, error) {
+	url, err := s.urlBuilder.BuildUrl(stk)
+	if err != nil {
+		return dividend.StockDividend{}, err
+	}
+
+	root, err := s.htmlParser.Parse(url)
 	if err != nil {
 		return dividend.StockDividend{}, err
 	}
@@ -175,20 +291,12 @@ func (s *stockDividendMarketChameleon) parseDateString(dt string) time.Time {
 }
 
 func (s *stockDividendMarketChameleon) Future(stk *stock.Stock) ([]dividend.StockDividend, error) {
-	url := fmt.Sprintf("%s/%s/Dividends", s.url, stk.Symbol)
-
-	resp, err := http.Get(url)
+	url, err := s.urlBuilder.BuildUrl(stk)
 	if err != nil {
 		return nil, err
 	}
 
-	if resp.StatusCode == http.StatusForbidden {
-		return nil, errors.New(
-			"marketChameleon said: You do not have permission to view this directory or page using the credentials that you supplied.",
-		)
-	}
-
-	root, err := html.Parse(resp.Body)
+	root, err := s.htmlParser.Parse(url)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +306,7 @@ func (s *stockDividendMarketChameleon) Future(stk *stock.Stock) ([]dividend.Stoc
 		return nil, err
 	}
 
-	logger.FromContext(s.ctx).Debugf("got stock next future dividend %+v from stock %s", sd, stk.Symbol)
+	logger.FromContext(s.ctx).Debugf("got stock future dividend %+v from stock %s", sd, stk.Symbol)
 
 	return sd, nil
 }
@@ -224,20 +332,12 @@ func (s *stockDividendMarketChameleon) findAllFutureDividend(root *html.Node) ([
 }
 
 func (s *stockDividendMarketChameleon) Historical(stk *stock.Stock, fromDate time.Time) ([]dividend.StockDividend, error) {
-	url := fmt.Sprintf("%s/%s/Dividends", s.url, stk.Symbol)
-
-	resp, err := http.Get(url)
+	url, err := s.urlBuilder.BuildUrl(stk)
 	if err != nil {
 		return nil, err
 	}
 
-	if resp.StatusCode == http.StatusForbidden {
-		return nil, errors.New(
-			"marketChameleon said: You do not have permission to view this directory or page using the credentials that you supplied.",
-		)
-	}
-
-	root, err := html.Parse(resp.Body)
+	root, err := s.htmlParser.Parse(url)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +347,7 @@ func (s *stockDividendMarketChameleon) Historical(stk *stock.Stock, fromDate tim
 		return nil, err
 	}
 
-	logger.FromContext(s.ctx).Debugf("got stock next historical dividend %+v from stock %s", sd, stk.Symbol)
+	logger.FromContext(s.ctx).Debugf("got stock historical dividend %+v from stock %s", sd, stk.Symbol)
 
 	return sd, nil
 }

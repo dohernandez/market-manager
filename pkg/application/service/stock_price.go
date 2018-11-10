@@ -211,7 +211,7 @@ func (s *yahooScraperStockPrice) marshalQuoteHeaderInfo(root *html.Node, p *stoc
 func (s *yahooScraperStockPrice) marshalQuoteHeaderInfoClosePrice(root *html.Node, p *stock.Price) error {
 	// define a matcher
 	matcherQuoteClosedPrice := func(n *html.Node) bool {
-		if n.DataAtom == atom.Span && scrape.Attr(n, "data-reactid") == "21" {
+		if n.DataAtom == atom.Span && scrape.Attr(n, "data-reactid") == "14" {
 			return true
 		}
 
@@ -231,7 +231,7 @@ func (s *yahooScraperStockPrice) marshalQuoteHeaderInfoClosePrice(root *html.Nod
 func (s *yahooScraperStockPrice) marshalQuoteHeaderInfoChangePrice(root *html.Node, p *stock.Price) error {
 	// define a matcher
 	matcherQuoteChangePrice := func(n *html.Node) bool {
-		if n.DataAtom == atom.Span && scrape.Attr(n, "data-reactid") == "23" {
+		if n.DataAtom == atom.Span && scrape.Attr(n, "data-reactid") == "16" {
 			return true
 		}
 
