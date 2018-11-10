@@ -83,11 +83,19 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	timeout := time.Second * time.Duration(cmd.config.CurrencyConverter.Timeout)
 	ccClient := cc.NewClient(cmd.newHTTPClient("CURRENCY-CONVERTER", timeout), cmd.cache)
 
+	// SCRAPER
+	//marketChameleonWWWUrlBuilder := service.NewStockScrapeMarketChameleonWWWUrlBuilder(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
+	//marketChameleonWWWHtmlParser := service.NewStockDividendMarketChameleonWWWHtmlParser(cmd.ctx)
+
+	marketChameleonFileUrlBuilder := service.NewStockScrapeMarketChameleonFileUrlBuilder(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonPath)
+	marketChameleonFileHtmlParser := service.NewStockDividendMarketChameleonFileHtmlParser(cmd.ctx)
+
 	// SERVICE
 	//stockPrice := service.NewBasicStockPrice(cmd.ctx, iexClient)
 	stockPriceScrapeYahooService := service.NewYahooScrapeStockPrice(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
 	stockPriceVolatilityMarketChameleonService := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
-	stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
+	//stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(cmd.ctx, marketChameleonWWWUrlBuilder, marketChameleonWWWHtmlParser)
+	stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(cmd.ctx, marketChameleonFileUrlBuilder, marketChameleonFileHtmlParser)
 	stockSummaryMarketChameleonService := service.NewStockSummaryMarketChameleon(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
 	stockSummaryYahooService := service.NewStockSummaryYahoo(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
 

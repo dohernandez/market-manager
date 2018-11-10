@@ -3,6 +3,9 @@ package util
 import (
 	"time"
 
+	"path/filepath"
+	"regexp"
+
 	"github.com/satori/go.uuid"
 )
 
@@ -28,4 +31,16 @@ func NewResource(resource, fname string) Resource {
 		FileName:  fname,
 		CreatedAt: time.Now(),
 	}
+}
+
+func GeResourceNameFromFilePath(file string) string {
+	var dir = filepath.Dir(file)
+	var ext = filepath.Ext(file)
+
+	name := file[len(dir)+1 : len(file)-len(ext)]
+
+	reg := regexp.MustCompile(`(^[0-9]+_)+(.*)`)
+	res := reg.ReplaceAllString(name, "${2}")
+
+	return res
 }

@@ -2,21 +2,17 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
-
-	"github.com/gogolfing/cbus"
-	"github.com/urfave/cli"
-
 	"strconv"
 	"strings"
 
-	"encoding/json"
-
+	"github.com/gogolfing/cbus"
 	"github.com/pkg/errors"
+	"github.com/urfave/cli"
 
 	"github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/render"
@@ -148,18 +144,6 @@ func (cmd *CLI) runImport(
 	}
 
 	return nil
-}
-
-func (cmd *CLI) geResourceNameFromFilePath(file string) string {
-	var dir = filepath.Dir(file)
-	var ext = filepath.Ext(file)
-
-	name := file[len(dir)+1 : len(file)-len(ext)]
-
-	reg := regexp.MustCompile(`(^[0-9]+_)+(.*)`)
-	res := reg.ReplaceAllString(name, "${2}")
-
-	return res
 }
 
 func (cmd *CLI) getStockImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
@@ -324,7 +308,7 @@ func (cmd *CLI) getWalletImport(cliCtx *cli.Context, importPath string) ([]resou
 
 			if filepath.Ext(path) == ".csv" {
 				filePath := path
-				wName := cmd.geResourceNameFromFilePath(filePath)
+				wName := util.GeResourceNameFromFilePath(filePath)
 
 				if wName == walletName {
 					wis = append(wis, resourceImport{
@@ -342,7 +326,7 @@ func (cmd *CLI) getWalletImport(cliCtx *cli.Context, importPath string) ([]resou
 
 	} else if cliCtx.String("wallet") == "" && cliCtx.String("file") != "" {
 		filePath := cliCtx.String("file")
-		walletName := cmd.geResourceNameFromFilePath(filePath)
+		walletName := util.GeResourceNameFromFilePath(filePath)
 
 		wis = append(wis, resourceImport{
 			filePath:     filePath,
@@ -356,7 +340,7 @@ func (cmd *CLI) getWalletImport(cliCtx *cli.Context, importPath string) ([]resou
 
 			if filepath.Ext(path) == ".csv" {
 				filePath := path
-				walletName := cmd.geResourceNameFromFilePath(filePath)
+				walletName := util.GeResourceNameFromFilePath(filePath)
 				wis = append(wis, resourceImport{
 					filePath:     filePath,
 					resourceName: walletName,
