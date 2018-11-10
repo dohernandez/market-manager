@@ -96,6 +96,34 @@ func (f *stockDividendFinder) hydrate(tuple dividendTuple) dividend.StockDividen
 	}
 }
 
+func (f *stockDividendFinder) FindAllDividendsFromThisYearOn(ID uuid.UUID, year int) ([]dividend.StockDividend, error) {
+	var tuples []dividendTuple
+
+	query := `
+		SELECT *
+		FROM stock_dividend sd
+		WHERE sd.stock_id = $1 
+       	AND EXTRACT(YEAR FROM sd.ex_date) >= $2
+		ORDER BY sd.ex_date
+	`
+
+	err := sqlx.Select(f.db, &tuples, query, ID, year)
+	if err != nil {
+		return nil, errors.Wrapf(
+			err,
+			"FindDividendsByYearAndMonth with year: %q",
+			strconv.Itoa(year),
+		)
+	}
+
+	var ds []dividend.StockDividend
+	for _, tuple := range tuples {
+		ds = append(ds, f.hydrate(tuple))
+	}
+
+	return ds, nil
+}
+
 func (f *stockDividendFinder) FindAllDividendsFromThisYearAndMontOn(ID uuid.UUID, year, month int) ([]dividend.StockDividend, error) {
 	var tuples []dividendTuple
 
