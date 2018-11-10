@@ -150,10 +150,6 @@ func (h *walletDetails) loadWalletWithWalletItemsAndWalletTrades(name string, st
 		return nil, err
 	}
 
-	now := time.Now()
-	month := int(now.Month())
-	year := now.Year()
-
 	for _, i := range w.Items {
 		// Add this into go routing. Use the example explain in the page
 		// https://medium.com/@trevor4e/learning-gos-concurrency-through-illustrations-8c4aff603b3
@@ -170,15 +166,6 @@ func (h *walletDetails) loadWalletWithWalletItemsAndWalletTrades(name string, st
 		if err != nil {
 			return nil, err
 		}
-
-		ds, err := h.dividendFinder.FindAllDividendsFromThisYearAndMontOn(i.Stock.ID, year, month)
-		if err != nil {
-			if err != mm.ErrNotFound {
-				return nil, err
-			}
-		}
-
-		i.Stock.Dividends = ds
 
 		err = h.walletFinder.LoadTradeItemOperations(i)
 		if err != nil {
@@ -267,10 +254,6 @@ func (h *walletDetails) createOperation(
 }
 
 func (h *walletDetails) addBuysOperationToWallet(w *wallet.Wallet, buys map[string]int, commissions map[string]appCommand.Commission) error {
-	now := time.Now()
-	month := int(now.Month())
-	year := now.Year()
-
 	for symbol, amount := range buys {
 		stk, err := h.stockFinder.FindBySymbol(symbol)
 		if err != nil {
@@ -289,19 +272,6 @@ func (h *walletDetails) addBuysOperationToWallet(w *wallet.Wallet, buys map[stri
 
 		o := h.createOperation(stk, amount, operation.Buy, capitalRate, commissions)
 
-		ds, err := h.dividendFinder.FindAllDividendsFromThisYearAndMontOn(stk.ID, year, month)
-		if err != nil {
-			if err != mm.ErrNotFound {
-				return errors.Wrapf(
-					err,
-					"loading dividends for stock bought symbol [%s]",
-					stk.Symbol,
-				)
-			}
-		}
-
-		o.Stock.Dividends = ds
-
 		w.AddOperation(o)
 	}
 
@@ -311,25 +281,30 @@ func (h *walletDetails) addBuysOperationToWallet(w *wallet.Wallet, buys map[stri
 func (h *walletDetails) dividendsProjectedDate(w *wallet.Wallet, date time.Time) ([]render.WalletDividendProjected, error) {
 	var dividendsProjected []render.WalletDividendProjected
 
+	year := date.Year()
+
+	for _, item := range w.Items {
+		ds, err := h.dividendFinder.FindAllDividendsFromThisYearOn(item.Stock.ID, year)
+		if err != nil {
+			if err != mm.ErrNotFound {
+				return nil, errors.Wrapf(
+					err,
+					"loading dividends for stock bought symbol [%s]",
+					item.Stock.Symbol,
+				)
+			}
+		}
+
+		item.Stock.Dividends = ds
+	}
+
 	for i := 0; i < 3; i++ {
 		var netDividends float64
 
 		month := date.Month()
-		year := date.Year()
 
 		for _, item := range w.Items {
-			ds, err := h.dividendFinder.FindAllDividendsFromThisYearAndMontOn(item.Stock.ID, year, int(month))
-			if err != nil {
-				if err != mm.ErrNotFound {
-					return nil, errors.Wrapf(
-						err,
-						"loading dividends for stock bought symbol [%s]",
-						item.Stock.Symbol,
-					)
-				}
-			}
-
-			for _, d := range ds {
+			for _, d := range item.Stock.Dividends {
 				if d.ExDate.Month() == month && d.ExDate.Year() == year {
 					grossDividend := d.Amount.Amount * float64(item.Amount)
 
@@ -412,6 +387,11 @@ func (h *walletDetails) walletDetailOutput(w *wallet.Wallet, dividendsProjected 
 
 func (h *walletDetails) walletStocksOutput(w *wallet.Wallet, status operation.Status) []*render.WalletStockOutput {
 	var wSOutputs []*render.WalletStockOutput
+
+	now := time.Now()
+	year := now.Year()
+	month := now.Month()
+
 	for _, item := range w.Items {
 		if status == operation.Active && item.Amount == 0 {
 			continue
@@ -433,7 +413,22 @@ func (h *walletDetails) walletStocksOutput(w *wallet.Wallet, status operation.St
 		wAPrice := item.WeightedAveragePrice()
 
 		if len(item.Stock.Dividends) > 0 {
-			d := item.Stock.Dividends[0]
+			var d dividend.StockDividend
+
+			for _, sd := range item.Stock.Dividends {
+				if sd.ExDate.Year() >= year {
+					if sd.ExDate.Year() == year && sd.ExDate.Month() == month {
+						d = sd
+
+						break
+					} else if sd.ExDate.Year() > year {
+						d = sd
+
+						break
+					}
+				}
+			}
+
 			exDate = d.ExDate
 
 			if d.Amount.Amount > 0 {

@@ -470,11 +470,10 @@ func (w *Wallet) DividendNetProjectedNextYear(retention float64) mm.Value {
 	now := time.Now()
 	month := now.Month()
 	year := now.Year()
-	untilYear := now.Year() + 1
 
 	for _, item := range w.Items {
 		for _, d := range item.Stock.Dividends {
-			if (d.ExDate.Year() >= year && d.ExDate.Year() < untilYear) && d.ExDate.Month() >= month {
+			if d.ExDate.Year() == year && d.ExDate.Month() >= month {
 				if d.TodayStatus() == dividend.Payed {
 					continue
 				}
