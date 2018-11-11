@@ -84,18 +84,18 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	ccClient := cc.NewClient(cmd.newHTTPClient("CURRENCY-CONVERTER", timeout), cmd.cache)
 
 	// SCRAPER
-	//marketChameleonWWWUrlBuilder := service.NewStockScrapeMarketChameleonWWWUrlBuilder(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
-	//marketChameleonWWWHtmlParser := service.NewStockDividendMarketChameleonWWWHtmlParser(cmd.ctx)
+	marketChameleonWWWUrlBuilder := service.NewStockScrapeMarketChameleonWWWUrlBuilder(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
+	marketChameleonWWWHtmlParser := service.NewStockDividendMarketChameleonWWWHtmlParser(cmd.ctx)
 
-	marketChameleonFileUrlBuilder := service.NewStockScrapeMarketChameleonFileUrlBuilder(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonPath)
-	marketChameleonFileHtmlParser := service.NewStockDividendMarketChameleonFileHtmlParser(cmd.ctx)
+	//marketChameleonFileUrlBuilder := service.NewStockScrapeMarketChameleonFileUrlBuilder(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonPath)
+	//marketChameleonFileHtmlParser := service.NewStockDividendMarketChameleonFileHtmlParser(cmd.ctx)
 
 	// SERVICE
 	//stockPrice := service.NewBasicStockPrice(cmd.ctx, iexClient)
 	stockPriceScrapeYahooService := service.NewYahooScrapeStockPrice(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
 	stockPriceVolatilityMarketChameleonService := service.NewMarketChameleonStockPriceVolatility(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
-	//stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(cmd.ctx, marketChameleonWWWUrlBuilder, marketChameleonWWWHtmlParser)
-	stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(cmd.ctx, marketChameleonFileUrlBuilder, marketChameleonFileHtmlParser)
+	stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(cmd.ctx, marketChameleonWWWUrlBuilder, marketChameleonWWWHtmlParser)
+	//stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(cmd.ctx, marketChameleonFileUrlBuilder, marketChameleonFileHtmlParser)
 	stockSummaryMarketChameleonService := service.NewStockSummaryMarketChameleon(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)
 	stockSummaryYahooService := service.NewStockSummaryYahoo(cmd.ctx, cmd.config.QuoteScraper.FinanceYahooQuoteURL)
 
@@ -103,14 +103,15 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	importStocksHandler := handler.NewImportStock(marketFinder, exchangeFinder, stockInfoFinder, stockPersister, stockInfoPersister)
 	updateAllStockPriceHandler := handler.NewUpdateAllStockPrice(stockFinder)
 	updateOneStockPrice := handler.NewUpdateOneStockPrice(stockFinder)
+	updateWalletStocksPriceHandler := handler.NewUpdateWalletStocksPrice(walletFinder, stockFinder)
 	updateAllStockDividendHandler := handler.NewUpdateAllStockDividend(stockFinder)
 	updateOneStockDividendHandler := handler.NewUpdateOneStockDividend(stockFinder)
+	updateWalletStocksDividendHandler := handler.NewUpdateWalletStocksDividend(walletFinder, stockFinder)
 	importTransferHandler := handler.NewImportTransfer(bankAccountFinder, transferPersister, walletFinder, walletPersister)
 	importWalletHandler := handler.NewImportWallet(bankAccountFinder, walletPersister)
 	importOperationHandler := handler.NewImportOperation(stockFinder)
 	listStockHandler := handler.NewListStock(stockFinder, stockDividendFinder)
 	walletDetailsHandler := handler.NewWalletDetails(walletFinder, stockFinder, stockDividendFinder, ccClient, cmd.config.Degiro.Retention)
-	updateWalletStocksPriceHandler := handler.NewUpdateWalletStocksPrice(walletFinder, stockFinder)
 	reloadWalletHandler := handler.NewReloadWallet(walletFinder, walletReload)
 	importRetentionHandler := handler.NewImportRetention(stockFinder, walletFinder)
 	addOperationHandler := handler.NewAddOperation(stockFinder)
@@ -160,6 +161,14 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.ListenCommand(cbus.AfterSuccess, &updateOneStocksPrice, updateWalletCapital)
 	bus.ListenCommand(cbus.AfterSuccess, &updateOneStocksPrice, updateStockPriceVolatility)
 
+	// Update wallet stocks price
+	updateWalletStocksPrice := command.UpdateWalletStocksPrice{}
+	bus.Handle(&updateWalletStocksPrice, updateWalletStocksPriceHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockPrice)
+	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockDividendYield)
+	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateWalletCapital)
+	//bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockPriceVolatility)
+
 	// Update all stock dividends
 	updateAllStocksDividend := command.UpdateAllStockDividend{}
 	bus.Handle(&updateAllStocksDividend, updateAllStockDividendHandler)
@@ -171,6 +180,12 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	bus.Handle(&updateOneStocksDividend, updateOneStockDividendHandler)
 	bus.ListenCommand(cbus.AfterSuccess, &updateOneStocksDividend, updateStockDividend)
 	bus.ListenCommand(cbus.AfterSuccess, &updateOneStocksDividend, updateStockDividendYield)
+
+	// Update wallet stock dividends
+	updateWalletStocksDividend := command.UpdateWalletStocksDividend{}
+	bus.Handle(&updateWalletStocksDividend, updateWalletStocksDividendHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksDividend, updateStockDividend)
+	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksDividend, updateStockDividendYield)
 
 	// import transfer
 	importTransfer := command.ImportTransfer{}
@@ -193,14 +208,6 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 	// Wallet details
 	walletDetails := command.WalletDetails{}
 	bus.Handle(&walletDetails, walletDetailsHandler)
-
-	// Update wallet stocks price
-	updateWalletStocksPrice := command.UpdateWalletStocksPrice{}
-	bus.Handle(&updateWalletStocksPrice, updateWalletStocksPriceHandler)
-	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockPrice)
-	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockDividendYield)
-	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateWalletCapital)
-	//bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksPrice, updateStockPriceVolatility)
 
 	//Reload wallet
 	bus.Handle(&command.ReloadWallet{}, reloadWalletHandler)

@@ -179,6 +179,10 @@ func main() {
 									Name:  "stock, s",
 									Usage: "Stock symbol(tricker) to update price",
 								},
+								cli.StringFlag{
+									Name:  "wallet, w",
+									Usage: "Wallet name",
+								},
 							},
 						},
 					},

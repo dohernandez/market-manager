@@ -186,15 +186,20 @@ func (cmd *CLI) UpdateDividend(cliCtx *cli.Context) error {
 
 	bus := cmd.initCommandBus()
 
-	if cliCtx.String("stock") == "" {
-		_, err := bus.ExecuteContext(ctx, &command.UpdateAllStockDividend{})
+	if cliCtx.String("stock") != "" {
+		_, err := bus.ExecuteContext(ctx, &command.UpdateOneStockDividend{
+			Symbol: cliCtx.String("stock"),
+		})
+		if err != nil {
+			return err
+		}
+	} else if cliCtx.String("wallet") != "" {
+		_, err := bus.ExecuteContext(ctx, &command.UpdateWalletStocksDividend{Wallet: cliCtx.String("wallet")})
 		if err != nil {
 			return err
 		}
 	} else {
-		_, err := bus.ExecuteContext(ctx, &command.UpdateOneStockDividend{
-			Symbol: cliCtx.String("stock"),
-		})
+		_, err := bus.ExecuteContext(ctx, &command.UpdateAllStockDividend{})
 		if err != nil {
 			return err
 		}
