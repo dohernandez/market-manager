@@ -276,7 +276,7 @@ func (s *Account) SellStocksWallet(
 			return err
 		}
 
-		o := s.createOperation(stk, amount, operation.Sell, w.CurrentCapitalRate(), pChangeCommissions, commissions)
+		o := s.createOperation(stk, amount, operation.Sell, w.CurrentCapitalRate().EURUSD, pChangeCommissions, commissions)
 		w.AddOperation(o)
 	}
 
@@ -335,7 +335,7 @@ func (s *Account) BuyStocksWallet(
 			return err
 		}
 
-		o := s.createOperation(stk, amount, operation.Buy, w.CurrentCapitalRate(), pChangeCommissions, commissions)
+		o := s.createOperation(stk, amount, operation.Buy, w.CurrentCapitalRate().EURUSD, pChangeCommissions, commissions)
 
 		ds, err := s.stockDividendFinder.FindAllFormStock(o.Stock.ID)
 		if err != nil {

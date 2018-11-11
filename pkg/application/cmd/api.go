@@ -2,25 +2,21 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"os"
+	"sort"
+	"strings"
+	"text/tabwriter"
 	"time"
 
-	"github.com/urfave/cli"
-
-	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
-
-	"fmt"
-	"strings"
-
-	"os"
-	"text/tabwriter"
-
-	"sort"
-
 	"github.com/fatih/color"
+	"github.com/urfave/cli"
 	"github.com/yhat/scrape"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+
+	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
 // API ...
@@ -37,6 +33,11 @@ func NewAPI(baseCMD *Base) *API {
 
 // Run runs the application import data
 func (cmd *API) Run(cliCtx *cli.Context) error {
+	return cmd.Run1(cliCtx)
+}
+
+// Run runs the application import data
+func (cmd *API) Run1(cliCtx *cli.Context) error {
 	//ctx, cancelCtx := context.WithCancel(context.TODO())
 	//defer cancelCtx()
 
