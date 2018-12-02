@@ -55,6 +55,12 @@ Feature:
       | c1469b77-c18a-44e3-9ebd-c88221add9f8 | QUALCOMM INCORPORATED                 | NASDAQ          | stock       | QCOM   | 17635c1f-9058-4cd2-8f8b-e193db69cccf | 508b0f62-81a8-42ae-998a-d236a3eb1040 | ac9d5a3c-014a-4507-afb9-c1f44566d7ac | 04/1/2018         | 04/1/2018               |
       | e1c7a018-0107-4e70-9353-a043f8dd0a57 | BROOKFIELD INFRASTRUCTURE PARTNERS LP | NYSE            | stock       | BIP    | 1ed71ccc-b9ed-426c-93c4-25fac1ce5995 | c243d304-ddd9-4a4a-9a7a-5f0912930fb9 | 4fdfd84d-43cf-4234-ac0e-c42df60de5bb | 04/1/2018         | 04/1/2018               |
 
+    And when request currency converter:
+
+      | currency | value  |
+      | EUR_USD  | 1.1654 |
+      | EUR_CAD  | 0      |
+
   Scenario: Import operations
     When I add a new csv file "01_wallet.csv" to the "accounts" import folder with the following lines:
 
@@ -62,7 +68,7 @@ Feature:
       | 1 | 04/12/2017 | STARBUCKS CORPORATION | Compra | 4      | 177,50 | 1,1840       | 0,16                    | 599,82 | 0,51       |
       | 2 | 04/1/2018  | QUALCOMM INCORPORATED | Compra | 8      | 44,50  | 1,1640       | 0,16                    | 399,82 | 0,54       |
 
-    And I run a command "market-manager" with args "account import operation":
+    And I run a command "market-manager" with args "account import operation -w wallet":
     Then the following wallets should have:
 
       | id                                   | invested | funds   | commission |

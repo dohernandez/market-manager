@@ -24,6 +24,8 @@ func RegisterDBContext(s *godog.Suite, db *sqlx.DB) *DBContext {
 		db: db,
 		tables: []string{
 			"wallet_item",
+			"trade_operation",
+			"trade",
 			"operation",
 			"transfer",
 			"wallet_bank_account",

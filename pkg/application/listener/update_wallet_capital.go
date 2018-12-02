@@ -58,6 +58,8 @@ func (l *updateWalletCapital) OnEvent(ctx context.Context, event cbus.Event) {
 		return
 	}
 
+	//panic(fmt.Sprintf("%+v", currencyConverter))
+
 	capitalRate := wallet.CapitalRate{
 		EURUSD: currencyConverter.EURUSD,
 		EURCAD: currencyConverter.EURCAD,

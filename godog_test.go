@@ -14,6 +14,7 @@ import (
 	"github.com/DATA-DOG/godog/colors"
 	"github.com/jmoiron/sqlx"
 	"github.com/kelseyhightower/envconfig"
+	_ "github.com/lib/pq"
 
 	"github.com/dohernandez/market-manager/features/bootstrap"
 	"github.com/dohernandez/market-manager/pkg/application/config"
@@ -63,19 +64,21 @@ func FeatureContext(s *godog.Suite) {
 		log.Fatal(errors.New("can not run feature test in production"))
 	}
 
-	envconfig.Process("", &eUrls)
-
 	db, err := sqlx.Connect("postgres", conf.Database.DSN)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	envconfig.Process("", &eUrls)
+
 	yahooFinanceWeb := bootstrap.RegisterWireMockExtension(s, eUrls.FinanceYahooBaseURL)
 	query1FinanceWeb := bootstrap.RegisterWireMockExtension(s, eUrls.Query1YahooBaseURL)
+	currencyConverter := bootstrap.RegisterWireMockExtension(s, conf.CurrencyConverter.BaseURL)
 
 	bootstrap.RegisterDBContext(s, db)
 	bootstrap.RegisterCommandContext(s)
 	bootstrap.RegisterCsvFileContext(s, "resources/dev/import")
+	bootstrap.RegisterCurrencyConverterContext(s, currencyConverter)
 	bootstrap.RegisterStockCommandContext(s, db, yahooFinanceWeb, query1FinanceWeb)
 	bootstrap.RegisterAccountCommandContext(s, db)
 	bootstrap.RegisterBankingCommandContext(s, db)

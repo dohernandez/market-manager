@@ -6,17 +6,17 @@ import (
 	cache "github.com/patrickmn/go-cache"
 )
 
-const baseUrl = "http://free.currencyconverterapi.com/api/v5"
-
 // Client provides methods to interact with http://free.currencyconverterapi.com/ HTTP API for developers.
 type Client struct {
 	client *http.Client
 
+	baseUrl   string
 	Converter *converterEndpoint
 }
 
-func NewClient(client *http.Client, ch *cache.Cache) *Client {
+func NewClient(baseUrl string, client *http.Client, ch *cache.Cache) *Client {
 	c := Client{}
+	c.baseUrl = baseUrl
 	c.client = client
 
 	c.Converter = &converterEndpoint{

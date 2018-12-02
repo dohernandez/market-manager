@@ -102,7 +102,7 @@ deps-dev: deps-dev-overalls
 	@go get github.com/githubnemo/CompileDaemon
 
 deps-dev-overalls:
-	@printf "$(OK_COLOR)==> Installing overalls(NO_COLOR)\n"
+	@printf "$(OK_COLOR)==> Installing overalls$(NO_COLOR)\n"
 	@go get github.com/go-playground/overalls
 
 ### --------------------------------------------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ deps-dev-overalls:
 ### --------------------------------------------------------------------------------------------------------------------
 build:
 	@printf "$(OK_COLOR)==> Building Binary $(NO_COLOR)\n"
-	@go build -o ${BUILD_DIR}/${BINARY} ${GO_LINKER_FLAGS} ${BINARY_SRC}
+	go build -o ${BUILD_DIR}/${BINARY} ${GO_LINKER_FLAGS} ${BINARY_SRC}/cmd/${BINARY}
 
 build-docs:
 	@docker run --rm -w "/data/" -v `pwd`:/data mattjtodd/raml2html:7.0.0 raml2html  -i "docs/raml/api.raml" -o "docs/api.html"
@@ -120,10 +120,10 @@ build-docs:
 ### --------------------------------------------------------------------------------------------------------------------
 install:
 	@printf "$(OK_COLOR)==> Installing using go install$(NO_COLOR)\n"
-	@go install ${REPO}
+	@go install ${REPO}/cmd/${BINARY}
 
 codecov: deps-dev-overalls
-	@printf "$(OK_COLOR)==> Running code coverage $(NO_COLOR)\n"
+	@printf "$(OK_COLOR)==> Running code coverage$(NO_COLOR)\n"
 	@overalls -project=github.com/dohernandez/market-manager -ignore="adapter,vendor,.glide,common" -covermode=count
 
 ### --------------------------------------------------------------------------------------------------------------------
@@ -154,60 +154,62 @@ dev-migrate:
 dev-fix-style:
 	@./resources/dev/fix-style.sh
 
+### --------------------------------------------------------------------------------------------------------------------
 # Dev with docker
+### --------------------------------------------------------------------------------------------------------------------
 dev-docker-start:
 	@printf "$(OK_COLOR)==> Starting docker containers$(NO_COLOR)\n"
-	@docker-compose up -d
+	@docker-compose -f docker-compose.yml -f ./resources/dev/docker-compose.dev.yml -p market-manager-test up -d
 
 dev-docker-stop:
 	@printf "$(OK_COLOR)==> Stopping docker containers$(NO_COLOR)\n"
-	@docker-compose down
+	@docker-compose -f docker-compose.yml -f ./resources/dev/docker-compose.dev.yml -p market-manager-test down
 
 dev-docker-deps:
 	@printf "$(OK_COLOR)==> Installing dependencies using docker container$(NO_COLOR)\n"
-	@docker-compose exec http make deps
-	@docker-compose exec http make deps-dev
+	@docker-compose -f docker-compose.yml -f ./resources/dev/docker-compose.dev.yml -p market-manager-test exec http make deps
+	@docker-compose -f docker-compose.yml -f ./resources/dev/docker-compose.dev.yml -p market-manager-test exec http make deps-dev
 
 dev-docker-migration:
 	@printf "$(OK_COLOR)==> Running migration using docker container$(NO_COLOR)\n"
-	@docker-compose exec http market-manager migrate up
+	@docker-compose -f docker-compose.yml -f ./resources/dev/docker-compose.dev.yml -p market-manager-test exec http market-manager migrate up
 
 dev-docker-test-unit:
 	@printf "$(OK_COLOR)==> Running unit test using docker container$(NO_COLOR)\n"
 	@printf "Don't forget before run unit test to update deps\n"
-	@docker-compose exec http make test-unit
+	@docker-compose -f docker-compose.yml -f ./resources/dev/docker-compose.dev.yml -p market-manager-test exec http make test-unit
 
 dev-docker-test-integration:
 	@printf "$(OK_COLOR)==> Running integration test using docker container$(NO_COLOR)\n"
 	@printf "Don't forget before run integration test to update deps and run migration if need it\n"
-	@docker-compose exec http make test-integration TAGS=${TAGS} FEATURE=${FEATURE}
+	@docker-compose -f docker-compose.yml -f ./resources/dev/docker-compose.dev.yml -p market-manager-test exec http make test-integration TAGS=${TAGS} FEATURE=${FEATURE}
 
 dev-docker-logs:
-	@docker-compose logs -f ${CONTAINER}
+	@docker-compose -f docker-compose.yml -f ./resources/dev/docker-compose.dev.yml -p market-manager-test logs -f ${CONTAINER}
 
 dev-docker-bash:
-	@docker-compose exec ${CONTAINER} bash
+	@docker-compose -f docker-compose.yml -f ./resources/dev/docker-compose.dev.yml -p market-manager-test exec ${CONTAINER} bash
 
 ### --------------------------------------------------------------------------------------------------------------------
 # Prod with docker
 ### --------------------------------------------------------------------------------------------------------------------
 prod-docker-start:
 	@printf "$(OK_COLOR)==> Starting docker containers$(NO_COLOR)\n"
-	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+	@docker-compose -p market-manager up -d
 
 prod-docker-stop:
 	@printf "$(OK_COLOR)==> Stopping docker containers$(NO_COLOR)\n"
-	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml down
+	@docker-compose -p market-manager down
 
 prod-docker-migration:
 	@printf "$(OK_COLOR)==> Running migration using docker container$(NO_COLOR)\n"
-	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec http market-manager migrate up
+	@docker-compose -p market-manager exec http market-manager migrate up
 
 prod-docker-logs:
-	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f ${CONTAINER}
+	@docker-compose -p market-manager logs -f ${CONTAINER}
 
 prod-docker-bash:
-	@docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec ${CONTAINER} bash
+	@docker-compose -p market-manager exec ${CONTAINER} bash
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### RULES

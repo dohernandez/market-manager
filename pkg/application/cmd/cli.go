@@ -3,32 +3,22 @@ package cmd
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"os"
-	"path"
-	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/gogolfing/cbus"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 
+	"github.com/dohernandez/market-manager/pkg/application/cmd/cli"
 	"github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/render"
 	"github.com/dohernandez/market-manager/pkg/application/storage"
 	"github.com/dohernandez/market-manager/pkg/application/util"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
-	"github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 )
 
 type (
-	resourceImport struct {
-		filePath     string
-		resourceName string
-	}
-
 	CLI struct {
 		*Base
 		resourceStorage util.ResourceStorage
@@ -70,116 +60,6 @@ func (cmd *CLI) UpdatePrice(cliCtx *cli.Context) error {
 	return nil
 }
 
-func (cmd *CLI) ImportStock(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
-	defer cancelCtx()
-
-	bus := cmd.initCommandBus()
-
-	ris, err := cmd.getStockImport(cliCtx, cmd.config.Import.StocksPath)
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	err = cmd.runImport(ctx, bus, "stocks", ris, func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error {
-		_, err := bus.ExecuteContext(ctx, &command.ImportStock{FilePath: ri.filePath})
-		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
-		}
-
-		return nil
-	})
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	logger.FromContext(ctx).Info("Import finished")
-
-	return nil
-}
-
-func (cmd *CLI) runImport(
-	ctx context.Context,
-	bus *cbus.Bus,
-	resourceType string,
-	ris []resourceImport,
-	fn func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error,
-) error {
-	irs, err := cmd.resourceStorage.FindAllByResource(resourceType)
-	if err != nil {
-		if err != mm.ErrNotFound {
-			return err
-		}
-
-		irs = []util.Resource{}
-	}
-
-	for _, ri := range ris {
-		fileName := path.Base(ri.filePath)
-
-		var found bool
-		for _, ir := range irs {
-			if ir.FileName == fileName {
-				found = true
-
-				break
-			}
-		}
-
-		if !found {
-			logger.FromContext(ctx).Infof("Importing file %s", fileName)
-
-			if err := fn(ctx, bus, ri); err != nil {
-				return err
-			}
-
-			ir := util.NewResource(resourceType, fileName)
-			err := cmd.resourceStorage.Persist(ir)
-			if err != nil {
-				return err
-			}
-
-			logger.FromContext(ctx).Infof("Imported file %s", fileName)
-		}
-	}
-
-	return nil
-}
-
-func (cmd *CLI) getStockImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
-	var ris []resourceImport
-
-	if cliCtx.String("file") != "" {
-		filePath := fmt.Sprintf("%s/%s.csv", importPath, cliCtx.String("file"))
-
-		ris = append(ris, resourceImport{
-			filePath:     filePath,
-			resourceName: "",
-		})
-	} else {
-		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() {
-				return nil
-			}
-
-			if filepath.Ext(path) == ".csv" {
-				filePath := path
-				ris = append(ris, resourceImport{
-					filePath:     filePath,
-					resourceName: "",
-				})
-			}
-
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ris, nil
-}
-
 func (cmd *CLI) UpdateDividend(cliCtx *cli.Context) error {
 	ctx, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
@@ -210,184 +90,104 @@ func (cmd *CLI) UpdateDividend(cliCtx *cli.Context) error {
 	return nil
 }
 
-func (cmd *CLI) ImportTransfer(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
+func (cmd *CLI) ImportStock(cliCtx *cli.Context) error {
+	ctxt, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
-	bus := cmd.initCommandBus()
+	return cmd_cli.Import(
+		ctxt,
+		func(_ context.Context, ri cmd_cli.ResourceImport) (interface{}, error) {
+			bus := cmd.initCommandBus()
 
-	ris, err := cmd.getTransferImport(cliCtx, cmd.config.Import.TransfersPath)
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	err = cmd.runImport(ctx, bus, "transfers", ris, func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error {
-		_, err := bus.ExecuteContext(ctx, &command.ImportTransfer{FilePath: ri.filePath})
-		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
-		}
-
-		return nil
-	})
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	logger.FromContext(ctx).Info("Import finished")
-
-	return nil
+			return bus.ExecuteContext(ctxt, &command.ImportStock{FilePath: ri.FilePath})
+		},
+		cmd.resourceStorage,
+		"stocks",
+		cmd.config.Import.StocksPath,
+		cliCtx.String("file"),
+		"",
+	)
 }
 
-func (cmd *CLI) getTransferImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
-	var ris []resourceImport
+func (cmd *CLI) ImportTransfer(cliCtx *cli.Context) error {
+	ctxt, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
 
-	if cliCtx.String("file") != "" {
-		ris = append(ris, resourceImport{
-			filePath:     cliCtx.String("file"),
-			resourceName: "",
-		})
-	} else {
-		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() {
-				return nil
-			}
+	return cmd_cli.Import(
+		ctxt,
+		func(ctx context.Context, ri cmd_cli.ResourceImport) (interface{}, error) {
+			bus := cmd.initCommandBus()
 
-			if filepath.Ext(path) == ".csv" {
-				filePath := path
-
-				ris = append(ris, resourceImport{
-					filePath:     filePath,
-					resourceName: "",
-				})
-			}
-
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ris, nil
+			return bus.ExecuteContext(ctx, &command.ImportTransfer{FilePath: ri.FilePath})
+		},
+		cmd.resourceStorage,
+		"transfers",
+		cmd.config.Import.TransfersPath,
+		cliCtx.String("file"),
+		"",
+	)
 }
 
 // ImportWallet
 func (cmd *CLI) ImportWallet(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
+	ctxt, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
-	bus := cmd.initCommandBus()
+	return cmd_cli.Import(
+		ctxt,
+		func(ctx context.Context, ri cmd_cli.ResourceImport) (interface{}, error) {
+			bus := cmd.initCommandBus()
 
-	wis, err := cmd.getWalletImport(cliCtx, cmd.config.Import.WalletsPath)
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	err = cmd.runImport(ctx, bus, "wallets", wis, func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error {
-		_, err := bus.ExecuteContext(ctx, &command.ImportWallet{FilePath: ri.filePath, Name: ri.resourceName})
-		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
-		}
-
-		return nil
-	})
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	logger.FromContext(ctx).Info("Import finished")
-
-	return nil
-}
-
-func (cmd *CLI) getWalletImport(cliCtx *cli.Context, importPath string) ([]resourceImport, error) {
-	var wis []resourceImport
-
-	if cliCtx.String("file") == "" && cliCtx.String("wallet") != "" {
-		walletName := cliCtx.String("wallet")
-
-		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() {
-				return nil
-			}
-
-			if filepath.Ext(path) == ".csv" {
-				filePath := path
-				wName := util.GeResourceNameFromFilePath(filePath)
-
-				if wName == walletName {
-					wis = append(wis, resourceImport{
-						filePath:     filePath,
-						resourceName: wName,
-					})
-				}
-			}
-
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-
-	} else if cliCtx.String("wallet") == "" && cliCtx.String("file") != "" {
-		filePath := cliCtx.String("file")
-		walletName := util.GeResourceNameFromFilePath(filePath)
-
-		wis = append(wis, resourceImport{
-			filePath:     filePath,
-			resourceName: walletName,
-		})
-	} else {
-		err := filepath.Walk(importPath, func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() {
-				return nil
-			}
-
-			if filepath.Ext(path) == ".csv" {
-				filePath := path
-				walletName := util.GeResourceNameFromFilePath(filePath)
-				wis = append(wis, resourceImport{
-					filePath:     filePath,
-					resourceName: walletName,
-				})
-			}
-
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return wis, nil
+			return bus.ExecuteContext(ctx, &command.ImportWallet{FilePath: ri.FilePath, Name: ri.ResourceName})
+		},
+		cmd.resourceStorage,
+		"wallets",
+		cmd.config.Import.WalletsPath,
+		cliCtx.String("file"),
+		cliCtx.String("wallet"),
+	)
 }
 
 func (cmd *CLI) ImportOperation(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
+	ctxt, cancelCtx := context.WithCancel(context.TODO())
 	defer cancelCtx()
 
-	bus := cmd.initCommandBus()
+	return cmd_cli.Import(
+		ctxt,
+		func(ctx context.Context, ri cmd_cli.ResourceImport) (interface{}, error) {
+			bus := cmd.initCommandBus()
 
-	ois, err := cmd.getWalletImport(cliCtx, cmd.config.Import.AccountsPath)
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
+			return bus.ExecuteContext(ctx, &command.ImportOperation{FilePath: ri.FilePath, Wallet: ri.ResourceName})
+		},
+		cmd.resourceStorage,
+		"accounts",
+		cmd.config.Import.AccountsPath,
+		cliCtx.String("file"),
+		"",
+	)
+}
+
+func (cmd *CLI) ImportDividendRetention(cliCtx *cli.Context) error {
+	ctxt, cancelCtx := context.WithCancel(context.TODO())
+	defer cancelCtx()
+
+	if cliCtx.String("wallet") == "" {
+		logger.FromContext(ctxt).Fatal("Missing wallet name")
 	}
 
-	err = cmd.runImport(ctx, bus, "accounts", ois, func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error {
-		_, err := bus.ExecuteContext(ctx, &command.ImportOperation{FilePath: ri.filePath, Wallet: ri.resourceName})
-		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
-		}
+	return cmd_cli.Import(
+		ctxt,
+		func(ctx context.Context, ri cmd_cli.ResourceImport) (interface{}, error) {
+			bus := cmd.initCommandBus()
 
-		return nil
-	})
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	logger.FromContext(ctx).Info("Import finished")
-
-	return nil
+			return bus.ExecuteContext(ctx, &command.ImportRetention{FilePath: ri.FilePath, Wallet: ri.ResourceName})
+		},
+		cmd.resourceStorage,
+		"retentions",
+		cmd.config.Import.RetentionsPath,
+		cliCtx.String("file"),
+		cliCtx.String("wallet"),
+	)
 }
 
 // List in csv format the wallet items from a wallet
@@ -569,38 +369,6 @@ func (cmd *CLI) ReloadWallet(cliCtx *cli.Context) error {
 	}
 
 	logger.FromContext(ctx).Info("Reloading finished")
-
-	return nil
-}
-
-func (cmd *CLI) ImportDividendRetention(cliCtx *cli.Context) error {
-	ctx, cancelCtx := context.WithCancel(context.TODO())
-	defer cancelCtx()
-
-	if cliCtx.String("wallet") == "" {
-		logger.FromContext(ctx).Fatal("Missing wallet name")
-	}
-
-	bus := cmd.initCommandBus()
-
-	ois, err := cmd.getWalletImport(cliCtx, cmd.config.Import.RetentionsPath)
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	err = cmd.runImport(ctx, bus, "retentions", ois, func(ctx context.Context, bus *cbus.Bus, ri resourceImport) error {
-		_, err := bus.ExecuteContext(ctx, &command.ImportRetention{FilePath: ri.filePath, Wallet: ri.resourceName})
-		if err != nil {
-			logger.FromContext(ctx).WithError(err).Fatal("Failed importing %s", ri.filePath)
-		}
-
-		return nil
-	})
-	if err != nil {
-		logger.FromContext(ctx).WithError(err).Fatal("Failed importing")
-	}
-
-	logger.FromContext(ctx).Info("Import finished")
 
 	return nil
 }

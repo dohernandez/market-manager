@@ -67,13 +67,17 @@
   version = "1.7.0"
 
 [[constraint]]
-  name = "github.com/jasonlvhit/gocron"
-  branch = "master"
-
-[[constraint]]
   name = "github.com/yhat/scrape"
   branch = "master"
 
 [[constraint]]
   name = "github.com/gogolfing/cbus"
   version = "3.1.0"
+
+[[constraint]]
+  name = "github.com/gocolly/colly"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/chromedp/chromedp"
+  version = "v0.1.2"
