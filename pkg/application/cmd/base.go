@@ -81,7 +81,7 @@ func (cmd *Base) initCommandBus() *cbus.Bus {
 
 	// CLIENT
 	timeout := time.Second * time.Duration(cmd.config.CurrencyConverter.Timeout)
-	ccClient := cc.NewClient(cmd.newHTTPClient("CURRENCY-CONVERTER", timeout), cmd.cache)
+	ccClient := cc.NewClient(cmd.config.CurrencyConverter.BaseURL, cmd.newHTTPClient("CURRENCY-CONVERTER", timeout), cmd.cache)
 
 	// SCRAPER
 	marketChameleonWWWUrlBuilder := service.NewStockScrapeMarketChameleonWWWUrlBuilder(cmd.ctx, cmd.config.QuoteScraper.MarketChameleonURL)

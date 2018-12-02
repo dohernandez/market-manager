@@ -1,6 +1,22 @@
 version: '2'
 services:
-  finance-yahoo:
-      image: rodolpheche/wiremock:2.15.0
-      ports:
-        - '9080:8080'
+  http:
+    extends: base
+    env_file: .env
+    depends_on:
+    - postgres
+    ports:
+    - '9082:8081'
+    command: "make dev-run-http"
+
+  postgres:
+    image: postgres:10.1
+    ports:
+    - '4532:5432'
+    volumes:
+    - ./resources/postgresql/data:/var/lib/postgresql/data
+    environment:
+      LC_ALL: C.UTF-8
+      POSTGRES_DB: market-manager-service
+      POSTGRES_USER: mms
+      POSTGRES_PASSWORD: mms4you

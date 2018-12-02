@@ -1,19 +1,14 @@
 automation/roles/external
 vendor/
-.env.dev
-.env.prod
+.env
 
 # Code coverage
 *.coverprofile
 
 docs/api.html
 
-resources/import/accounts/
-resources/import/dividends/
-resources/import/transfers/
-resources/import/wallets/
-resources/import/retentions/
-
+resources/import/*
+!resources/import/stocks
 !resources/import/*/.gitkeep
 
 resources/postgresql/data/

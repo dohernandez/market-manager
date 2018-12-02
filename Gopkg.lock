@@ -22,12 +22,83 @@
   revision = "316a6e2335b3b1b69e8b4faecbf3ac26a1aa3619"
 
 [[projects]]
+  branch = "master"
+  digest = "1:86dd96ca2595b550dc25839483feef3e28de790a6ee1cde38172adf1fa7148ea"
+  name = "github.com/chromedp/cdproto"
+  packages = [
+    ".",
+    "accessibility",
+    "animation",
+    "applicationcache",
+    "audits",
+    "browser",
+    "cachestorage",
+    "cdp",
+    "css",
+    "database",
+    "debugger",
+    "deviceorientation",
+    "dom",
+    "domdebugger",
+    "domsnapshot",
+    "domstorage",
+    "emulation",
+    "fetch",
+    "headlessexperimental",
+    "heapprofiler",
+    "indexeddb",
+    "input",
+    "inspector",
+    "io",
+    "layertree",
+    "log",
+    "memory",
+    "network",
+    "overlay",
+    "page",
+    "performance",
+    "profiler",
+    "runtime",
+    "security",
+    "serviceworker",
+    "storage",
+    "systeminfo",
+    "target",
+    "testing",
+    "tethering",
+    "tracing",
+  ]
+  pruneopts = ""
+  revision = "6fb67cb3bc6279b18f267437b6a0d2b7c06d8742"
+
+[[projects]]
+  digest = "1:f8d22d4043e7e00272197975075e9a36e3ab6f907f19083be3ef1ce5555390fc"
+  name = "github.com/chromedp/chromedp"
+  packages = [
+    ".",
+    "client",
+    "kb",
+    "runner",
+  ]
+  pruneopts = ""
+  revision = "34591780d9d429c470ccf81a2760c40245fc823a"
+  version = "v0.1.2"
+
+[[projects]]
   digest = "1:56c130d885a4aacae1dd9c7b71cfe39912c7ebc1ff7d2b46083c8812996dc43b"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = ""
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
+
+[[projects]]
+  digest = "1:1edcb8e554be820ed5767bf936a933f692043a0e60b29a9a1d43f8594a6124d9"
+  name = "github.com/disintegration/imaging"
+  packages = ["."]
+  pruneopts = ""
+  revision = "0bd5694c78c9c3d9a3cd06a706a8f3c59296a9ac"
+  version = "v1.5.0"
 
 [[projects]]
   digest = "1:aa59ed446bcbca1cb4733ecd6be1cd36b81c5a019bb47b72b0f528f3a106e1cd"
@@ -89,6 +160,14 @@
   version = "v3.1.0"
 
 [[projects]]
+  digest = "1:09aa5dd1332b93c96bde671bafb053249dc813febf7d5ca84e8f382ba255d67d"
+  name = "github.com/gorilla/websocket"
+  packages = ["."]
+  pruneopts = ""
+  revision = "66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d"
+  version = "v1.4.0"
+
+[[projects]]
   branch = "master"
   digest = "1:b8776d99ac570b2cec6152d3491ad78b70d93843c5a2c7fa4e0496a7cec45e19"
   name = "github.com/jmoiron/sqlx"
@@ -109,6 +188,22 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:99bce57e3bcada19dd332206dba47e8e515bb1e2825a4555e0fbcaf39209cce5"
+  name = "github.com/knq/snaker"
+  packages = ["."]
+  pruneopts = ""
+  revision = "d9ad1e7f342a5b58202aa92c5f1106d7bb8b9c73"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b46bf4f838d75a473133c853d30cde75619074a53d5094f4453266f38f979ccb"
+  name = "github.com/knq/sysutil"
+  packages = ["."]
+  pruneopts = ""
+  revision = "0218e141a794643e8c0fa283b9cd076fc0df662d"
+
+[[projects]]
+  branch = "master"
   digest = "1:8f0ecac344e2c0a4a55df0306994ed2ce3b9e9598da959ce4e5831aaa05f1e1e"
   name = "github.com/lib/pq"
   packages = [
@@ -117,6 +212,19 @@
   ]
   pruneopts = ""
   revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
+
+[[projects]]
+  branch = "master"
+  digest = "1:212bebc561f4f654a653225868b2a97353cd5e160dc0b0bbc7232b06608474ec"
+  name = "github.com/mailru/easyjson"
+  packages = [
+    ".",
+    "buffer",
+    "jlexer",
+    "jwriter",
+  ]
+  pruneopts = ""
+  revision = "60711f1a8329503b04e1c88535f419d0bb440bff"
 
 [[projects]]
   branch = "master"
@@ -241,6 +349,18 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:1da7ae3598dc309aa0bfb82f6ea370a32dc184998aebe8f8a04e8702ed628cb1"
+  name = "golang.org/x/image"
+  packages = [
+    "bmp",
+    "tiff",
+    "tiff/lzw",
+  ]
+  pruneopts = ""
+  revision = "249dc8530c0efc2766606a940c1c50b434b2f1cd"
+
+[[projects]]
+  branch = "master"
   digest = "1:c4009838d5e021df996b864edd8847de1a59db8b2878a04a449a7b5e74a56cd5"
   name = "golang.org/x/net"
   packages = [
@@ -269,6 +389,8 @@
     "github.com/DATA-DOG/godog/colors",
     "github.com/DATA-DOG/godog/gherkin",
     "github.com/almerlucke/go-iban/iban",
+    "github.com/chromedp/cdproto/cdp",
+    "github.com/chromedp/chromedp",
     "github.com/dohernandez/go-quote",
     "github.com/dohernandez/googlefinance-client-go",
     "github.com/f2prateek/train",

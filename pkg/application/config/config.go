@@ -32,7 +32,8 @@ type Specification struct {
 		Timeout int `envconfig:"IEX_TRADING_TIMEOUT" default:"30"`
 	}
 	CurrencyConverter struct {
-		Timeout int `envconfig:"CURRENCY_CONVERTER_TIMEOUT" default:"15"`
+		BaseURL string `envconfig:"CURRENCY_CONVERTER_BASEURL" default:"http://free.currencyconverterapi.com/"`
+		Timeout int    `envconfig:"CURRENCY_CONVERTER_TIMEOUT" default:"15"`
 	}
 	QuoteScraper struct {
 		FinanceYahooBaseURL  string `envconfig:"FINANCE_YAHOO_BASEURL" default:"https://finance.yahoo.com"`

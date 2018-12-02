@@ -1,0 +1,31 @@
+version: '2'
+services:
+  base:
+    build:
+      context: .
+      dockerfile: ./resources/dev/Dockerfile
+
+  http:
+    extends: base
+    env_file: ./resources/dev/.env
+    depends_on:
+      - postgres
+      - wiremock
+    ports:
+      - '9083:8081'
+    command: "make dev-run-http"
+
+  postgres:
+    image: postgres:10.1
+    ports:
+      - '4533:5432'
+    environment:
+      LC_ALL: C.UTF-8
+      POSTGRES_DB: market-manager-service-dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev4you
+
+  wiremock:
+    image: rodolpheche/wiremock:2.15.0
+    ports:
+    - '9080:8080'

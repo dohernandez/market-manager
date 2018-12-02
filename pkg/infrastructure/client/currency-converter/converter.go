@@ -9,7 +9,7 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-const converterUrl = "%s/convert?q=%s&compact=ultra"
+const converterUrl = "%s/api/v5/convert?q=%s&compact=ultra"
 
 type (
 	converterEndpoint struct {
@@ -53,7 +53,7 @@ func (e *converterEndpoint) Get() (Converter, error) {
 }
 
 func (e *converterEndpoint) eurUSD(c *Converter) error {
-	url := fmt.Sprintf(converterUrl, baseUrl, "EUR_USD")
+	url := fmt.Sprintf(converterUrl, e.base.baseUrl, "EUR_USD")
 
 	resp, err := e.base.client.Get(url)
 	if err != nil {
@@ -71,7 +71,7 @@ func (e *converterEndpoint) eurUSD(c *Converter) error {
 }
 
 func (e *converterEndpoint) eurCAD(c *Converter) error {
-	url := fmt.Sprintf(converterUrl, baseUrl, "EUR_CAD")
+	url := fmt.Sprintf(converterUrl, e.base.baseUrl, "EUR_CAD")
 
 	resp, err := e.base.client.Get(url)
 	if err != nil {
