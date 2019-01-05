@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+
 	"golang.org/x/net/html"
+
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 )
 
