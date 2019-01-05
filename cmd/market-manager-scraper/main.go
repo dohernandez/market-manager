@@ -2,56 +2,101 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-
 	"time"
 
-	"strings"
-
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
+	"github.com/gogolfing/cbus"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq" // enable postgres driver
+	"github.com/sirupsen/logrus"
+
+	"github.com/dohernandez/market-manager/pkg/application/command"
+	"github.com/dohernandez/market-manager/pkg/application/handler"
+	"github.com/dohernandez/market-manager/pkg/application/listener"
+	"github.com/dohernandez/market-manager/pkg/application/service"
+	"github.com/dohernandez/market-manager/pkg/application/storage"
+	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 )
 
 func main() {
 	// create context
 	ctxt, cancel := context.WithCancel(context.Background())
 
-	c, err := chromedp.New(ctxt, chromedp.WithLog(log.Printf))
+	// Init logger
+	log := logrus.StandardLogger()
+	level, err := logrus.ParseLevel("debug")
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatal("Parsing LogLevel fails.")
+	}
+	log.SetLevel(level)
+	logrus.SetFormatter(&logrus.JSONFormatter{FieldMap: logrus.FieldMap{
+		logrus.FieldKeyTime: "@timestamp",
+		logrus.FieldKeyMsg:  "message",
+	}})
+
+	logger.SetLogger(log)
+
+	// Init postgres connection
+	db, err := sqlx.Connect("postgres", "postgres://mms:mms4you@127.0.0.1:4532/market-manager-service?sslmode=disable&client_encoding=UTF8")
+	if err != nil {
+		log.WithError(err).Fatal(err, "Connecting to postgres fails")
 	}
 
+	// Init chromedp
+	cdp, err := chromedp.New(ctxt)
+	if err != nil {
+		log.WithError(err).Fatal("Init chromedp fails.")
+	}
 	defer func() {
-		log.Println("main defer")
-		shutdown(ctxt, c, cancel)
+		shutdown(ctxt, cdp, cancel)
 	}()
 
-	handleGracefulShutdown(ctxt, c, cancel)
+	handleGracefulShutdown(ctxt, cdp, cancel)
 
-	var stocks []string
-	for _, s := range []string{
-		"LLY",
-		"CSCO",
-		"VZ",
-		"SBUX",
-		"V",
-	} {
-		// run task list
-		res, err := runTaskList(ctxt, c, s)
-		if err != nil {
-			log.Println(err)
-		}
+	// FINDER
+	stockFinder := storage.NewStockFinder(db)
+	walletFinder := storage.NewWalletFinder(db)
+	stockDividendFinder := storage.NewStockDividendFinder(db)
 
-		stocks = append(stocks, fmt.Sprintf("\"%s\": %s", s, res.(string)))
+	// PERSISTER
+	stockDividendPersister := storage.NewStockDividendPersister(db)
+	stockPersister := storage.NewStockPersister(db)
 
-		time.Sleep(5 * time.Second)
+	// SCRAPER
+	marketChameleonWWWUrlBuilder := service.NewStockScrapeMarketChameleonWWWUrlBuilder(ctxt, "https://marketchameleon.com/Overview")
+	marketChameleonWWWHtmlParser := service.NewStockDividendMarketChameleonChromedpParser(ctxt, cdp)
+
+	// SERVICE
+	stockDividendMarketChameleonService := service.NewStockDividendMarketChameleon(ctxt, marketChameleonWWWUrlBuilder, marketChameleonWWWHtmlParser)
+
+	// HANDLER
+	updateWalletStocksDividendHandler := handler.NewUpdateWalletStocksDividend(walletFinder, stockFinder)
+
+	// LISTENER
+	updateStockDividend := listener.NewUpdateStockDividend(stockDividendPersister, stockDividendMarketChameleonService)
+	updateStockDividend.WithConcurrency(1)
+	updateStockDividend.WithSleep(5)
+	updateStockDividendYield := listener.NewUpdateStockDividendYield(stockDividendFinder, stockPersister)
+	// COMMAND BUS
+	bus := cbus.Bus{}
+
+	// Update wallet stock dividends
+	updateWalletStocksDividend := command.UpdateWalletStocksDividend{}
+	bus.Handle(&updateWalletStocksDividend, updateWalletStocksDividendHandler)
+	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksDividend, updateStockDividend)
+	bus.ListenCommand(cbus.AfterSuccess, &updateWalletStocksDividend, updateStockDividendYield)
+
+	walletName := "degiro"
+	_, err = bus.ExecuteContext(ctxt, &command.UpdateWalletStocksDividend{Wallet: walletName})
+	if err != nil {
+		logger.FromContext(ctxt).WithError(err).Error("fail")
 	}
 
-	log.Printf("overview: {%s}", strings.Join(stocks, ", "))
+	logger.FromContext(ctxt).Info("finish successful")
 }
 
 func handleGracefulShutdown(ctxt context.Context, c *chromedp.CDP, cancel func()) {
@@ -94,69 +139,4 @@ func shutdown(ctxt context.Context, c *chromedp.CDP, cancel func()) {
 	if cancel != nil {
 		cancel()
 	}
-}
-
-const textJS = `(function(a) {
-		var s = '';
-		for (var i = 0; i < a.length; i++) {
-			var current = a[i];
-			
-			// Looping over tbody
-			if (current.offsetParent !== null && current.nodeName == 'TBODY') {
-
-				// Check the TBODY has children
-				if(current.children && current.children.length > 0) {
-					var dict = [];
-
-					for(var j = 0; j < current.children.length; j++) {
-						var child = current.children[j];
-
-						// Check the TR has children
-						if(child.children && child.children.length > 0) {
-							
-							dict.push({
-    							ex_dates: child.children[0].textContent,
-								r_date: child.children[1].textContent,
-								p_date: child.children[2].textContent,
-								status: child.children[3].textContent,
-								amount: child.children[5].textContent
-							});
-						}
-					}
-					s += JSON.stringify(dict);
-				}
-			}
-		}
-
-		return s;
-	})($x('%s/node()'))`
-
-func runTaskList(ctxt context.Context, c *chromedp.CDP, stock string) (interface{}, error) {
-	ctxtRun, cancelRun := context.WithTimeout(ctxt, 25*time.Second)
-	defer func() {
-		log.Println("runTaskList defer")
-		cancelRun()
-	}()
-
-	//var res []*cdp.Node
-	var res string
-	sel := `future_divs`
-
-	err := c.Run(ctxtRun, chromedp.Tasks{
-		chromedp.Navigate(fmt.Sprintf(`https://marketchameleon.com/Overview/%s/Dividends/`, stock)),
-		chromedp.Sleep(2 * time.Second),
-		chromedp.WaitReady(sel, chromedp.ByID),
-		chromedp.QueryAfter(sel, func(ctxt context.Context, h *chromedp.TargetHandler, nodes ...*cdp.Node) error {
-			if len(nodes) < 1 {
-				return fmt.Errorf("selector `%s` did not return any nodes", sel)
-			}
-
-			return chromedp.EvaluateAsDevTools(fmt.Sprintf(textJS, nodes[0].FullXPath()), &res).Do(ctxt, h)
-		}),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
 }

@@ -1,6 +1,6 @@
 package stock
 
-import "github.com/satori/go.uuid"
+import uuid "github.com/satori/go.uuid"
 
 type (
 	Finder interface {

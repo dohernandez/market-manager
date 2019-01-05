@@ -9,9 +9,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
-	"github.com/dohernandez/market-manager/pkg/market-manager"
+	mm "github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/exchange"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/market"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -49,7 +49,7 @@ type (
 	}
 )
 
-var _ stock.Finder = &stockFinder{}
+var _ stock.Finder = new(stockFinder)
 
 func NewStockFinder(db sqlx.Queryer) *stockFinder {
 	return &stockFinder{

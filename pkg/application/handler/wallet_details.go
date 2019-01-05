@@ -9,9 +9,9 @@ import (
 
 	appCommand "github.com/dohernandez/market-manager/pkg/application/command"
 	"github.com/dohernandez/market-manager/pkg/application/render"
-	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
+	cc "github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
-	"github.com/dohernandez/market-manager/pkg/market-manager"
+	mm "github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/wallet"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
@@ -417,7 +417,7 @@ func (h *walletDetails) walletStocksOutput(w *wallet.Wallet, status operation.St
 
 			for _, sd := range item.Stock.Dividends {
 				if sd.ExDate.Year() >= year {
-					if sd.ExDate.Year() == year && sd.ExDate.Month() == month {
+					if sd.ExDate.Year() == year && sd.ExDate.Month() >= month {
 						d = sd
 
 						break

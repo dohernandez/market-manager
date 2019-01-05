@@ -9,7 +9,7 @@ import (
 	"github.com/f2prateek/train"
 	"github.com/gogolfing/cbus"
 	"github.com/jmoiron/sqlx"
-	"github.com/patrickmn/go-cache"
+	cache "github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/sony/gobreaker"
@@ -21,7 +21,7 @@ import (
 	"github.com/dohernandez/market-manager/pkg/application/service"
 	"github.com/dohernandez/market-manager/pkg/application/storage"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/client"
-	"github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
+	cc "github.com/dohernandez/market-manager/pkg/infrastructure/client/currency-converter"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
 )
 

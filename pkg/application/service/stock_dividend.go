@@ -15,9 +15,11 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
+	"github.com/chromedp/chromedp"
+
 	"github.com/dohernandez/market-manager/pkg/application/util"
 	"github.com/dohernandez/market-manager/pkg/infrastructure/logger"
-	"github.com/dohernandez/market-manager/pkg/market-manager"
+	mm "github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
@@ -160,6 +162,60 @@ func (s *stockDividendMarketChameleonFileHtmlParser) Parse(url string) (*html.No
 	return root, nil
 }
 
+// ----------------------------------------------------------------------------------------------------------------------
+// stockDividendMarketChameleonChromedpParser
+// ----------------------------------------------------------------------------------------------------------------------
+type stockDividendMarketChameleonChromedpParser struct {
+	ctx context.Context
+	cdp *chromedp.CDP
+
+	parsed map[string]*html.Node
+}
+
+var _ HtmlParser = new(stockDividendMarketChameleonChromedpParser)
+
+func NewStockDividendMarketChameleonChromedpParser(ctx context.Context, cdp *chromedp.CDP) HtmlParser {
+	return &stockDividendMarketChameleonChromedpParser{
+		ctx:    ctx,
+		cdp:    cdp,
+		parsed: map[string]*html.Node{},
+	}
+}
+
+func (p *stockDividendMarketChameleonChromedpParser) Parse(url string) (*html.Node, error) {
+	root, ok := p.parsed[url]
+	if !ok {
+		// run task list
+		var buf string
+		err := p.cdp.Run(p.ctx, p.screenshots(url, &buf))
+		if err != nil {
+			return nil, err
+		}
+
+		r := strings.NewReader(buf)
+		root, err = html.Parse(r)
+		if err != nil {
+			return nil, err
+		}
+
+		p.parsed[url] = root
+	}
+
+	return root, nil
+}
+
+func (p *stockDividendMarketChameleonChromedpParser) screenshots(url string, res *string) chromedp.Tasks {
+	return chromedp.Tasks{
+		chromedp.Navigate(url),
+		chromedp.Sleep(5 * time.Second),
+		chromedp.WaitReady(Future, chromedp.ByID),
+		chromedp.InnerHTML("site-body-outer", res, chromedp.NodeVisible, chromedp.ByID),
+	}
+}
+
+// ----------------------------------------------------------------------------------------------------------------------
+// stockDividendMarketChameleon Service
+// ----------------------------------------------------------------------------------------------------------------------
 func NewStockDividendMarketChameleon(ctx context.Context, urlBuilder UrlBuilder, htmlParser HtmlParser) *stockDividendMarketChameleon {
 	return &stockDividendMarketChameleon{
 		ctx:        ctx,
@@ -420,3 +476,68 @@ func (s *stockDividendMarketChameleon) sanitizePercentage(percentage string) flo
 
 	return pf
 }
+
+//func (p *stockDividendMarketChameleonChromedpParser) runChromedpTask(url string) (interface{}, error) {
+//	ctxtRun, cancelRun := context.WithTimeout(p.ctx, p.Timeout)
+//	defer func() {
+//		cancelRun()
+//	}()
+//
+//	//var res []*cdp.Node
+//	var res string
+//
+//	err := p.cdp.Run(ctxtRun, chromedp.Tasks{
+//		chromedp.Navigate(url),
+//		chromedp.Sleep(2 * time.Second),
+//		chromedp.WaitReady(Future, chromedp.ByID),
+//		chromedp.QueryAfter(Future, func(ctxt context.Context, h *chromedp.TargetHandler, nodes ...*cdp.Node) error {
+//			if len(nodes) < 1 {
+//				return fmt.Errorf("selector `%s` did not return any nodes", Future)
+//			}
+//
+//			return chromedp.EvaluateAsDevTools(fmt.Sprintf(p.jsTextFuture(), nodes[0].FullXPath()), &res).Do(ctxt, h)
+//		}),
+//	})
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return res, nil
+//}
+//
+//func (p *stockDividendMarketChameleonChromedpParser) jsTextFuture() string {
+//	return `(function(a) {
+//		var s = '';
+//		for (var i = 0; i < a.length; i++) {
+//			var current = a[i];
+//
+//			// Looping over tbody
+//			if (current.offsetParent !== null && current.nodeName == 'TBODY') {
+//
+//				// Check the TBODY has children
+//				if(current.children && current.children.length > 0) {
+//					var dict = [];
+//
+//					for(var j = 0; j < current.children.length; j++) {
+//						var child = current.children[j];
+//
+//						// Check the TR has children
+//						if(child.children && child.children.length > 0) {
+//
+//							dict.push({
+//    							ex_dates: child.children[0].textContent,
+//								r_date: child.children[1].textContent,
+//								p_date: child.children[2].textContent,
+//								status: child.children[3].textContent,
+//								amount: child.children[5].textContent
+//							});
+//						}
+//					}
+//					s += JSON.stringify(dict);
+//				}
+//			}
+//		}
+//
+//		return s;
+//	})($x('%s/node()'))`
+//}
