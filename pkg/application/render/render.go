@@ -3,9 +3,9 @@ package render
 import (
 	"time"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
-	"github.com/dohernandez/market-manager/pkg/market-manager"
+	mm "github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
@@ -95,20 +95,22 @@ type (
 	}
 
 	WalletOutput struct {
-		Capital               mm.Value
-		Invested              mm.Value
-		Funds                 mm.Value
-		FreeMargin            mm.Value
-		NetCapital            mm.Value
-		NetBenefits           mm.Value
-		PercentageBenefits    float64
-		DividendPayed         mm.Value
-		DividendPayedYield    float64
-		DividendYearProjected mm.Value
-		DividendYearYield     float64
-		Connection            mm.Value
-		Interest              mm.Value
-		Commission            mm.Value
+		Capital                mm.Value
+		Invested               mm.Value
+		Funds                  mm.Value
+		FreeMargin             mm.Value
+		NetCapital             mm.Value
+		NetBenefits            mm.Value
+		PercentageBenefits     float64
+		DividendPayed          mm.Value
+		DividendPayedYield     float64
+		DividendYearProjected  mm.Value
+		DividendYearYield      float64
+		DividendTotalProjected mm.Value
+		DividendTotalYield     float64
+		Connection             mm.Value
+		Interest               mm.Value
+		Commission             mm.Value
 
 		DividendProjected []WalletDividendProjected
 	}

@@ -4,14 +4,13 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
-	"github.com/dohernandez/market-manager/pkg/market-manager"
+	mm "github.com/dohernandez/market-manager/pkg/market-manager"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/operation"
 	"github.com/dohernandez/market-manager/pkg/market-manager/account/trade"
 	"github.com/dohernandez/market-manager/pkg/market-manager/banking/bank"
 	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock"
-	"github.com/dohernandez/market-manager/pkg/market-manager/purchase/stock/dividend"
 )
 
 type Item struct {
@@ -464,20 +463,15 @@ func (w *Wallet) DividendGrossProjectedNextYear() mm.Value {
 	}
 }
 
-func (w *Wallet) DividendNetProjectedNextYear(retention float64) mm.Value {
+func (w *Wallet) DividendNetProjectedYear(retention float64) mm.Value {
 	var netDividends float64
 
 	now := time.Now()
-	month := now.Month()
 	year := now.Year()
 
 	for _, item := range w.Items {
 		for _, d := range item.Stock.Dividends {
-			if d.ExDate.Year() == year && d.ExDate.Month() >= month {
-				if d.TodayStatus() == dividend.Payed {
-					continue
-				}
-
+			if d.ExDate.Year() == year {
 				dnd := d.Amount.Amount * float64(item.Amount)
 
 				ret := retention * dnd / 100
@@ -486,14 +480,19 @@ func (w *Wallet) DividendNetProjectedNextYear(retention float64) mm.Value {
 					ret = item.DividendRetention.Amount * float64(item.Amount)
 				}
 
+				var netDividend float64
+
 				switch item.Stock.Exchange.Symbol {
 				case "NASDAQ", "NYSE":
-					netDividends += dnd/w.capitalRate.EURUSD - ret
+					netDividend = dnd/w.capitalRate.EURUSD - ret
+
 				case "TSX":
-					netDividends += dnd/w.capitalRate.EURCAD - ret
+					netDividend = dnd/w.capitalRate.EURCAD - ret
 				default:
-					netDividends += dnd - ret
+					netDividend = dnd - ret
 				}
+
+				netDividends += netDividend
 			}
 		}
 	}
