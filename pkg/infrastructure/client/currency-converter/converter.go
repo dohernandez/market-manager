@@ -6,15 +6,16 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/patrickmn/go-cache"
+	cache "github.com/patrickmn/go-cache"
 )
 
-const converterUrl = "%s/api/v5/convert?q=%s&compact=ultra"
+const converterUrl = "%s/api/v6/convert?q=%s&compact=ultra&apiKey=%s"
 
 type (
 	converterEndpoint struct {
-		base  *Client
-		cache *cache.Cache
+		base   *Client
+		cache  *cache.Cache
+		apiKey string
 	}
 
 	Converter struct {
@@ -37,53 +38,22 @@ func (e *converterEndpoint) Get() (Converter, error) {
 		return c, nil
 	}
 
-	err := e.eurUSD(&c)
+	url := fmt.Sprintf(converterUrl, e.base.baseUrl, "EUR_USD,EUR_CAD", e.apiKey)
+
+	resp, err := e.base.client.Get(url)
 	if err != nil {
 		return c, err
 	}
 
-	err = e.eurCAD(&c)
+	err = json.NewDecoder(resp.Body).Decode(&c)
 	if err != nil {
 		return c, err
 	}
+
+	c.EURUSD, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", c.EURUSD), 64)
+	c.EURCAD, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", c.EURCAD), 64)
 
 	e.cache.Set(key, c, cache.DefaultExpiration)
 
 	return c, nil
-}
-
-func (e *converterEndpoint) eurUSD(c *Converter) error {
-	url := fmt.Sprintf(converterUrl, e.base.baseUrl, "EUR_USD")
-
-	resp, err := e.base.client.Get(url)
-	if err != nil {
-		return err
-	}
-
-	err = json.NewDecoder(resp.Body).Decode(c)
-	if err != nil {
-		return err
-	}
-
-	c.EURUSD, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", c.EURUSD), 64)
-
-	return nil
-}
-
-func (e *converterEndpoint) eurCAD(c *Converter) error {
-	url := fmt.Sprintf(converterUrl, e.base.baseUrl, "EUR_CAD")
-
-	resp, err := e.base.client.Get(url)
-	if err != nil {
-		return err
-	}
-
-	err = json.NewDecoder(resp.Body).Decode(c)
-	if err != nil {
-		return err
-	}
-
-	c.EURCAD, _ = strconv.ParseFloat(fmt.Sprintf("%.4f", c.EURCAD), 64)
-
-	return nil
 }
