@@ -360,26 +360,31 @@ func (h *walletDetails) dividendsProjectedDate(w *wallet.Wallet, date time.Time)
 }
 
 func (h *walletDetails) walletDetailOutput(w *wallet.Wallet, dividendsProjected []render.WalletDividendProjected) render.WalletDetailsOutput {
-	wDProjectedYear := w.DividendNetProjectedNextYear(h.retention)
-	wDProjectedYear = wDProjectedYear.Increase(w.Dividend)
+	wDProjectedYear := w.DividendNetProjectedYear(h.retention)
 	dividendYearYield := wDProjectedYear.Amount * 100 / w.Invested.Amount
+
+	wDProjectedTotal := wDProjectedYear.Increase(w.Dividend)
+	dividendTotalYield := wDProjectedTotal.Amount * 100 / w.Invested.Amount
+
 	wDetailsOutput := render.WalletDetailsOutput{
 		WalletOutput: render.WalletOutput{
-			Capital:               w.Capital,
-			Invested:              w.Invested,
-			Funds:                 w.Funds,
-			FreeMargin:            w.FreeMargin(),
-			NetCapital:            w.NetCapital(),
-			NetBenefits:           w.NetBenefits(),
-			PercentageBenefits:    w.PercentageBenefits(),
-			DividendPayed:         w.Dividend,
-			DividendPayedYield:    w.Dividend.Amount * 100 / w.Invested.Amount,
-			DividendProjected:     dividendsProjected,
-			DividendYearProjected: wDProjectedYear,
-			DividendYearYield:     dividendYearYield,
-			Connection:            w.Connection,
-			Interest:              w.Interest,
-			Commission:            w.Commission,
+			Capital:                w.Capital,
+			Invested:               w.Invested,
+			Funds:                  w.Funds,
+			FreeMargin:             w.FreeMargin(),
+			NetCapital:             w.NetCapital(),
+			NetBenefits:            w.NetBenefits(),
+			PercentageBenefits:     w.PercentageBenefits(),
+			DividendPayed:          w.Dividend,
+			DividendPayedYield:     w.Dividend.Amount * 100 / w.Invested.Amount,
+			DividendProjected:      dividendsProjected,
+			DividendYearProjected:  wDProjectedYear,
+			DividendYearYield:      dividendYearYield,
+			DividendTotalProjected: wDProjectedTotal,
+			DividendTotalYield:     dividendTotalYield,
+			Connection:             w.Connection,
+			Interest:               w.Interest,
+			Commission:             w.Commission,
 		},
 	}
 	return wDetailsOutput

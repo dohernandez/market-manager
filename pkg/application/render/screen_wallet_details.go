@@ -182,11 +182,20 @@ func (s *screenWalletDetails) renderWalletDividendProjected(tw *tabwriter.Writer
 	noColor(tw, "")
 
 	header := color.New(color.FgWhite).FprintlnFunc()
+	header(tw, "Invested\t Dividend\t D. Yield\t")
+
+	inNormal := color.New(color.FgWhite).FprintlnFunc()
+	inNormal(tw, fmt.Sprintf("%s\t %s\t %s\t",
+		util.SPrintValue(wOutput.Invested, precision),
+		util.SPrintValue(wOutput.DividendTotalProjected, precision),
+		util.SPrintPercentage(wOutput.DividendTotalYield, precision),
+	))
+
+	noColor(tw, "")
 	header(tw, "Month\t Dividend\t D. Yield\t          Month\t Dividend\t D. Yield\t          Month\t Dividend\t D. Yield\t          Year\t Dividend\t D. Yield\t")
 
 	now := time.Now()
 
-	inNormal := color.New(color.FgWhite).FprintlnFunc()
 	inNormal(tw, fmt.Sprintf(
 		"%s\t %s\t %s\t          %s\t %s\t %s\t          %s\t %s\t %s\t          %d\t %s\t %s\t",
 		wOutput.DividendProjected[0].Month,

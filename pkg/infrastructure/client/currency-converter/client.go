@@ -14,14 +14,15 @@ type Client struct {
 	Converter *converterEndpoint
 }
 
-func NewClient(baseUrl string, client *http.Client, ch *cache.Cache) *Client {
+func NewClient(baseUrl string, apiKey string, client *http.Client, ch *cache.Cache) *Client {
 	c := Client{}
 	c.baseUrl = baseUrl
 	c.client = client
 
 	c.Converter = &converterEndpoint{
-		base:  &c,
-		cache: ch,
+		base:   &c,
+		cache:  ch,
+		apiKey: apiKey,
 	}
 
 	return &c
